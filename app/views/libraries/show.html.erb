@@ -13,6 +13,50 @@
     <p class="description"><%= @library.description %></p>
   <% end %>
 
+  <section class="members-section">
+    <h2 class="section-title">Miembros</h2>
+    <ul class="member-list">
+      <% @library.memberships.includes(:user).order(:created_at).each do |membership| %>
+        <li class="member-row">
+          <span class="avatar"><%= membership.user.email.first.upcase %></span>
+          <div class="info">
+            <span class="nm"><%= membership.user.email %></span>
+            <span class="sub"><%= membership.role.humanize %></span>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <% if @is_owner %>
+    <section class="invite-section">
+      <h2 class="section-title">Invitar a otro lector</h2>
+      <%= simple_form_for [@library, Invitation.new], html: {class: "invite-form"} do |f| %>
+        <div class="form-inputs">
+          <%= f.input :email, label: "Correo electrónico del invitado", required: true, input_html: {type: "email", autocomplete: "off"} %>
+        </div>
+        <div class="form-actions">
+          <%= f.button :submit, "Enviar invitación" %>
+        </div>
+      <% end %>
+
+      <% pending = @library.invitations.pending %>
+      <% if pending.any? %>
+        <div class="pending-invites">
+          <h3>Invitaciones pendientes</h3>
+          <ul>
+            <% pending.each do |inv| %>
+              <li>
+                <span class="email"><%= inv.email %></span>
+                <span class="expires">expira <%= l(inv.expires_at, format: :short) %></span>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
   <p class="empty-state">Libros, fotos de estantería y comentarios aterrizan en los próximos slices.</p>
 
   <%= link_to "← Volver a mis bibliotecas", libraries_path, class: "back-link" %>

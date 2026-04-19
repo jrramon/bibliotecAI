@@ -1,0 +1,20 @@
+<h1>Te han invitado a una biblioteca</h1>
+
+<p>Hola,</p>
+
+<p>
+  <strong><%= @invited_by.email %></strong> te ha invitado a unirte a
+  <strong>«<%= @library.name %>»</strong> en BibliotecAI.
+</p>
+
+<% if @library.description.present? %>
+  <p><em><%= @library.description %></em></p>
+<% end %>
+
+<p>
+  <%= link_to "Aceptar invitación", @accept_url %>
+</p>
+
+<p>Este enlace expira el <%= l(@invitation.expires_at, format: :long) %>.</p>
+
+<p>Si no esperabas esta invitación, puedes ignorar este correo.</p>

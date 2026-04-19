@@ -1,0 +1,15 @@
+Te han invitado a una biblioteca
+================================
+
+<%= @invited_by.email %> te ha invitado a unirte a «<%= @library.name %>» en BibliotecAI.
+
+<% if @library.description.present? %>
+<%= @library.description %>
+<% end %>
+
+Acepta la invitación aquí:
+<%= @accept_url %>
+
+Este enlace expira el <%= l(@invitation.expires_at, format: :long) %>.
+
+Si no esperabas esta invitación, puedes ignorar este correo.

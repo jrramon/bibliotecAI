@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_19_204256) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_19_210416) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_204256) do
     t.index ["sluggable_type", "sluggable_id"], name: "index_friendly_id_slugs_on_sluggable_type_and_sluggable_id"
   end
 
+  create_table "invitations", force: :cascade do |t|
+    t.bigint "library_id", null: false
+    t.bigint "invited_by_id", null: false
+    t.string "email", null: false
+    t.string "token", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "accepted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invited_by_id"], name: "index_invitations_on_invited_by_id"
+    t.index ["library_id", "email"], name: "index_invitations_on_library_id_and_email", unique: true, where: "(accepted_at IS NULL)"
+    t.index ["library_id"], name: "index_invitations_on_library_id"
+    t.index ["token"], name: "index_invitations_on_token", unique: true
+  end
+
   create_table "libraries", force: :cascade do |t|
     t.string "name", null: false
     t.string "slug", null: false
@@ -99,6 +114,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_204256) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "invitations", "libraries"
+  add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "libraries", "users", column: "owner_id"
   add_foreign_key "memberships", "libraries"
   add_foreign_key "memberships", "users"

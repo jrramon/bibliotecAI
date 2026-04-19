@@ -7,6 +7,7 @@ class LibrariesController < ApplicationController
   end
 
   def show
+    @is_owner = current_user.memberships.find_by(library: @library)&.owner?
   end
 
   def new

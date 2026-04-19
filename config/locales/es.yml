@@ -1,0 +1,11 @@
+es:
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      long: "%-d de %B de %Y"
+    month_names: [~, enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre]
+  time:
+    formats:
+      default: "%-d de %B de %Y a las %H:%M"
+      long: "%-d de %B de %Y a las %H:%M"
+      short: "%d/%m %H:%M"

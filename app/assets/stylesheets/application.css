@@ -571,6 +571,74 @@ input, textarea, select { font: inherit; color: inherit; }
 .form-actions a:hover { color: var(--accent); }
 
 /* ==========================================================================
+   Library show — members + invitations
+   ========================================================================== */
+
+.section-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin: 36px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.member-row:last-child { border-bottom: none; }
+.member-row .info { display: flex; flex-direction: column; }
+.member-row .nm { font-size: 14px; color: var(--ink); font-family: var(--serif); }
+.member-row .sub { font-size: 11px; color: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase; }
+
+.invite-section {
+  margin-top: 36px;
+  padding: 22px 24px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+}
+.invite-form { margin-top: 8px; }
+
+.pending-invites {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--rule);
+}
+.pending-invites h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 16px;
+  margin: 0 0 10px;
+  color: var(--ink-2);
+}
+.pending-invites ul { list-style: none; margin: 0; padding: 0; }
+.pending-invites li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  font-size: 13px;
+}
+.pending-invites li:last-child { border-bottom: none; }
+.pending-invites .email { font-family: var(--serif); color: var(--ink); }
+.pending-invites .expires { font-family: var(--mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.04em; }
+
+/* ==========================================================================
    Library show
    ========================================================================== */
 
