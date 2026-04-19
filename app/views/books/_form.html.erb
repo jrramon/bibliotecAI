@@ -1,0 +1,17 @@
+<%= simple_form_for [@library, @book], html: {multipart: true} do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :title, label: "Título", required: true, autofocus: @book.new_record? %>
+    <%= f.input :author, label: "Autor" %>
+    <%= f.input :isbn, label: "ISBN" %>
+    <%= f.input :goodreads_url, label: "URL de Goodreads", input_html: {type: "url", placeholder: "https://..."} %>
+    <%= f.input :notes, label: "Notas", as: :text, input_html: {rows: 4} %>
+    <%= f.input :cover_image, label: "Portada", as: :file, input_html: {accept: "image/jpeg,image/png,image/webp,image/heic"} %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit, @book.new_record? ? "Añadir libro" : "Guardar cambios" %>
+    <%= link_to "Cancelar", @book.persisted? ? [@library, @book] : library_books_path(@library) %>
+  </div>
+<% end %>

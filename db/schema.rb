@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_19_210416) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_19_211623) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_210416) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "books", force: :cascade do |t|
+    t.bigint "library_id", null: false
+    t.bigint "added_by_user_id", null: false
+    t.string "title", null: false
+    t.string "author"
+    t.string "isbn"
+    t.string "goodreads_url"
+    t.text "notes"
+    t.string "slug", null: false
+    t.float "confidence"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["added_by_user_id"], name: "index_books_on_added_by_user_id"
+    t.index ["library_id", "slug"], name: "index_books_on_library_id_and_slug", unique: true
+    t.index ["library_id"], name: "index_books_on_library_id"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -114,6 +131,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_210416) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "books", "libraries"
+  add_foreign_key "books", "users", column: "added_by_user_id"
   add_foreign_key "invitations", "libraries"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "libraries", "users", column: "owner_id"

@@ -6,6 +6,7 @@ Rails.application.routes.draw do
 
   resources :libraries, only: %i[index show new create] do
     resources :invitations, only: %i[create]
+    resources :books
   end
 
   get "invitations/:token", to: "invitations#show", as: :invitation

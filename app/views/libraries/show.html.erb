@@ -57,7 +57,13 @@
     </section>
   <% end %>
 
-  <p class="empty-state">Libros, fotos de estantería y comentarios aterrizan en los próximos slices.</p>
+  <section class="library-shortcuts">
+    <%= link_to library_books_path(@library), class: "shortcut-card" do %>
+      <span class="kanji" aria-hidden="true">本</span>
+      <span class="label">Libros</span>
+      <span class="count"><%= @library.books.count %></span>
+    <% end %>
+  </section>
 
   <%= link_to "← Volver a mis bibliotecas", libraries_path, class: "back-link" %>
 </section>

@@ -1,0 +1,43 @@
+<section class="page books-index">
+  <header class="page-head">
+    <div class="title-group">
+      <h1 class="page-title"><%= @library.name %> <span class="accent">· libros</span></h1>
+      <p class="sub"><%= pluralize(@books.size, "volumen", plural: "volúmenes") %> en esta biblioteca.</p>
+    </div>
+    <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-seal" %>
+  </header>
+
+  <% if @books.any? %>
+    <ul class="book-grid">
+      <% @books.each do |book| %>
+        <li class="book-card">
+          <%= link_to [@library, book], class: "book-card-link" do %>
+            <% if book.cover_image.attached? %>
+              <%= image_tag book.cover_image.variant(:card), class: "book-cover-image", alt: book.title %>
+            <% else %>
+              <div class="book-cover placeholder">
+                <span class="cov-title"><%= book.title %></span>
+                <% if book.author.present? %>
+                  <span class="cov-author"><%= book.author %></span>
+                <% end %>
+                <span class="cov-stamp" aria-hidden="true">函</span>
+              </div>
+            <% end %>
+          <% end %>
+          <div class="book-meta">
+            <span class="bm-title"><%= book.title %></span>
+            <% if book.author.present? %>
+              <span class="bm-author"><%= book.author %></span>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Aún no hay libros en esta biblioteca. Añade el primero.</p>
+  <% end %>
+
+  <p>
+    <%= link_to "← Volver a la biblioteca", library_path(@library), class: "back-link" %>
+  </p>
+</section>

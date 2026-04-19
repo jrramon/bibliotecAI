@@ -1,0 +1,53 @@
+<section class="page book-show">
+  <div class="detail">
+    <div class="detail-cover-wrap">
+      <% if @book.cover_image.attached? %>
+        <%= image_tag @book.cover_image.variant(:hero), class: "detail-cover-image", alt: @book.title %>
+      <% else %>
+        <div class="detail-cover">
+          <div class="dc-title"><%= @book.title %></div>
+          <% if @book.author.present? %>
+            <div class="dc-author"><%= @book.author %></div>
+          <% end %>
+          <span class="dc-stamp" aria-hidden="true">函</span>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="detail-info">
+      <p class="breadcrumb">
+        <%= link_to @library.name, @library %>
+        <span>›</span>
+        <%= link_to "Libros", library_books_path(@library) %>
+      </p>
+      <h1><%= @book.title %></h1>
+      <% if @book.author.present? %>
+        <p class="by">por <%= @book.author %></p>
+      <% end %>
+
+      <% if @book.notes.present? %>
+        <p class="description"><span class="dropcap"><%= @book.notes %></span></p>
+      <% end %>
+
+      <dl class="bib">
+        <% if @book.isbn.present? %>
+          <dt>ISBN</dt><dd><%= @book.isbn %></dd>
+        <% end %>
+        <% if @book.goodreads_url.present? %>
+          <dt>Goodreads</dt>
+          <dd><%= link_to @book.goodreads_url, @book.goodreads_url, target: "_blank", rel: "noopener" %></dd>
+        <% end %>
+        <dt>Añadido por</dt><dd><%= @book.added_by_user.email %></dd>
+        <dt>Añadido el</dt><dd><%= l(@book.created_at, format: :long) %></dd>
+      </dl>
+
+      <div class="action-row">
+        <%= link_to "Editar", edit_library_book_path(@library, @book), class: "btn btn-ghost" %>
+        <%= button_to "Eliminar", library_book_path(@library, @book),
+                      method: :delete,
+                      class: "btn btn-ghost",
+                      form: {data: {turbo_confirm: "¿Eliminar este libro?"}} %>
+      </div>
+    </div>
+  </div>
+</section>
