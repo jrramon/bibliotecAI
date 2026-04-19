@@ -27,5 +27,8 @@ module App
     config.i18n.default_locale = :es
     config.i18n.available_locales = %i[es en]
     config.i18n.fallbacks = [:en]
+
+    # ImageMagick is installed in dev/prod containers; libvips is not.
+    config.active_storage.variant_processor = :mini_magick
   end
 end

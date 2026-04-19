@@ -1,0 +1,29 @@
+<section class="page shelf-photo-show">
+  <%= turbo_stream_from [@library, :shelf_photos] %>
+
+  <header class="page-head">
+    <div class="title-group">
+      <h1 class="page-title">Foto de estantería</h1>
+      <p class="sub">Subida por <%= @shelf_photo.uploaded_by_user.email %> el <%= l(@shelf_photo.created_at, format: :long) %></p>
+    </div>
+    <%= link_to "← Volver", library_path(@library), class: "btn btn-ghost" %>
+  </header>
+
+  <div id="<%= dom_id(@shelf_photo, :status) %>">
+    <%= render "shelf_photos/status_badge", shelf_photo: @shelf_photo %>
+  </div>
+
+  <div class="shelf-photo-viewer">
+    <figure>
+      <figcaption class="eyebrow">Original</figcaption>
+      <%= image_tag @shelf_photo.image.variant(:hero), alt: "Foto original de la estantería", class: "shelf-photo-image" %>
+    </figure>
+
+    <% if @shelf_photo.annotated_image.attached? %>
+      <figure>
+        <figcaption class="eyebrow">Libros sin identificar</figcaption>
+        <%= image_tag @shelf_photo.annotated_image.variant(:hero), alt: "Imagen con libros no identificados marcados en rojo", class: "shelf-photo-image" %>
+      </figure>
+    <% end %>
+  </div>
+</section>

@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     resources :books, except: %i[index] do
       resources :comments, only: %i[create destroy]
     end
+    resources :shelf_photos, only: %i[new create show]
   end
 
   get "invitations/:token", to: "invitations#show", as: :invitation

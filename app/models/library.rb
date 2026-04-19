@@ -8,6 +8,7 @@ class Library < ApplicationRecord
   has_many :users, through: :memberships
   has_many :invitations, dependent: :destroy
   has_many :books, dependent: :destroy
+  has_many :shelf_photos, dependent: :destroy
 
   validates :name, presence: true, length: {maximum: 120}
   validates :description, length: {maximum: 1_000}, allow_blank: true

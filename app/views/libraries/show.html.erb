@@ -8,7 +8,8 @@
       </p>
     </div>
     <div class="header-ctas">
-      <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-seal" %>
+      <%= link_to "＋ Subir foto de estantería", new_library_shelf_photo_path(@library), class: "btn btn-seal" %>
+      <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-ghost" %>
       <%= link_to "Configuración", settings_library_path(@library), class: "btn btn-ghost" %>
     </div>
   </header>
@@ -45,6 +46,23 @@
     </ul>
   <% else %>
     <p class="empty-state">Aún no hay libros en esta biblioteca. Añade el primero.</p>
+  <% end %>
+
+  <% shelf_photos = @library.shelf_photos.recent.limit(8) %>
+  <% if shelf_photos.any? %>
+    <section class="shelf-photos-section">
+      <h2 class="section-title">Fotos de estantería</h2>
+      <ul class="shelf-photo-strip">
+        <% shelf_photos.each do |photo| %>
+          <li>
+            <%= link_to [@library, photo], class: "shelf-photo-thumb status-#{photo.status}" do %>
+              <%= image_tag photo.image.variant(:card), alt: "Foto de estantería subida por #{photo.uploaded_by_user.email}" %>
+              <span class="badge status-<%= photo.status %>"><%= photo.status.humanize %></span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
   <% end %>
 
   <%= link_to "← Volver a mis bibliotecas", libraries_path, class: "back-link" %>

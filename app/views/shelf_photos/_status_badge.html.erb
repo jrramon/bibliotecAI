@@ -1,0 +1,12 @@
+<p class="status-badge status-<%= shelf_photo.status %>" role="status">
+  <% case shelf_photo.status.to_sym %>
+  <% when :pending %>
+    <span class="dot"></span> En cola
+  <% when :processing %>
+    <span class="dot"></span> Identificando libros con Claude…
+  <% when :completed %>
+    <span class="dot"></span> Identificación completa
+  <% when :failed %>
+    <span class="dot"></span> Error: <%= shelf_photo.error_message.presence || "intento fallido" %>
+  <% end %>
+</p>
