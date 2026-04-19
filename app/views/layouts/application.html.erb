@@ -21,11 +21,20 @@
   <body>
     <header class="site-header">
       <a href="/" class="brand">BibliotecAI</a>
+      <nav class="site-nav" aria-label="Principal">
+        <% if user_signed_in? %>
+          <span class="user-email"><%= current_user.email %></span>
+          <%= button_to "Cerrar sesión", destroy_user_session_path, method: :delete, data: { turbo_method: :delete } %>
+        <% else %>
+          <%= link_to "Iniciar sesión", new_user_session_path %>
+          <%= link_to "Registrarse", new_user_registration_path %>
+        <% end %>
+      </nav>
     </header>
 
     <main>
-      <% if notice %><p class="notice"><%= notice %></p><% end %>
-      <% if alert %><p class="alert"><%= alert %></p><% end %>
+      <% if notice %><p class="notice" role="status"><%= notice %></p><% end %>
+      <% if alert %><p class="alert" role="alert"><%= alert %></p><% end %>
       <%= yield %>
     </main>
   </body>
