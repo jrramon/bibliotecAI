@@ -1,0 +1,19 @@
+<% viewer = local_assigns[:viewer] %>
+<article class="comment" id="<%= dom_id(comment) %>">
+  <span class="avatar" aria-hidden="true"><%= comment.user.email.first.upcase %></span>
+  <div class="comment-body">
+    <header class="cm-head">
+      <span class="cm-name"><%= comment.user.email %></span>
+      <time class="cm-time" datetime="<%= comment.created_at.iso8601 %>"><%= l(comment.created_at, format: :short) %></time>
+    </header>
+    <div class="cm-body"><%= comment.body %></div>
+    <% if viewer && comment.user_id == viewer.id %>
+      <footer class="cm-actions">
+        <%= button_to "Eliminar", [comment.book.library, comment.book, comment],
+                      method: :delete,
+                      class: "btn-link",
+                      form: {data: {turbo_confirm: "¿Eliminar este comentario?"}} %>
+      </footer>
+    <% end %>
+  </div>
+</article>

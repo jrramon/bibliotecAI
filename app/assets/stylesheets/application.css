@@ -922,6 +922,116 @@ input, textarea, select { font: inherit; color: inherit; }
 .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0 8px; }
 
 /* ==========================================================================
+   Comments (ActionText + Turbo)
+   ========================================================================== */
+
+.comments {
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+  margin-top: 8px;
+}
+.comments h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.comments h3 .count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  background: var(--bg-sunken);
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0;
+}
+
+.thread { display: flex; flex-direction: column; gap: 22px; }
+.thread:empty { display: none; }
+
+.comment {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+.comment .avatar { width: 36px; height: 36px; font-size: 14px; }
+.comment .cm-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.comment .cm-name { font-family: var(--serif); font-weight: 500; font-size: 15px; color: var(--ink); }
+.comment .cm-time { font-size: 11px; color: var(--ink-4); letter-spacing: 0.04em; font-family: var(--mono); }
+.comment .cm-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  padding: 12px 16px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 2px 10px 10px 10px;
+}
+.comment .cm-body p { margin: 0 0 8px; }
+.comment .cm-body p:last-child { margin-bottom: 0; }
+.comment .cm-actions { display: flex; gap: 14px; margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+.comment .cm-actions form { display: inline; }
+.comment .cm-actions button.btn-link,
+.comment .cm-actions button[type="submit"] {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  padding: 0;
+  font-size: 12px;
+  cursor: pointer;
+}
+.comment .cm-actions button.btn-link:hover,
+.comment .cm-actions button[type="submit"]:hover { color: var(--accent); }
+
+.comment-compose {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px dashed var(--rule);
+}
+.comment-compose .avatar { width: 36px; height: 36px; font-size: 14px; }
+.comment-compose .box {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.comment-compose .input { display: block; }
+.comment-compose trix-editor {
+  min-height: 72px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  padding: 0;
+}
+.comment-compose trix-toolbar { margin-bottom: 6px; }
+.comment-compose .tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule-soft);
+}
+
+/* ==========================================================================
    Library show
    ========================================================================== */
 

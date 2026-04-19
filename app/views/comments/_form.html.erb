@@ -1,0 +1,9 @@
+<%= simple_form_for [book.library, book, Comment.new], html: {class: "comment-compose"} do |f| %>
+  <span class="avatar" aria-hidden="true"><%= current_user.email.first.upcase %></span>
+  <div class="box">
+    <%= f.input :body, label: false, as: :rich_text_area, input_html: {placeholder: "Escribe un comentario…"} %>
+    <div class="tools">
+      <%= f.button :submit, "Publicar", class: "btn btn-seal" %>
+    </div>
+  </div>
+<% end %>

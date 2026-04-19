@@ -5,4 +5,5 @@ class User < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :libraries, through: :memberships
   has_many :owned_libraries, class_name: "Library", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner
+  has_many :comments, dependent: :destroy
 end

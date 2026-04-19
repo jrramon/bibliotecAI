@@ -48,4 +48,23 @@
       </div>
     </div>
   </div>
+
+  <section class="comments" aria-labelledby="comments-heading">
+    <%= turbo_stream_from [@book, :comments] %>
+
+    <h3 id="comments-heading">
+      Notas y comentarios
+      <span class="count" data-book-comments-count><%= @book.comments.count %></span>
+    </h3>
+
+    <div class="thread" id="<%= dom_id(@book, :comments) %>">
+      <% @book.comments.recent.each do |comment| %>
+        <%= render "comments/comment", comment: comment, viewer: current_user %>
+      <% end %>
+    </div>
+
+    <div id="<%= dom_id(@book, :comment_form) %>">
+      <%= render "comments/form", book: @book %>
+    </div>
+  </section>
 </section>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_19_211623) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_19_212913) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -67,6 +67,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_211623) do
     t.index ["added_by_user_id"], name: "index_books_on_added_by_user_id"
     t.index ["library_id", "slug"], name: "index_books_on_library_id_and_slug", unique: true
     t.index ["library_id"], name: "index_books_on_library_id"
+  end
+
+  create_table "comments", force: :cascade do |t|
+    t.bigint "book_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_comments_on_book_id"
+    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -133,6 +142,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_211623) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "books", "libraries"
   add_foreign_key "books", "users", column: "added_by_user_id"
+  add_foreign_key "comments", "books"
+  add_foreign_key "comments", "users"
   add_foreign_key "invitations", "libraries"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "libraries", "users", column: "owner_id"

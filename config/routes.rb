@@ -9,7 +9,9 @@ Rails.application.routes.draw do
       get :settings
     end
     resources :invitations, only: %i[create]
-    resources :books, except: %i[index]
+    resources :books, except: %i[index] do
+      resources :comments, only: %i[create destroy]
+    end
   end
 
   get "invitations/:token", to: "invitations#show", as: :invitation

@@ -1,0 +1,8 @@
+<%= turbo_stream.append dom_id(@book, :comments) do %>
+  <%= render "comments/comment", comment: @comment, viewer: current_user %>
+<% end %>
+<%= turbo_stream.replace dom_id(@book, :comment_form) do %>
+  <div id="<%= dom_id(@book, :comment_form) %>">
+    <%= render "comments/form", book: @book %>
+  </div>
+<% end %>

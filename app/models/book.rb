@@ -11,6 +11,8 @@ class Book < ApplicationRecord
     attachable.variant :hero, resize_to_limit: [800, 1200]
   end
 
+  has_many :comments, dependent: :destroy
+
   validates :title, presence: true, length: {maximum: 240}
   validates :author, length: {maximum: 180}, allow_blank: true
   validates :isbn, length: {maximum: 32}, allow_blank: true
