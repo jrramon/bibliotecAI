@@ -14,6 +14,8 @@ class LibrarySharingTest < ApplicationSystemTestCase
 
     assert_selector "h1", text: "Familia"
 
+    click_on "Configuración"
+
     fill_in "invitation_email", with: "friend@bibliotecai.test"
     click_on "Enviar invitación"
 

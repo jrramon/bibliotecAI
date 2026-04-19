@@ -5,8 +5,11 @@ Rails.application.routes.draw do
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
   resources :libraries, only: %i[index show new create] do
+    member do
+      get :settings
+    end
     resources :invitations, only: %i[create]
-    resources :books
+    resources :books, except: %i[index]
   end
 
   get "invitations/:token", to: "invitations#show", as: :invitation

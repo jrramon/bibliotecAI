@@ -382,6 +382,11 @@ input, textarea, select { font: inherit; color: inherit; }
   font-style: italic;
   max-width: 320px;
 }
+.page-head .header-ctas {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 /* ==========================================================================
    Flash messages

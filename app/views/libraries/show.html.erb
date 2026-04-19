@@ -2,10 +2,14 @@
   <header class="page-head">
     <div class="title-group">
       <h1 class="page-title"><%= @library.name %></h1>
-      <p class="meta">
-        <%= pluralize(@library.users.count, "miembro", plural: "miembros") %>
-        · creada por <%= @library.owner.email %>
+      <p class="sub">
+        <%= pluralize(@books.size, "volumen", plural: "volúmenes") %>
+        · <%= pluralize(@library.users.count, "miembro", plural: "miembros") %>
       </p>
+    </div>
+    <div class="header-ctas">
+      <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-seal" %>
+      <%= link_to "Configuración", settings_library_path(@library), class: "btn btn-ghost" %>
     </div>
   </header>
 
@@ -13,57 +17,35 @@
     <p class="description"><%= @library.description %></p>
   <% end %>
 
-  <section class="members-section">
-    <h2 class="section-title">Miembros</h2>
-    <ul class="member-list">
-      <% @library.memberships.includes(:user).order(:created_at).each do |membership| %>
-        <li class="member-row">
-          <span class="avatar"><%= membership.user.email.first.upcase %></span>
-          <div class="info">
-            <span class="nm"><%= membership.user.email %></span>
-            <span class="sub"><%= membership.role.humanize %></span>
+  <% if @books.any? %>
+    <ul class="book-grid">
+      <% @books.each do |book| %>
+        <li class="book-card">
+          <%= link_to [@library, book], class: "book-card-link" do %>
+            <% if book.cover_image.attached? %>
+              <%= image_tag book.cover_image.variant(:card), class: "book-cover-image", alt: book.title %>
+            <% else %>
+              <div class="book-cover placeholder">
+                <span class="cov-title"><%= book.title %></span>
+                <% if book.author.present? %>
+                  <span class="cov-author"><%= book.author %></span>
+                <% end %>
+                <span class="cov-stamp" aria-hidden="true">函</span>
+              </div>
+            <% end %>
+          <% end %>
+          <div class="book-meta">
+            <span class="bm-title"><%= book.title %></span>
+            <% if book.author.present? %>
+              <span class="bm-author"><%= book.author %></span>
+            <% end %>
           </div>
         </li>
       <% end %>
     </ul>
-  </section>
-
-  <% if @is_owner %>
-    <section class="invite-section">
-      <h2 class="section-title">Invitar a otro lector</h2>
-      <%= simple_form_for [@library, Invitation.new], html: {class: "invite-form"} do |f| %>
-        <div class="form-inputs">
-          <%= f.input :email, label: "Correo electrónico del invitado", required: true, input_html: {type: "email", autocomplete: "off"} %>
-        </div>
-        <div class="form-actions">
-          <%= f.button :submit, "Enviar invitación" %>
-        </div>
-      <% end %>
-
-      <% pending = @library.invitations.pending %>
-      <% if pending.any? %>
-        <div class="pending-invites">
-          <h3>Invitaciones pendientes</h3>
-          <ul>
-            <% pending.each do |inv| %>
-              <li>
-                <span class="email"><%= inv.email %></span>
-                <span class="expires">expira <%= l(inv.expires_at, format: :short) %></span>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-    </section>
+  <% else %>
+    <p class="empty-state">Aún no hay libros en esta biblioteca. Añade el primero.</p>
   <% end %>
-
-  <section class="library-shortcuts">
-    <%= link_to library_books_path(@library), class: "shortcut-card" do %>
-      <span class="kanji" aria-hidden="true">本</span>
-      <span class="label">Libros</span>
-      <span class="count"><%= @library.books.count %></span>
-    <% end %>
-  </section>
 
   <%= link_to "← Volver a mis bibliotecas", libraries_path, class: "back-link" %>
 </section>

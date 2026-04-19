@@ -12,6 +12,6 @@
 
   <div class="form-actions">
     <%= f.button :submit, @book.new_record? ? "Añadir libro" : "Guardar cambios" %>
-    <%= link_to "Cancelar", @book.persisted? ? [@library, @book] : library_books_path(@library) %>
+    <%= link_to "Cancelar", @book.persisted? ? [@library, @book] : library_path(@library) %>
   </div>
 <% end %>

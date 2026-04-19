@@ -17,8 +17,6 @@
     <div class="detail-info">
       <p class="breadcrumb">
         <%= link_to @library.name, @library %>
-        <span>›</span>
-        <%= link_to "Libros", library_books_path(@library) %>
       </p>
       <h1><%= @book.title %></h1>
       <% if @book.author.present? %>

@@ -1,13 +1,17 @@
 class LibrariesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_library, only: %i[show]
+  before_action :set_library, only: %i[show settings]
 
   def index
     @libraries = current_user.libraries.order(:name)
   end
 
   def show
-    @is_owner = current_user.memberships.find_by(library: @library)&.owner?
+    @books = @library.books.recent
+  end
+
+  def settings
+    @is_owner = membership&.owner?
   end
 
   def new
@@ -24,6 +28,10 @@ class LibrariesController < ApplicationController
   end
 
   private
+
+  def membership
+    current_user.memberships.find_by(library: @library)
+  end
 
   def set_library
     @library = current_user.libraries.friendly.find(params[:id])

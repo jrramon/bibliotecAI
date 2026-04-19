@@ -3,10 +3,6 @@ class BooksController < ApplicationController
   before_action :set_library
   before_action :set_book, only: %i[show edit update destroy]
 
-  def index
-    @books = @library.books.recent
-  end
-
   def show
   end
 
@@ -36,7 +32,7 @@ class BooksController < ApplicationController
 
   def destroy
     @book.destroy
-    redirect_to library_books_path(@library), notice: "Libro eliminado."
+    redirect_to library_path(@library), notice: "Libro eliminado."
   end
 
   private

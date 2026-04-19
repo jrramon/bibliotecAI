@@ -9,9 +9,8 @@ class BooksCrudTest < ApplicationSystemTestCase
 
   test "user adds a book, sees it in the grid, edits, and deletes it" do
     visit library_path(@library)
-    click_on "Libros"
 
-    assert_selector "h1", text: /libros/i
+    assert_selector "h1", text: "Mi casa"
     assert_text "Aún no hay libros"
 
     click_on "＋ Añadir libro"
@@ -32,7 +31,7 @@ class BooksCrudTest < ApplicationSystemTestCase
 
     assert_text "A. Pérez-Reverte"
 
-    visit library_books_path(@library)
+    visit library_path(@library)
     assert_selector ".book-grid li", text: "Línea de fuego"
 
     click_on "Línea de fuego"
