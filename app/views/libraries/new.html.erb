@@ -1,0 +1,17 @@
+<section class="page library-new">
+  <h1>Nueva biblioteca</h1>
+
+  <%= simple_form_for @library do |f| %>
+    <%= f.error_notification %>
+
+    <div class="form-inputs">
+      <%= f.input :name, label: "Nombre", required: true, autofocus: true %>
+      <%= f.input :description, label: "Descripción", as: :text, input_html: {rows: 4} %>
+    </div>
+
+    <div class="form-actions">
+      <%= f.button :submit, "Crear biblioteca" %>
+      <%= link_to "Cancelar", libraries_path %>
+    </div>
+  <% end %>
+</section>

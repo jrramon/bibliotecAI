@@ -12,7 +12,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     click_on "Sign up"
 
     assert_selector "nav.site-nav", text: "nueva@bibliotecai.test"
-    assert_selector "section.hero h1", text: "BibliotecAI"
+    assert_selector "h1", text: "Mis bibliotecas"
 
     click_on "Cerrar sesión"
 

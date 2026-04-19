@@ -1,0 +1,19 @@
+<section class="page libraries">
+  <header class="page-header">
+    <h1>Mis bibliotecas</h1>
+    <%= link_to "Nueva biblioteca", new_library_path, class: "btn btn-primary" %>
+  </header>
+
+  <% if @libraries.any? %>
+    <ul class="library-list">
+      <% @libraries.each do |library| %>
+        <li>
+          <%= link_to library.name, library_path(library) %>
+          <span class="meta"><%= library.users.count %> miembro(s)</span>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="empty-state">Aún no tienes bibliotecas. Crea la primera para empezar.</p>
+  <% end %>
+</section>

@@ -2,7 +2,7 @@
   <h1>BibliotecAI</h1>
   <p>Tu biblioteca compartida, identificada por Claude.</p>
   <p class="cta">
-    <%# Los enlaces de auth aparecerán en el Slice 1 %>
-    Próximamente: regístrate y crea tu biblioteca.
+    <%= link_to "Empezar", new_user_registration_path, class: "btn btn-primary" %>
+    <%= link_to "Ya tengo cuenta", new_user_session_path %>
   </p>
 </section>

@@ -4,5 +4,11 @@ Rails.application.routes.draw do
 
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
+  resources :libraries, only: %i[index show new create]
+
+  authenticated :user do
+    root to: "libraries#index", as: :authenticated_root
+  end
+
   root "home#index"
 end

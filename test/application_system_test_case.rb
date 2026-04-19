@@ -34,6 +34,15 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     setup { Capybara.current_driver = :remote_chrome }
   end
 
+  def sign_in_as(user, password: "supersecret123")
+    user.update!(password: password) unless user.valid_password?(password)
+    visit new_user_session_path
+    fill_in "Email", with: user.email
+    fill_in "Password", with: password
+    click_on "Log in"
+    assert_selector "nav.site-nav", text: user.email
+  end
+
   # TODO: axe-core a11y helper — wire up once we have a real interactive page (Slice 1+).
   def assert_accessible
     # placeholder — a11y assertions arrive with Slice 1 once axe-core-capybara API is validated end-to-end.
