@@ -1,7 +1,10 @@
 <section class="page libraries">
-  <header class="page-header">
-    <h1>Mis bibliotecas</h1>
-    <%= link_to "Nueva biblioteca", new_library_path, class: "btn btn-primary" %>
+  <header class="page-head">
+    <div class="title-group">
+      <h1 class="page-title">Mis <span class="accent">bibliotecas</span></h1>
+      <p class="sub">Un estante por cada grupo de lectores.</p>
+    </div>
+    <%= link_to "＋ Nueva biblioteca", new_library_path, class: "btn btn-seal" %>
   </header>
 
   <% if @libraries.any? %>
@@ -9,7 +12,7 @@
       <% @libraries.each do |library| %>
         <li>
           <%= link_to library.name, library_path(library) %>
-          <span class="meta"><%= library.users.count %> miembro(s)</span>
+          <span class="meta"><%= pluralize(library.users.count, "miembro", plural: "miembros") %></span>
         </li>
       <% end %>
     </ul>

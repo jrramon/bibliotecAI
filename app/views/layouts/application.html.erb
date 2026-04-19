@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <title><%= content_for(:title) || "BibliotecAI" %></title>
+    <title><%= content_for(:title) || "BibliotecAI · 函" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,24 +19,40 @@
   </head>
 
   <body>
-    <header class="site-header">
-      <a href="/" class="brand">BibliotecAI</a>
-      <nav class="site-nav" aria-label="Principal">
-        <% if user_signed_in? %>
-          <%= link_to "Mis bibliotecas", libraries_path %>
-          <span class="user-email"><%= current_user.email %></span>
-          <%= button_to "Cerrar sesión", destroy_user_session_path, method: :delete, data: { turbo_method: :delete } %>
-        <% else %>
-          <%= link_to "Iniciar sesión", new_user_session_path %>
-          <%= link_to "Registrarse", new_user_registration_path %>
-        <% end %>
-      </nav>
-    </header>
+    <div class="app <%= "app--guest" unless user_signed_in? %>">
+      <% if user_signed_in? %>
+        <aside class="sidebar" aria-label="Navegación">
+          <%= render "shared/brand" %>
+          <nav class="nav-section" aria-label="Principal">
+            <span class="nav-label">Biblioteca</span>
+            <%= link_to libraries_path, class: "nav-item #{"active" if controller_name == "libraries" && action_name == "index"}" do %>
+              <span>Mis bibliotecas</span>
+              <span class="count"><%= current_user.libraries.count %></span>
+            <% end %>
+          </nav>
+        </aside>
+      <% end %>
 
-    <main>
-      <% if notice %><p class="notice" role="status"><%= notice %></p><% end %>
-      <% if alert %><p class="alert" role="alert"><%= alert %></p><% end %>
-      <%= yield %>
-    </main>
+      <header class="header">
+        <% unless user_signed_in? %>
+          <%= render "shared/brand" %>
+        <% end %>
+        <div class="header-actions">
+          <% if user_signed_in? %>
+            <span class="user-email"><%= current_user.email %></span>
+            <%= button_to "Cerrar sesión", destroy_user_session_path, method: :delete, class: "btn btn-ghost", data: { turbo_method: :delete } %>
+          <% else %>
+            <%= link_to "Iniciar sesión", new_user_session_path, class: "btn btn-ghost" %>
+            <%= link_to "Registrarse", new_user_registration_path, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      </header>
+
+      <main class="main">
+        <% if notice %><p class="flash notice" role="status"><%= notice %></p><% end %>
+        <% if alert %><p class="flash alert" role="alert"><%= alert %></p><% end %>
+        <%= yield %>
+      </main>
+    </div>
   </body>
 </html>

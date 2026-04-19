@@ -6,28 +6,28 @@ class AuthenticationTest < ApplicationSystemTestCase
 
     click_on "Registrarse"
 
-    fill_in "Email", with: "nueva@bibliotecai.test"
+    fill_in "user_email", with: "nueva@bibliotecai.test"
     fill_in "user_password", with: "supersecret123"
     fill_in "user_password_confirmation", with: "supersecret123"
     click_on "Sign up"
 
-    assert_selector "nav.site-nav", text: "nueva@bibliotecai.test"
+    assert_selector "header.header", text: "nueva@bibliotecai.test"
     assert_selector "h1", text: "Mis bibliotecas"
 
     click_on "Cerrar sesión"
 
-    assert_selector "nav.site-nav a", text: "Iniciar sesión"
-    assert_selector "nav.site-nav a", text: "Registrarse"
+    assert_selector ".header-actions a", text: "Iniciar sesión"
+    assert_selector ".header-actions a", text: "Registrarse"
   end
 
   test "existing user can sign in" do
     user = create(:user, email: "existente@bibliotecai.test", password: "supersecret123")
 
     visit new_user_session_path
-    fill_in "Email", with: user.email
-    fill_in "Password", with: "supersecret123"
+    fill_in "user_email", with: user.email
+    fill_in "user_password", with: "supersecret123"
     click_on "Log in"
 
-    assert_selector "nav.site-nav", text: user.email
+    assert_selector "header.header", text: user.email
   end
 end

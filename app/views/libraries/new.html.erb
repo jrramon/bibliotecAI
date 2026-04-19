@@ -1,17 +1,24 @@
 <section class="page library-new">
-  <h1>Nueva biblioteca</h1>
-
-  <%= simple_form_for @library do |f| %>
-    <%= f.error_notification %>
-
-    <div class="form-inputs">
-      <%= f.input :name, label: "Nombre", required: true, autofocus: true %>
-      <%= f.input :description, label: "Descripción", as: :text, input_html: {rows: 4} %>
+  <header class="page-head">
+    <div class="title-group">
+      <h1 class="page-title">Nueva <span class="accent">biblioteca</span></h1>
+      <p class="sub">Dale un nombre y una descripción breve; puedes invitar a otros miembros después.</p>
     </div>
+  </header>
 
-    <div class="form-actions">
-      <%= f.button :submit, "Crear biblioteca" %>
-      <%= link_to "Cancelar", libraries_path %>
-    </div>
-  <% end %>
+  <div class="card">
+    <%= simple_form_for @library do |f| %>
+      <%= f.error_notification %>
+
+      <div class="form-inputs">
+        <%= f.input :name, label: "Nombre", required: true, autofocus: true %>
+        <%= f.input :description, label: "Descripción", as: :text, input_html: {rows: 4} %>
+      </div>
+
+      <div class="form-actions">
+        <%= f.button :submit, "Crear biblioteca" %>
+        <%= link_to "Cancelar", libraries_path %>
+      </div>
+    <% end %>
+  </div>
 </section>

@@ -1,8 +1,11 @@
-<section class="hero">
-  <h1>BibliotecAI</h1>
-  <p>Tu biblioteca compartida, identificada por Claude.</p>
-  <p class="cta">
-    <%= link_to "Empezar", new_user_registration_path, class: "btn btn-primary" %>
-    <%= link_to "Ya tengo cuenta", new_user_session_path %>
-  </p>
+<section class="hero" aria-labelledby="hero-title">
+  <div>
+    <h1 id="hero-title">Una biblioteca compartida, <em>identificada por Claude</em>.</h1>
+    <p>Sube una foto de tu estantería y deja que la IA saque los títulos, autores y una imagen anotada con los lomos que no se leen. Comparte la biblioteca con otros lectores y comentad juntos.</p>
+    <p class="cta">
+      <%= link_to "Empezar", new_user_registration_path, class: "btn btn-primary" %>
+      <%= link_to "Ya tengo cuenta", new_user_session_path, class: "btn btn-ghost" %>
+    </p>
+  </div>
+  <span class="kanji-wash" aria-hidden="true">函</span>
 </section>

@@ -1,10 +1,12 @@
 <section class="page library-show">
-  <header class="page-header">
-    <h1><%= @library.name %></h1>
-    <p class="meta">
-      <%= pluralize(@library.users.count, "miembro", plural: "miembros") %>
-      · creada por <%= @library.owner.email %>
-    </p>
+  <header class="page-head">
+    <div class="title-group">
+      <h1 class="page-title"><%= @library.name %></h1>
+      <p class="meta">
+        <%= pluralize(@library.users.count, "miembro", plural: "miembros") %>
+        · creada por <%= @library.owner.email %>
+      </p>
+    </div>
   </header>
 
   <% if @library.description.present? %>
@@ -13,5 +15,5 @@
 
   <p class="empty-state">Libros, fotos de estantería y comentarios aterrizan en los próximos slices.</p>
 
-  <p><%= link_to "← Volver a mis bibliotecas", libraries_path %></p>
+  <%= link_to "← Volver a mis bibliotecas", libraries_path, class: "back-link" %>
 </section>
