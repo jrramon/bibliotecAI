@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+if [ ! -f /usr/local/bundle/bundler-installed ] || [ ! -d /usr/local/bundle/ruby ]; then
+  bundle install
+  touch /usr/local/bundle/bundler-installed
+fi
+
+exec "${@}"

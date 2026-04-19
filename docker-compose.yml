@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME:-rails_dev}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-aqwe123}
+      POSTGRES_DB: bibliotecai_development
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-rails_dev}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: bash -c "rm -f tmp/pids/server.pid && bin/rails server -b 0.0.0.0"
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: db
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-rails_dev}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-aqwe123}
+      SELENIUM_URL: http://chrome:4444
+      RAILS_ENV: development
+      RAILS_LOG_TO_STDOUT: "true"
+    stdin_open: true
+    tty: true
+
+  chrome:
+    image: selenium/standalone-chromium:latest
+    shm_size: 2gb
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+
+volumes:
+  pg_data:
+  bundle_cache:

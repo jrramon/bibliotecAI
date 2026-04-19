@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rails_dev
+          POSTGRES_PASSWORD: aqwe123
+          POSTGRES_DB: bibliotecai_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U rails_dev"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_USERNAME: rails_dev
+      DATABASE_PASSWORD: aqwe123
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick google-chrome-stable
+      - name: Prepare DB
+        run: bin/rails db:test:prepare
+      - name: Tests
+        run: bin/rails test test:system
+      - name: StandardRB
+        run: bundle exec standardrb
+      - name: ERB lint
+        run: bundle exec erb_lint --lint-all
+      - name: Brakeman
+        run: bundle exec brakeman --no-pager -q
+
+      - name: Keep screenshots from failed system tests
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: ${{ github.workspace }}/tmp/screenshots
+          if-no-files-found: ignore
