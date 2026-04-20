@@ -462,36 +462,100 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 20px;
 }
 
-.library-list {
+.library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.library-list li {
-  padding: 18px 20px;
+.library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 18px;
   background: var(--bg-raised);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+  border-radius: 12px;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+  position: relative;
+  overflow: hidden;
 }
-.library-list li:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(40, 30, 20, 0.08); }
-.library-list li a {
+.library-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 160ms;
+}
+.library-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(40, 30, 20, 0.1);
+}
+.library-card:hover::before { opacity: 1; }
+.library-card header { display: flex; flex-direction: column; gap: 6px; }
+.library-card h2 {
   font-family: var(--serif);
-  font-size: 20px;
-  color: var(--ink);
-  display: block;
-  margin-bottom: 6px;
+  font-weight: 400;
+  font-size: 22px;
   letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
 }
-.library-list li a:hover { color: var(--accent); }
-.library-list li .meta {
-  font-size: 11px;
+.library-card .excerpt {
+  font-size: 13px;
   color: var(--ink-3);
-  letter-spacing: 0.12em;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+}
+.library-card-spines {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 56px;
+  padding-top: 4px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.library-card-spines:empty { display: none; }
+.library-card-spines .mini-sp {
+  flex: 1;
+  min-width: 14px;
+  max-width: 40px;
+  height: 48px;
+  border-radius: 1px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 4px 2px;
+  font-family: var(--serif);
+  font-size: 10px;
+  font-weight: 500;
+  box-shadow: inset -2px 0 0 rgba(0, 0, 0, 0.15);
+  line-height: 1;
+}
+.library-card footer {
+  display: flex;
+  gap: 22px;
+  padding-top: 6px;
+}
+.library-card .stat { display: flex; flex-direction: column; gap: 2px; }
+.library-card .stat .v {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.library-card .stat .k {
+  font-size: 10px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--ink-3);
 }
 
 .empty-state {
@@ -504,6 +568,79 @@ input, textarea, select { font: inherit; color: inherit; }
   text-align: center;
   font-family: var(--serif);
   font-size: 16px;
+}
+
+.hero-empty {
+  padding: 56px 32px;
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.hero-empty .kanji {
+  font-family: var(--serif);
+  font-size: 80px;
+  line-height: 1;
+  color: var(--accent);
+  opacity: 0.4;
+}
+.hero-empty h2 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--ink);
+  margin: 4px 0 0;
+}
+.hero-empty p {
+  margin: 0;
+  color: var(--ink-3);
+  max-width: 40ch;
+  font-style: normal;
+}
+.hero-empty p.cta {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.stat-row {
+  display: flex;
+  gap: 0;
+  padding: 22px 0;
+  margin: 0 0 28px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  list-style: none;
+}
+.stat-row > div {
+  flex: 1;
+  padding: 0 24px;
+  border-right: 1px solid var(--rule-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.stat-row > div:first-child { padding-left: 0; }
+.stat-row > div:last-child { border-right: none; padding-right: 0; }
+.stat-row dt {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+  font-family: var(--sans);
+  order: 2;
+}
+.stat-row dd {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1;
+  color: var(--ink);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  order: 1;
 }
 
 /* ==========================================================================

@@ -1,6 +1,7 @@
 <section class="page libraries">
   <header class="page-head">
     <div class="title-group">
+      <p class="eyebrow">Dashboard · 函</p>
       <h1 class="page-title">Mis <span class="accent">bibliotecas</span></h1>
       <p class="sub">Un estante por cada grupo de lectores.</p>
     </div>
@@ -8,15 +9,36 @@
   </header>
 
   <% if @libraries.any? %>
-    <ul class="library-list">
+    <ul class="library-grid">
       <% @libraries.each do |library| %>
-        <li>
-          <%= link_to library.name, library_path(library) %>
-          <span class="meta"><%= pluralize(library.users.count, "miembro", plural: "miembros") %></span>
-        </li>
+        <%= link_to library_path(library), class: "library-card" do %>
+          <header>
+            <h2><%= library.name %></h2>
+            <% if library.description.present? %>
+              <p class="excerpt"><%= truncate(library.description, length: 120) %></p>
+            <% end %>
+          </header>
+          <div class="library-card-spines" aria-hidden="true">
+            <% library.books.limit(5).each_with_index do |book, idx| %>
+              <% hues = [%w[#8B2E2A #F5F1E8], %w[#6B7A5A #F5F1E8], %w[#C9B896 #1C1917], %w[#3F3A33 #F5F1E8], %w[#A84B43 #F5F1E8]] %>
+              <% bg, fg = hues[idx % hues.size] %>
+              <span class="mini-sp" style="background: <%= bg %>; color: <%= fg %>;"><%= book.title.first(2).upcase %></span>
+            <% end %>
+          </div>
+          <footer>
+            <span class="stat"><span class="v"><%= library.books.count %></span><span class="k">libros</span></span>
+            <span class="stat"><span class="v"><%= library.users.count %></span><span class="k">miembros</span></span>
+            <span class="stat"><span class="v"><%= library.shelf_photos.count %></span><span class="k">fotos</span></span>
+          </footer>
+        <% end %>
       <% end %>
     </ul>
   <% else %>
-    <p class="empty-state">Aún no tienes bibliotecas. Crea la primera para empezar.</p>
+    <div class="empty-state hero-empty">
+      <span class="kanji" aria-hidden="true">空</span>
+      <h2>Aún no tienes bibliotecas</h2>
+      <p>Crea la primera para empezar a catalogar tus libros.</p>
+      <%= link_to "Crear biblioteca", new_library_path, class: "btn btn-primary" %>
+    </div>
   <% end %>
 </section>

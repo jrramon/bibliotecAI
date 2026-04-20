@@ -1,11 +1,11 @@
 <section class="page library-show">
   <header class="page-head">
     <div class="title-group">
+      <p class="eyebrow">Biblioteca</p>
       <h1 class="page-title"><%= @library.name %></h1>
-      <p class="sub">
-        <%= pluralize(@books.size, "volumen", plural: "volúmenes") %>
-        · <%= pluralize(@library.users.count, "miembro", plural: "miembros") %>
-      </p>
+      <% if @library.description.present? %>
+        <p class="sub description"><%= @library.description %></p>
+      <% end %>
     </div>
     <div class="header-ctas">
       <%= link_to "＋ Subir foto de estantería", new_library_shelf_photo_path(@library), class: "btn btn-seal" %>
@@ -14,9 +14,20 @@
     </div>
   </header>
 
-  <% if @library.description.present? %>
-    <p class="description"><%= @library.description %></p>
-  <% end %>
+  <dl class="stat-row">
+    <div>
+      <dt>Libros</dt>
+      <dd><%= @books.size %></dd>
+    </div>
+    <div>
+      <dt>Miembros</dt>
+      <dd><%= @library.users.count %></dd>
+    </div>
+    <div>
+      <dt>Fotos de estantería</dt>
+      <dd><%= @library.shelf_photos.count %></dd>
+    </div>
+  </dl>
 
   <% if @books.any? %>
     <ul class="book-grid">
@@ -45,7 +56,15 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="empty-state">Aún no hay libros en esta biblioteca. Añade el primero.</p>
+    <div class="empty-state hero-empty">
+      <span class="kanji" aria-hidden="true">本</span>
+      <h2>Aún no hay libros</h2>
+      <p>Sube una foto de tu estantería para identificar libros automáticamente, o añade uno a mano.</p>
+      <p class="cta">
+        <%= link_to "Subir foto", new_library_shelf_photo_path(@library), class: "btn btn-primary" %>
+        <%= link_to "Añadir libro", new_library_book_path(@library), class: "btn btn-ghost" %>
+      </p>
+    </div>
   <% end %>
 
   <% shelf_photos = @library.shelf_photos.recent.limit(8) %>

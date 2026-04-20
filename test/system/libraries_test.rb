@@ -28,7 +28,7 @@ class LibrariesTest < ApplicationSystemTestCase
 
     visit libraries_path
 
-    assert_selector "li", text: "Propia"
+    assert_selector ".library-card", text: "Propia"
     assert_no_text "Ajena"
 
     _ignored = own # keep rubocop/standard quiet about unused block-local

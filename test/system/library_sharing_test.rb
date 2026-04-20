@@ -45,7 +45,7 @@ class LibrarySharingTest < ApplicationSystemTestCase
     assert_text "Te has unido a «Familia»"
 
     visit libraries_path
-    assert_selector "li", text: "Familia"
+    assert_selector ".library-card", text: "Familia"
   end
 
   test "second library member sees the library in their dashboard" do
@@ -59,6 +59,6 @@ class LibrarySharingTest < ApplicationSystemTestCase
 
     assert_text "Te has unido a «Club de lectura»"
     visit libraries_path
-    assert_selector "li", text: "Club de lectura"
+    assert_selector ".library-card", text: "Club de lectura"
   end
 end
