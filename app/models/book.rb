@@ -22,6 +22,17 @@ class Book < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
 
+  # Transliterates + lowercases + collapses non-alphanum so that near-duplicate
+  # titles from successive Claude passes ("1984" vs "1984 ", "Episodios
+  # Nacionales" vs "episodios nacionales (primera serie)") can be deduped.
+  def self.normalize(text)
+    I18n.transliterate(text.to_s).downcase.gsub(/[^a-z0-9]+/, " ").squeeze(" ").strip
+  end
+
+  def search_key
+    self.class.normalize(title)
+  end
+
   private
 
   def cover_image_is_supported

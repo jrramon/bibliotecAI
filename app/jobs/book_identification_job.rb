@@ -29,9 +29,15 @@ class BookIdentificationJob < ApplicationJob
   private
 
   def create_books(shelf_photo, entries)
+    existing_keys = shelf_photo.library.books.pluck(:title).map { |t| Book.normalize(t) }.to_set
+
     entries.each do |entry|
       next unless entry["title"].to_s.present?
       next if (entry["confidence"] || 0).to_f < CONFIDENCE_THRESHOLD
+
+      key = Book.normalize(entry["title"])
+      next if existing_keys.include?(key)
+      existing_keys << key
 
       shelf_photo.library.books.create!(
         title: entry["title"].to_s,
