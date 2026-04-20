@@ -30,6 +30,11 @@ interval = ${INTERVAL}.to_i
 Rails.logger = Logger.new(\$stdout)
 Rails.logger.level = Logger::INFO
 
+# Run every ActiveJob inline in this process so the main poll thread
+# never contends for the ActiveRecord connection pool with background
+# :async workers spawned by ActiveStorage::AnalyzeJob.
+ActiveJob::Base.queue_adapter = :inline
+
 trap("INT")  { puts "[poller] stopping"; exit 0 }
 trap("TERM") { puts "[poller] stopping"; exit 0 }
 
