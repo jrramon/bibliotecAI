@@ -3,7 +3,8 @@
 
   <header class="page-head">
     <div class="title-group">
-      <h1 class="page-title">Foto de estantería</h1>
+      <p class="eyebrow">Foto de estantería</p>
+      <h1 class="page-title"><%= @shelf_photo.image.filename %></h1>
       <p class="sub">Subida por <%= @shelf_photo.uploaded_by_user.email %> el <%= l(@shelf_photo.created_at, format: :long) %></p>
     </div>
     <%= link_to "← Volver", library_path(@library), class: "btn btn-ghost" %>
@@ -26,4 +27,90 @@
       </figure>
     <% end %>
   </div>
+
+  <% if @shelf_photo.completed? && @shelf_photo.claude_raw_response.present? %>
+    <% above = @shelf_photo.entries_above_threshold %>
+    <% below = @shelf_photo.entries_below_threshold %>
+    <% boxes = @shelf_photo.unidentified_boxes %>
+
+    <section class="identification-results">
+      <h2 class="section-title">Resultado de la identificación</h2>
+
+      <div class="results-grid">
+        <div class="result-col">
+          <h3><span class="count"><%= above.size %></span> libros añadidos</h3>
+          <% if above.any? %>
+            <ul class="entry-list">
+              <% above.each do |entry| %>
+                <% book = @shelf_photo.matching_book(entry) %>
+                <li class="entry-row">
+                  <div class="info">
+                    <span class="title">
+                      <% if book %>
+                        <%= link_to entry["title"], [@library, book] %>
+                      <% else %>
+                        <%= entry["title"] %>
+                      <% end %>
+                    </span>
+                    <% if entry["author"].present? %>
+                      <span class="author"><%= entry["author"] %></span>
+                    <% end %>
+                  </div>
+                  <span class="conf conf-high"><%= (entry["confidence"].to_f * 100).round %>%</span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="empty-mini">Ninguno superó el umbral de confianza.</p>
+          <% end %>
+        </div>
+
+        <div class="result-col">
+          <h3><span class="count"><%= below.size %></span> confianza baja · descartados</h3>
+          <% if below.any? %>
+            <ul class="entry-list">
+              <% below.each do |entry| %>
+                <li class="entry-row">
+                  <div class="info">
+                    <span class="title"><%= entry["title"].presence || "—" %></span>
+                    <% if entry["author"].present? %>
+                      <span class="author"><%= entry["author"] %></span>
+                    <% end %>
+                  </div>
+                  <span class="conf conf-low"><%= (entry["confidence"].to_f * 100).round %>%</span>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="empty-mini">Todos los libros legibles superaron el umbral.</p>
+          <% end %>
+        </div>
+
+        <% if boxes.any? %>
+          <div class="result-col">
+            <h3><span class="count"><%= boxes.size %></span> spines no leídos</h3>
+            <ul class="entry-list">
+              <% boxes.each do |box| %>
+                <li class="entry-row">
+                  <div class="info">
+                    <span class="title"><%= box["reason"].presence || "Sin descripción" %></span>
+                    <span class="author mono">
+                      (<%= box["x1"] %>, <%= box["y1"] %>) → (<%= box["x2"] %>, <%= box["y2"] %>)
+                    </span>
+                  </div>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+      </div>
+
+      <details class="raw-json">
+        <summary>JSON devuelto por Claude</summary>
+        <pre><code><%= JSON.pretty_generate(@shelf_photo.claude_raw_response) %></code></pre>
+      </details>
+    </section>
+  <% elsif @shelf_photo.failed? %>
+    <p class="flash alert">Falló la identificación: <%= @shelf_photo.error_message %></p>
+  <% end %>
 </section>

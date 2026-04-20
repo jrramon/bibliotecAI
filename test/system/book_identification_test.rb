@@ -24,7 +24,7 @@ class BookIdentificationTest < ApplicationSystemTestCase
     attach_file "shelf_photo_image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
     click_on "Subir e identificar"
 
-    assert_selector "h1", text: "Foto de estantería"
+    assert_selector ".eyebrow", text: /foto de estantería/i
 
     photo = @library.shelf_photos.first
     # The host poller would pick this up; in tests we drive the job directly.

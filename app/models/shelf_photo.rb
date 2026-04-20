@@ -17,6 +17,29 @@ class ShelfPhoto < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
 
+  def identified_entries
+    Array(claude_raw_response&.dig("books"))
+  end
+
+  def unidentified_boxes
+    Array(claude_raw_response&.dig("unidentified"))
+  end
+
+  def entries_above_threshold
+    identified_entries.select { |e| (e["confidence"] || 0).to_f >= BookIdentificationJob::CONFIDENCE_THRESHOLD }
+  end
+
+  def entries_below_threshold
+    identified_entries.reject { |e| (e["confidence"] || 0).to_f >= BookIdentificationJob::CONFIDENCE_THRESHOLD }
+  end
+
+  # Matches an identified entry back to an actual Book row in the library
+  # via normalized title — `nil` if we dropped it (e.g. deduped, below threshold).
+  def matching_book(entry)
+    @books_by_key ||= library.books.index_by { |b| Book.normalize(b.title) }
+    @books_by_key[Book.normalize(entry["title"])]
+  end
+
   private
 
   def image_present

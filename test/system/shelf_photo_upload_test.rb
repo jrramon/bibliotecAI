@@ -15,7 +15,7 @@ class ShelfPhotoUploadTest < ApplicationSystemTestCase
     attach_file "shelf_photo_image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
     click_on "Subir e identificar"
 
-    assert_selector "h1", text: "Foto de estantería"
+    assert_selector ".eyebrow", text: /foto de estantería/i
     assert_selector ".status-badge", text: /En cola|Identificando/i
 
     assert_equal 1, @library.reload.shelf_photos.count
