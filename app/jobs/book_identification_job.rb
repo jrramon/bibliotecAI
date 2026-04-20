@@ -59,7 +59,15 @@ class BookIdentificationJob < ApplicationJob
         added_by_user: shelf_photo.uploaded_by_user
       )
       existing[key] = created
+
+      fetch_cover_async(created)
     end
+  end
+
+  def fetch_cover_async(book)
+    BookCoverFetcher.call(book)
+  rescue => e
+    Rails.logger.warn("[BookIdentificationJob] cover fetch for ##{book.id} failed: #{e.class}: #{e.message}")
   end
 
   def broadcast(shelf_photo)
