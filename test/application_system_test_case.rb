@@ -34,6 +34,10 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     setup { Capybara.current_driver = :remote_chrome }
   end
 
+  teardown do
+    Capybara.reset_sessions!
+  end
+
   def sign_in_as(user, password: "supersecret123")
     user.update!(password: password) unless user.valid_password?(password)
     visit new_user_session_path
