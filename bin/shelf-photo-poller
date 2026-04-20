@@ -24,6 +24,8 @@ INTERVAL="${INTERVAL:-5}"
 echo "[poller] starting  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN  interval=${INTERVAL}s"
 
 exec bundle exec bin/rails runner - <<RUBY
+\$stdout.sync = true
+\$stderr.sync = true
 interval = ${INTERVAL}.to_i
 Rails.logger = Logger.new(\$stdout)
 Rails.logger.level = Logger::INFO
@@ -31,6 +33,7 @@ Rails.logger.level = Logger::INFO
 trap("INT")  { puts "[poller] stopping"; exit 0 }
 trap("TERM") { puts "[poller] stopping"; exit 0 }
 
+puts "[poller] ready, polling every #{interval}s"
 loop do
   pending = ShelfPhoto.pending.order(:created_at).to_a
   if pending.any?
@@ -39,6 +42,7 @@ loop do
       puts "[poller] → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
       begin
         BookIdentificationJob.new.perform(p.id)
+        puts "[poller] ✓ #{p.id} done (status=#{p.reload.status})"
       rescue => e
         warn "[poller] ! #{p.id} failed: #{e.class}: #{e.message}"
         p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil

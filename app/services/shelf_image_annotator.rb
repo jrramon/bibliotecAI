@@ -2,13 +2,20 @@ require "mini_magick"
 
 class ShelfImageAnnotator
   STROKE_COLOR = "#D63A3A"
-  STROKE_WIDTH = 8
+  MIN_STROKE_WIDTH = 6
 
   def self.call(...) = new(...).call
 
-  def initialize(shelf_photo, boxes)
+  # `reported_width` / `reported_height` are Claude's view of the image.
+  # Claude Code's multimodal input is downsampled to roughly 1568px on the
+  # long edge, so its bounding boxes are in a much smaller coordinate
+  # space than the original upload. We scale each box back up to the real
+  # pixel dimensions before drawing.
+  def initialize(shelf_photo, boxes, reported_width: nil, reported_height: nil)
     @shelf_photo = shelf_photo
     @boxes = Array(boxes)
+    @reported_width = reported_width.to_i
+    @reported_height = reported_height.to_i
   end
 
   def call
@@ -22,12 +29,20 @@ class ShelfImageAnnotator
     File.binwrite(source_path, @shelf_photo.image.download)
 
     image = MiniMagick::Image.open(source_path)
+    actual_w, actual_h = image.width, image.height
+    scale_x = (@reported_width.positive? ? actual_w.to_f / @reported_width : 1.0)
+    scale_y = (@reported_height.positive? ? actual_h.to_f / @reported_height : 1.0)
+    stroke = [(actual_w / 250.0).round, MIN_STROKE_WIDTH].max
+
     image.combine_options do |c|
       c.fill "none"
       c.stroke STROKE_COLOR
-      c.strokewidth STROKE_WIDTH
+      c.strokewidth stroke
       @boxes.each do |box|
-        x1, y1, x2, y2 = box.values_at("x1", "y1", "x2", "y2").map(&:to_i)
+        x1 = (box["x1"].to_i * scale_x).round
+        y1 = (box["y1"].to_i * scale_y).round
+        x2 = (box["x2"].to_i * scale_x).round
+        y2 = (box["y2"].to_i * scale_y).round
         c.draw "rectangle #{x1},#{y1} #{x2},#{y2}"
       end
     end

@@ -13,7 +13,12 @@ class BookIdentificationJob < ApplicationJob
 
     result = ClaudeBookIdentifier.call(shelf_photo)
     create_books(shelf_photo, result.books)
-    ShelfImageAnnotator.call(shelf_photo, result.unidentified)
+    ShelfImageAnnotator.call(
+      shelf_photo,
+      result.unidentified,
+      reported_width: result.image_width,
+      reported_height: result.image_height
+    )
 
     shelf_photo.update!(
       status: :completed,
