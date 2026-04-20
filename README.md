@@ -31,12 +31,16 @@ The shelf-photo identification job calls `claude -p`, which is not available ins
 ```bash
 # On the host (requires Ruby 3.3.6 + bundle)
 bundle install
-DATABASE_HOST=localhost DATABASE_PORT=5433 \
+OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES \
+  DATABASE_HOST=localhost DATABASE_PORT=5433 \
+  DATABASE_USERNAME=rails_dev DATABASE_PASSWORD=aqwe123 \
   CLAUDE_BIN=$(which claude) \
   bin/rails solid_queue:start
 ```
 
 If `claude` is not on `$PATH`, set `CLAUDE_BIN` to the absolute path (e.g. `/Applications/cmux.app/Contents/Resources/bin/claude`).
+
+`OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` is required on macOS arm64 to keep the `pg` gem from segfaulting when Solid Queue forks worker processes.
 
 ## Tests
 

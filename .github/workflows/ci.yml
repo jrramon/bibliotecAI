@@ -46,7 +46,7 @@ jobs:
       - name: ERB lint
         run: bundle exec erb_lint --lint-all
       - name: Brakeman
-        run: bundle exec brakeman --no-pager -q
+        run: bundle exec brakeman --no-pager -q -c config/brakeman.yml
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

@@ -44,6 +44,11 @@ Rails.application.configure do
   config.hosts << "web"
   config.hosts << /.*\.local/
 
+  # Background jobs go through Solid Queue. The worker runs on the host
+  # (`bin/rails solid_queue:start` against localhost:5433) so it can shell
+  # out to the host-installed Claude Code CLI.
+  config.active_job.queue_adapter = :solid_queue
+
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 
