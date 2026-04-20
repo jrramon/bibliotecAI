@@ -1457,3 +1457,59 @@ input, textarea, select { font: inherit; color: inherit; }
 
 ::selection { background: color-mix(in oklab, var(--accent), white 70%); color: var(--ink); }
 [data-theme="dark"] ::selection { background: color-mix(in oklab, var(--accent), black 40%); color: var(--washi); }
+
+/* ==========================================================================
+   Tag chips (CDU + genres)
+   ========================================================================== */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-2);
+  line-height: 1;
+}
+.chip-cdu {
+  background: color-mix(in oklab, var(--accent-2), white 75%);
+  border-color: color-mix(in oklab, var(--accent-2), white 60%);
+  color: var(--accent-2);
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.chip-genre {
+  background: color-mix(in oklab, var(--accent), white 82%);
+  border-color: color-mix(in oklab, var(--accent), white 72%);
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--serif);
+  font-size: 12px;
+}
+[data-theme="dark"] .chip-cdu {
+  background: color-mix(in oklab, var(--accent-2), black 40%);
+  color: color-mix(in oklab, var(--accent-2), white 30%);
+}
+[data-theme="dark"] .chip-genre {
+  background: color-mix(in oklab, var(--accent), black 45%);
+  color: color-mix(in oklab, var(--accent), white 35%);
+}
+
+.chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin: 8px 0 16px;
+}
+.taglist {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}

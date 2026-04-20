@@ -27,9 +27,26 @@
         <p class="description"><span class="dropcap"><%= @book.notes %></span></p>
       <% end %>
 
+      <% if @book.genres.any? || @book.cdu.present? %>
+        <div class="chips">
+          <% if @book.cdu.present? %>
+            <span class="chip chip-cdu">CDU <%= @book.cdu %></span>
+          <% end %>
+          <% @book.genres.each do |g| %>
+            <span class="chip chip-genre"><%= g %></span>
+          <% end %>
+        </div>
+      <% end %>
+
       <dl class="bib">
         <% if @book.isbn.present? %>
           <dt>ISBN</dt><dd><%= @book.isbn %></dd>
+        <% end %>
+        <% if @book.cdu.present? %>
+          <dt>CDU</dt><dd><code><%= @book.cdu %></code></dd>
+        <% end %>
+        <% if @book.genres.any? %>
+          <dt>Géneros</dt><dd><%= @book.genres.join(" · ") %></dd>
         <% end %>
         <% if @book.goodreads_url.present? %>
           <dt>Goodreads</dt>

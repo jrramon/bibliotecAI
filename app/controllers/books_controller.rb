@@ -46,6 +46,10 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    params.expect(book: [:title, :author, :isbn, :goodreads_url, :notes, :cover_image])
+    permitted = params.expect(book: [:title, :author, :isbn, :goodreads_url, :notes, :cover_image, :cdu, :genres_csv])
+    if permitted[:genres_csv]
+      permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)
+    end
+    permitted
   end
 end

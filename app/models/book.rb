@@ -16,11 +16,18 @@ class Book < ApplicationRecord
   validates :title, presence: true, length: {maximum: 240}
   validates :author, length: {maximum: 180}, allow_blank: true
   validates :isbn, length: {maximum: 32}, allow_blank: true
+  validates :cdu, length: {maximum: 32}, allow_blank: true
   validates :goodreads_url, format: {with: URI::DEFAULT_PARSER.make_regexp(%w[http https])}, allow_blank: true
   validates :notes, length: {maximum: 4_000}, allow_blank: true
   validate :cover_image_is_supported
 
+  normalizes :genres, with: ->(values) {
+    Array(values).flat_map { |v| v.to_s.split(",") }.map(&:strip).reject(&:empty?).uniq
+  }
+
   scope :recent, -> { order(created_at: :desc) }
+  scope :with_cdu, ->(code) { where("cdu LIKE ?", "#{code}%") }
+  scope :with_genre, ->(g) { where("? = ANY(genres)", g) }
 
   # Transliterates + lowercases + collapses non-alphanum so that near-duplicate
   # titles from successive Claude passes ("1984" vs "1984 ", "Episodios

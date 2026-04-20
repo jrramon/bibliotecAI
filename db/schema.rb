@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_19_215024) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_20_143613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,7 +64,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_19_215024) do
     t.float "confidence"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "cdu", limit: 32
+    t.string "genres", default: [], array: true
     t.index ["added_by_user_id"], name: "index_books_on_added_by_user_id"
+    t.index ["cdu"], name: "index_books_on_cdu", where: "((cdu IS NOT NULL) AND ((cdu)::text <> ''::text))"
+    t.index ["genres"], name: "index_books_on_genres", using: :gin
     t.index ["library_id", "slug"], name: "index_books_on_library_id_and_slug", unique: true
     t.index ["library_id"], name: "index_books_on_library_id"
   end

@@ -19,7 +19,13 @@ class ClaudeBookIdentifier
       "image_width": <integer pixels>,
       "image_height": <integer pixels>,
       "books": [
-        {"title": "...", "author": "...", "confidence": 0.0-1.0}
+        {
+          "title": "...",
+          "author": "...",
+          "confidence": 0.0-1.0,
+          "cdu": "...",
+          "genres": ["...", "..."]
+        }
       ],
       "unidentified": [
         {"x1": <int>, "y1": <int>, "x2": <int>, "y2": <int>, "reason": "..."}
@@ -31,6 +37,14 @@ class ClaudeBookIdentifier
     - Only include `unidentified` boxes around spines you tried to read but could not — not for blank shelf space.
     - `author` may be empty string if the spine only shows the title.
     - `confidence` reflects how sure you are about title + author together.
+    - `cdu` is the Clasificación Decimal Universal code (Spanish CDU, the library
+      standard): a dotted numeric string like "82-31" (novela), "159.9" (psicología),
+      "330" (economía), "658" (management/dirección de empresas), "94(460)"
+      (historia de España). Pick the most specific code you're confident about;
+      empty string if unsure.
+    - `genres` is an array of 1-4 short Spanish genre/topic tags — e.g.
+      ["Novela histórica", "Guerra Civil"], ["Management", "Agile"],
+      ["Ensayo", "Filosofía"]. Empty array is fine for non-obvious cases.
     - If you can't see any books, return empty arrays — never invent titles.
   PROMPT
 

@@ -55,6 +55,16 @@
                     <% if entry["author"].present? %>
                       <span class="author"><%= entry["author"] %></span>
                     <% end %>
+                    <% if entry["cdu"].present? || Array(entry["genres"]).any? %>
+                      <span class="taglist">
+                        <% if entry["cdu"].present? %>
+                          <span class="chip chip-cdu">CDU <%= entry["cdu"] %></span>
+                        <% end %>
+                        <% Array(entry["genres"]).each do |g| %>
+                          <span class="chip chip-genre"><%= g %></span>
+                        <% end %>
+                      </span>
+                    <% end %>
                   </div>
                   <span class="conf conf-high"><%= (entry["confidence"].to_f * 100).round %>%</span>
                 </li>

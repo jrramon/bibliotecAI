@@ -34,22 +34,31 @@ class BookIdentificationJob < ApplicationJob
   private
 
   def create_books(shelf_photo, entries)
-    existing_keys = shelf_photo.library.books.pluck(:title).map { |t| Book.normalize(t) }.to_set
+    existing = shelf_photo.library.books.index_by { |b| Book.normalize(b.title) }
 
     entries.each do |entry|
       next unless entry["title"].to_s.present?
       next if (entry["confidence"] || 0).to_f < CONFIDENCE_THRESHOLD
 
       key = Book.normalize(entry["title"])
-      next if existing_keys.include?(key)
-      existing_keys << key
 
-      shelf_photo.library.books.create!(
+      if (book = existing[key])
+        # Don't dupe the Book, but enrich any classification we couldn't nail
+        # the first time Claude saw the shelf.
+        book.update(cdu: entry["cdu"]) if book.cdu.blank? && entry["cdu"].present?
+        book.update(genres: entry["genres"]) if book.genres.empty? && entry["genres"].present?
+        next
+      end
+
+      created = shelf_photo.library.books.create!(
         title: entry["title"].to_s,
         author: entry["author"].to_s,
         confidence: entry["confidence"]&.to_f,
+        cdu: entry["cdu"].presence,
+        genres: Array(entry["genres"]),
         added_by_user: shelf_photo.uploaded_by_user
       )
+      existing[key] = created
     end
   end
 
