@@ -1,8 +1,6 @@
 require "application_system_test_case"
 
 class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
-  include ActiveJob::TestHelper
-
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
@@ -30,8 +28,10 @@ class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
       assert_selector ".status-badge"
     end
 
-    perform_enqueued_jobs
-    photo = @library.shelf_photos.first.reload
+    photo = @library.shelf_photos.first
+    BookIdentificationJob.new.perform(photo.id)
+
+    photo.reload
     assert_equal "completed", photo.status
     assert photo.annotated_image.attached?, "annotated_image should be attached when boxes present"
 
@@ -57,8 +57,10 @@ class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
       assert_selector ".status-badge"
     end
 
-    perform_enqueued_jobs
-    photo = @library.shelf_photos.first.reload
+    photo = @library.shelf_photos.first
+    BookIdentificationJob.new.perform(photo.id)
+
+    photo.reload
     assert_equal "completed", photo.status
     assert_not photo.annotated_image.attached?
   end

@@ -1,15 +1,13 @@
 require "application_system_test_case"
 
 class BookIdentificationTest < ApplicationSystemTestCase
-  include ActiveJob::TestHelper
-
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
     sign_in_as(@user)
   end
 
-  test "uploading a shelf photo creates books from the Claude response" do
+  test "processing a shelf photo creates books from the Claude response" do
     fake_response = File.read(Rails.root.join("test/fixtures/files/claude_response.json"))
     parsed = JSON.parse(JSON.parse(fake_response).fetch("result"))
     fake_result = ClaudeBookIdentifier::Result.new(
@@ -28,11 +26,11 @@ class BookIdentificationTest < ApplicationSystemTestCase
 
     assert_selector "h1", text: "Foto de estantería"
 
-    perform_enqueued_jobs
-
     photo = @library.shelf_photos.first
-    assert_equal "completed", photo.reload.status
+    # The host poller would pick this up; in tests we drive the job directly.
+    BookIdentificationJob.new.perform(photo.id)
 
+    assert_equal "completed", photo.reload.status
     assert_equal 2, @library.books.count
     titles = @library.books.pluck(:title)
     assert_includes titles, "Línea de fuego"

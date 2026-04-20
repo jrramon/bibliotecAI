@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Quick status of shelf photos + the poller process. Run from the project root.
+set -euo pipefail
+
+HOST="${DATABASE_HOST:-localhost}"
+PORT="${DATABASE_PORT:-5433}"
+USER="${DATABASE_USERNAME:-rails_dev}"
+DB="${POSTGRES_DB:-bibliotecai_development}"
+export PGPASSWORD="${DATABASE_PASSWORD:-aqwe123}"
+
+echo "=== Shelf photos (last 10) ==="
+psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
+  SELECT id,
+         CASE status WHEN 0 THEN 'pending' WHEN 1 THEN 'processing' WHEN 2 THEN 'completed' WHEN 3 THEN 'failed' END AS status,
+         library_id,
+         coalesce(substring(error_message,1,40),'') AS err,
+         to_char(created_at,'YYYY-MM-DD HH24:MI') AS created
+  FROM shelf_photos
+  ORDER BY id DESC
+  LIMIT 10;"
+
+echo "=== Host poller process ==="
+pgrep -lf 'shelf-photo-poller|bin/rails runner' || echo '  (no poller running on host — start with bin/shelf-photo-poller)'

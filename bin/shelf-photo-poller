@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Polls ShelfPhoto.pending and processes each through BookIdentificationJob,
+# which shells out to the host-installed Claude CLI. Runs inline (no fork)
+# so it sidesteps the macOS arm64 pg-gem crash that kills Solid Queue.
+#
+# Usage:
+#   bin/shelf-photo-poller          # loop, 5s interval
+#   INTERVAL=15 bin/shelf-photo-poller
+set -euo pipefail
+
+if ! command -v claude >/dev/null 2>&1 && [ -z "${CLAUDE_BIN:-}" ]; then
+  echo "error: claude not on PATH and CLAUDE_BIN unset" >&2
+  exit 1
+fi
+
+export DATABASE_HOST="${DATABASE_HOST:-localhost}"
+export DATABASE_PORT="${DATABASE_PORT:-5433}"
+export DATABASE_USERNAME="${DATABASE_USERNAME:-rails_dev}"
+export DATABASE_PASSWORD="${DATABASE_PASSWORD:-aqwe123}"
+export CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude)}"
+export RAILS_ENV="${RAILS_ENV:-development}"
+INTERVAL="${INTERVAL:-5}"
+
+echo "[poller] starting  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN  interval=${INTERVAL}s"
+
+exec bundle exec bin/rails runner - <<RUBY
+interval = ${INTERVAL}.to_i
+Rails.logger = Logger.new(\$stdout)
+Rails.logger.level = Logger::INFO
+
+trap("INT")  { puts "[poller] stopping"; exit 0 }
+trap("TERM") { puts "[poller] stopping"; exit 0 }
+
+loop do
+  pending = ShelfPhoto.pending.order(:created_at).to_a
+  if pending.any?
+    puts "[poller] #{pending.size} pending"
+    pending.each do |p|
+      puts "[poller] → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
+      begin
+        BookIdentificationJob.new.perform(p.id)
+      rescue => e
+        warn "[poller] ! #{p.id} failed: #{e.class}: #{e.message}"
+        p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil
+      end
+    end
+  end
+  sleep interval
+end
+RUBY

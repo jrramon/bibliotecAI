@@ -1,15 +1,13 @@
 require "application_system_test_case"
 
 class ShelfPhotoUploadTest < ApplicationSystemTestCase
-  include ActiveJob::TestHelper
-
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
     sign_in_as(@user)
   end
 
-  test "user uploads a shelf photo and lands on the status page" do
+  test "user uploads a shelf photo and lands on the pending status page" do
     visit library_path(@library)
 
     click_on "＋ Subir foto de estantería"
@@ -24,6 +22,6 @@ class ShelfPhotoUploadTest < ApplicationSystemTestCase
     photo = @library.shelf_photos.first
     assert photo.image.attached?
     assert_equal @user.id, photo.uploaded_by_user_id
-    assert_enqueued_with(job: BookIdentificationJob, args: [photo.id])
+    assert_equal "pending", photo.status
   end
 end

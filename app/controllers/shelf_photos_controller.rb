@@ -10,7 +10,9 @@ class ShelfPhotosController < ApplicationController
   def create
     @shelf_photo = @library.shelf_photos.build(uploaded_by_user: current_user, image: params.dig(:shelf_photo, :image))
     if @shelf_photo.save
-      BookIdentificationJob.perform_later(@shelf_photo.id)
+      # The host-side `bin/shelf-photo-poller` picks this up and shells
+      # out to the local Claude CLI. No ActiveJob enqueue — the Rails
+      # web process can't reach the host-installed claude binary.
       redirect_to [@library, @shelf_photo], notice: "Foto subida. Identificando libros…"
     else
       render :new, status: :unprocessable_entity

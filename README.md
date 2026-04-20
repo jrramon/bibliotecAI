@@ -35,23 +35,22 @@ docker run --rm \
   tar czf /backup/storage.tgz -C /data .
 ```
 
-### Running the worker on the host
+### Running the poller on the host
 
-The shelf-photo identification job calls `claude -p`, which is not available inside the Rails container. Run Solid Queue from the host:
+Shelf photo identification calls the host-installed Claude CLI, which isn't available inside the Rails container. A simple polling loop on the host picks up `ShelfPhoto.pending` rows and processes each inline (no forking, no queue backend) — this sidesteps the pg-gem fork crash that kills Solid Queue on macOS arm64.
 
 ```bash
-# On the host (requires Ruby 3.3.6 + bundle)
-bundle install
-OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES \
-  DATABASE_HOST=localhost DATABASE_PORT=5433 \
-  DATABASE_USERNAME=rails_dev DATABASE_PASSWORD=aqwe123 \
-  CLAUDE_BIN=$(which claude) \
-  bin/rails solid_queue:start
+# On the host (requires Ruby 3.3.6 + bundle install)
+bin/shelf-photo-poller
 ```
 
-If `claude` is not on `$PATH`, set `CLAUDE_BIN` to the absolute path (e.g. `/Applications/cmux.app/Contents/Resources/bin/claude`).
+Environment variables (all optional):
 
-`OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES` is required on macOS arm64 to keep the `pg` gem from segfaulting when Solid Queue forks worker processes.
+- `CLAUDE_BIN` — absolute path to the Claude CLI binary (defaults to `$(which claude)`).
+- `INTERVAL` — seconds between polls (defaults to 5).
+- `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` — defaults match docker-compose (`localhost:5433`, `rails_dev` / `aqwe123`).
+
+To check where a photo stands without opening the UI, run `bin/queue-status`.
 
 ## Tests
 

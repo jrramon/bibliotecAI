@@ -23,7 +23,6 @@ services:
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
-      - app_storage:/app/storage
     ports:
       - "3000:3000"
     depends_on:
@@ -49,4 +48,3 @@ services:
 volumes:
   pg_data:
   bundle_cache:
-  app_storage:
