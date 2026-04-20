@@ -24,6 +24,17 @@ docker compose exec web bin/rails db:prepare db:seed
 
 Visit http://localhost:3000. Dev mail dashboard at http://localhost:3000/letter_opener.
 
+### Storage
+
+ActiveStorage uploads live in a Docker named volume (`app_storage`) mounted at `/app/storage`, so they persist across `docker compose down/up` and survive image rebuilds. Postgres data lives in `pg_data` the same way. Inspect with `docker volume ls`; back up with:
+
+```bash
+docker run --rm \
+  -v bibliotecai_app_storage:/data \
+  -v $PWD:/backup alpine \
+  tar czf /backup/storage.tgz -C /data .
+```
+
 ### Running the worker on the host
 
 The shelf-photo identification job calls `claude -p`, which is not available inside the Rails container. Run Solid Queue from the host:
