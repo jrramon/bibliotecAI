@@ -116,7 +116,7 @@ class BooksController < ApplicationController
     # edited via #note and stored in user_book_notes.
     permitted = params.expect(book: [
       :title, :subtitle, :author, :publisher, :published_year, :page_count, :language,
-      :isbn, :goodreads_url, :synopsis, :cover_image, :cdu, :genres_csv
+      :isbn, :goodreads_url, :synopsis, :cover_image, :cdu, :stamp, :spine_palette, :genres_csv
     ])
     if permitted[:genres_csv]
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)

@@ -71,6 +71,24 @@ class Book < ApplicationRecord
     self.class.normalize(title)
   end
 
+  # Deterministic slot 0..9 based on the title, used to pick a spine colour
+  # when the user hasn't set one explicitly.
+  PALETTE_SIZE = 10
+
+  def spine_slot
+    spine_palette || (Digest::MD5.hexdigest(title.to_s)[0, 2].to_i(16) % PALETTE_SIZE)
+  end
+
+  # Returns the first CJK (Han) character in title/author, or the first
+  # letter of the author's surname, or the first letter of the title — in
+  # that order — as a fallback for the spine stamp.
+  def stamp_fallback
+    return stamp if stamp.present?
+    han = "#{title} #{author}".scan(/\p{Han}/).first
+    return han if han
+    (author.to_s.split.last || title.to_s).first&.upcase.to_s
+  end
+
   private
 
   def cover_image_is_supported

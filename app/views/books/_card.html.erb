@@ -1,0 +1,21 @@
+<li class="book-card">
+  <%= link_to [library, book], class: "book-card-link" do %>
+    <% if book.cover_image.attached? %>
+      <%= image_tag book.cover_image.variant(:card), class: "book-cover-image", alt: book.title %>
+    <% else %>
+      <div class="book-cover placeholder spine-slot-<%= book.spine_slot %>">
+        <span class="cov-title"><%= book.title %></span>
+        <% if book.author.present? %>
+          <span class="cov-author"><%= book.author %></span>
+        <% end %>
+        <span class="cov-stamp" aria-hidden="true"><%= book.stamp_fallback %></span>
+      </div>
+    <% end %>
+  <% end %>
+  <div class="book-meta">
+    <span class="bm-title"><%= book.title %></span>
+    <% if book.author.present? %>
+      <span class="bm-author"><%= book.author %></span>
+    <% end %>
+  </div>
+</li>

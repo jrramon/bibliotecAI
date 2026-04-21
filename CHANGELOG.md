@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Slice 11: Spine view + wooden plank + list view — the library books page now renders all three layouts (spines on a wooden plank, grid of covers, and a tabular list) at once; CSS switches which one is visible off `<html data-shelf-layout>`, so the Tweaks panel toggles feel instant. New columns on books (`stamp`, `spine_palette`) with deterministic defaults derived from the title / CJK characters in the author. Partials `books/_spine.html.erb`, `books/_card.html.erb`, `books/_row.html.erb`. 3 system tests.
 - Slice 10: Tweaks panel (theme + shelf layout) — floating bottom-right button opens a panel with Paleta (Washi / Sepia / Sumi) and Estantería (Lomos / Cuadrícula / Lista) segmented controls. Choice persists in `localStorage` and is re-applied to `<html data-theme>` / `<html data-shelf-layout>` by an inline head script before first paint (no flash of default theme). New Stimulus `tweaks_controller.js`. 4 system tests.
 - Slice 9: Dashboard + library header polish — `libraries#index` becomes a card grid (mini-spine strip + title + excerpt + libros/miembros/fotos stats); `libraries#show` gets an eyebrow, serif page title, and a three-cell stat row above the book grid. Shared `hero-empty` empty state with kanji watermark replaces the old flat message.
 - fix: deduplicate identified books per library on re-upload (Book.normalize).

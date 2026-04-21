@@ -1,0 +1,7 @@
+<%= link_to [library, book], class: "spine spine-slot-#{book.spine_slot}", title: "#{book.title} — #{book.author}" do %>
+  <span class="spine-mark" aria-hidden="true"><%= book.stamp_fallback %></span>
+  <span class="spine-title"><%= book.title %></span>
+  <% if book.author.present? %>
+    <span class="spine-author"><%= book.author.split(/\s+/).last %></span>
+  <% end %>
+<% end %>

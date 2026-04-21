@@ -1892,6 +1892,206 @@ turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
 }
 
 /* ==========================================================================
+   Book layouts — spine (vertical books on a wooden plank), grid, list.
+   Switched via <html data-shelf-layout="spine | grid | list">.
+   ========================================================================== */
+
+.books-layout { display: none; }
+html:not([data-shelf-layout]) .books-layout--grid,
+html[data-shelf-layout="grid"] .books-layout--grid,
+html[data-shelf-layout="spine"] .books-layout--spine,
+html[data-shelf-layout="list"] .books-layout--list { display: block; }
+
+/* 10 spine-colour pairs keyed by Book#spine_slot */
+.spine-slot-0 { --spine-color: #8B2E2A; --spine-ink: #F5F1E8; }
+.spine-slot-1 { --spine-color: #3F3A33; --spine-ink: #F5F1E8; }
+.spine-slot-2 { --spine-color: #C9B896; --spine-ink: #1C1917; }
+.spine-slot-3 { --spine-color: #6B7A5A; --spine-ink: #F5F1E8; }
+.spine-slot-4 { --spine-color: #A84B43; --spine-ink: #F5F1E8; }
+.spine-slot-5 { --spine-color: #2B4A5C; --spine-ink: #EDE3CE; }
+.spine-slot-6 { --spine-color: #D7B787; --spine-ink: #3A2A18; }
+.spine-slot-7 { --spine-color: #5C4A3A; --spine-ink: #F5F1E8; }
+.spine-slot-8 { --spine-color: #756B5C; --spine-ink: #F5F1E8; }
+.spine-slot-9 { --spine-color: #8E4B2B; --spine-ink: #F5F1E8; }
+
+.shelf {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 20px 0 22px;
+  min-height: 280px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+.shelf::-webkit-scrollbar { height: 6px; }
+.shelf::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+.shelf::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 14px;
+  background: linear-gradient(180deg, var(--wood-dark), color-mix(in oklab, var(--wood-dark), black 25%));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 12px rgba(60, 40, 20, 0.25);
+  border-radius: 2px;
+}
+
+.bookend {
+  width: 10px;
+  height: 180px;
+  margin-bottom: 14px;
+  border-radius: 1px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg,
+    color-mix(in oklab, var(--wood-dark), black 10%),
+    color-mix(in oklab, var(--wood-dark), black 35%));
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.spine {
+  position: relative;
+  width: 34px;
+  height: 220px;
+  margin-bottom: 14px;
+  background: var(--spine-color, #8B2E2A);
+  color: var(--spine-ink, #F5F1E8);
+  border-radius: 1px 1px 0 0;
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 220ms var(--ease-out), margin 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+  box-shadow:
+    inset -3px 0 0 rgba(0, 0, 0, 0.18),
+    inset 3px 0 0 rgba(255, 255, 255, 0.07),
+    inset 0 8px 0 rgba(0, 0, 0, 0.12),
+    0 2px 4px rgba(40, 30, 20, 0.3);
+  text-decoration: none;
+}
+.spine::before {
+  content: "";
+  position: absolute;
+  top: 6px; left: 6px; right: 6px;
+  height: 2px;
+  background: rgba(201, 184, 150, 0.55);
+  border-radius: 1px;
+}
+.spine::after {
+  content: "";
+  position: absolute;
+  bottom: 24px; left: 6px; right: 6px;
+  height: 1px;
+  background: rgba(201, 184, 150, 0.4);
+}
+.spine:hover {
+  transform: translateY(-12px);
+  margin-left: 4px;
+  margin-right: 4px;
+  box-shadow:
+    inset -3px 0 0 rgba(0, 0, 0, 0.18),
+    inset 3px 0 0 rgba(255, 255, 255, 0.07),
+    inset 0 8px 0 rgba(0, 0, 0, 0.12),
+    0 14px 22px rgba(40, 30, 20, 0.35);
+}
+.spine .spine-title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-family: var(--serif);
+  font-weight: 450;
+  font-size: 13px;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: calc(100% - 50px);
+}
+.spine .spine-author {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+.spine .spine-mark {
+  width: 16px;
+  height: 16px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Grid placeholder cover — tint by spine slot */
+.book-cover.placeholder {
+  background: var(--spine-color, var(--vermilion));
+  color: var(--spine-ink, var(--washi));
+}
+
+/* --------- List view --------- */
+
+.book-list {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--rule);
+}
+.book-list-head {
+  display: grid;
+  grid-template-columns: 44px 1fr 160px 120px;
+  gap: 18px;
+  padding: 10px 8px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  border-bottom: 1px dashed var(--rule);
+}
+.book-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 160px 120px;
+  gap: 18px;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--rule-soft);
+  color: inherit;
+  text-decoration: none;
+  transition: background 140ms;
+}
+.book-row:hover { background: var(--bg-raised); }
+.book-row .mini-spine {
+  height: 40px;
+  width: 28px;
+  border-radius: 1px;
+  background: var(--spine-color, #8B2E2A);
+  box-shadow: inset -2px 0 0 rgba(0, 0, 0, 0.15);
+}
+.book-row .br-title { font-family: var(--serif); font-size: 15px; color: var(--ink); }
+.book-row .br-author { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.book-row .br-meta { font-size: 12px; color: var(--ink-3); }
+@media (max-width: 720px) {
+  .book-list-head { grid-template-columns: 44px 1fr; gap: 12px; }
+  .book-list-head > :nth-child(n+3) { display: none; }
+  .book-row { grid-template-columns: 44px 1fr; gap: 12px; }
+  .book-row > :nth-child(n+3) { display: none; }
+}
+
+/* ==========================================================================
    Tweaks panel (theme + shelf layout)
    ========================================================================== */
 

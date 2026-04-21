@@ -1,0 +1,13 @@
+<%= link_to [library, book], class: "book-row" do %>
+  <span class="mini-spine spine-slot-<%= book.spine_slot %>" aria-hidden="true"></span>
+  <div class="br-main">
+    <div class="br-title"><%= book.title %></div>
+    <% if book.author.present? %>
+      <div class="br-author">
+        <%= book.author %><% if book.published_year %> · <%= book.published_year %><% end %>
+      </div>
+    <% end %>
+  </div>
+  <div class="br-meta"><%= book.genres.first %></div>
+  <div class="br-meta"><%= l(book.created_at.to_date, format: :short) if book.created_at %></div>
+<% end %>

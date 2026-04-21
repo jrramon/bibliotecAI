@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_21_083733) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_21_141503) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,6 +73,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_083733) do
     t.integer "page_count"
     t.string "language", limit: 8
     t.string "google_books_id", limit: 32
+    t.string "stamp", limit: 4
+    t.integer "spine_palette"
     t.index ["added_by_user_id"], name: "index_books_on_added_by_user_id"
     t.index ["cdu"], name: "index_books_on_cdu", where: "((cdu IS NOT NULL) AND ((cdu)::text <> ''::text))"
     t.index ["genres"], name: "index_books_on_genres", using: :gin

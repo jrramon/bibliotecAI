@@ -44,31 +44,40 @@
   <% end %>
 
   <% if @books.any? %>
-    <ul class="book-grid">
-      <% @books.each do |book| %>
-        <li class="book-card">
-          <%= link_to [@library, book], class: "book-card-link" do %>
-            <% if book.cover_image.attached? %>
-              <%= image_tag book.cover_image.variant(:card), class: "book-cover-image", alt: book.title %>
-            <% else %>
-              <div class="book-cover placeholder">
-                <span class="cov-title"><%= book.title %></span>
-                <% if book.author.present? %>
-                  <span class="cov-author"><%= book.author %></span>
-                <% end %>
-                <span class="cov-stamp" aria-hidden="true">函</span>
-              </div>
-            <% end %>
-          <% end %>
-          <div class="book-meta">
-            <span class="bm-title"><%= book.title %></span>
-            <% if book.author.present? %>
-              <span class="bm-author"><%= book.author %></span>
-            <% end %>
-          </div>
-        </li>
-      <% end %>
-    </ul>
+    <%# The three layouts (spines / grid / list) all render at once; CSS
+        shows exactly one based on <html data-shelf-layout>, so switching
+        from the Tweaks panel is instant — no page reload needed. %>
+    <section class="books-layout books-layout--spine" aria-label="Estantería (lomos)">
+      <div class="shelf">
+        <div class="bookend" aria-hidden="true"></div>
+        <% @books.each do |book| %>
+          <%= render "books/spine", book: book, library: @library %>
+        <% end %>
+        <div class="bookend" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="books-layout books-layout--grid" aria-label="Estantería (cuadrícula)">
+      <ul class="book-grid">
+        <% @books.each do |book| %>
+          <%= render "books/card", book: book, library: @library %>
+        <% end %>
+      </ul>
+    </section>
+
+    <section class="books-layout books-layout--list" aria-label="Estantería (lista)">
+      <div class="book-list">
+        <div class="book-list-head" aria-hidden="true">
+          <span></span>
+          <span>Título / autor</span>
+          <span>Género</span>
+          <span>Añadido</span>
+        </div>
+        <% @books.each do |book| %>
+          <%= render "books/row", book: book, library: @library %>
+        <% end %>
+      </div>
+    </section>
   <% elsif @query.present? %>
     <div class="empty-state hero-empty">
       <span class="kanji" aria-hidden="true">索</span>
