@@ -22,6 +22,7 @@ class PersonalNotesTest < ApplicationSystemTestCase
 
     # Bob opens the same book — he should NOT see Alice's note
     click_on "Cerrar sesión"
+    assert_selector ".header-actions a", text: "Iniciar sesión"
     sign_in_as(@bob)
     visit library_book_path(@library, @book)
 

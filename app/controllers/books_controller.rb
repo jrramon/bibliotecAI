@@ -130,6 +130,7 @@ class BooksController < ApplicationController
       next unless response.is_a?(Net::HTTPSuccess)
       body = response.body.to_s
       next if body.bytesize < 2_000
+      next if BookCoverFetcher::PLACEHOLDER_HASHES.include?(Digest::SHA256.hexdigest(body))
       content_type = response["content-type"].to_s.split(";").first
       next unless content_type&.start_with?("image/")
 

@@ -1,6 +1,7 @@
 require "net/http"
 require "json"
 require "uri"
+require "digest"
 
 # Fetches a book cover from Google Books (primary) with an Open Library
 # fallback via ISBN. Attaches the downloaded image to `book.cover_image`
@@ -8,6 +9,14 @@ require "uri"
 #
 # Both APIs are public, no API key required, free at our expected volume.
 class BookCoverFetcher
+  # SHA-256 of the "image not available" placeholder Google Books serves
+  # when it knows about a volume but has no real cover for it. We download
+  # it as a regular 15 KB PNG otherwise, so size alone isn't enough — the
+  # hash of the known bytes is.
+  PLACEHOLDER_HASHES = %w[
+    12557f8948b8bdc6af436e3a8b3adddd45f7f7d2b67c5832e799cdf4686f72bb
+  ].freeze
+
   GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
   OPEN_LIBRARY_COVERS = "https://covers.openlibrary.org/b/isbn"
   TIMEOUT = 8
@@ -172,6 +181,12 @@ class BookCoverFetcher
     # Open Library returns a 1×1 placeholder when the cover is missing.
     if body.bytesize < 2_000
       log "#{source}: body too small (#{body.bytesize}B) — treating as missing"
+      return false
+    end
+
+    hash = Digest::SHA256.hexdigest(body)
+    if PLACEHOLDER_HASHES.include?(hash)
+      log "#{source}: served the known \"image not available\" placeholder (#{body.bytesize}B, sha=#{hash[0, 12]}…)"
       return false
     end
 
