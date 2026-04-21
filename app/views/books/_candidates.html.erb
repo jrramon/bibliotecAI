@@ -36,7 +36,10 @@
             <% end %>
           </div>
           <div class="actions">
-            <%= button_to apply_candidate_library_book_path(book.library, book), method: :post, class: "btn btn-primary btn-small" do %>
+            <%= button_to apply_candidate_library_book_path(book.library, book),
+                          method: :post,
+                          class: "btn btn-primary btn-small",
+                          form: {data: {turbo_frame: "_top"}} do %>
               <%= hidden_field_tag "candidate[title]", c.title %>
               <%= hidden_field_tag "candidate[author]", c.author %>
               <%= hidden_field_tag "candidate[isbn]", c.isbn %>
