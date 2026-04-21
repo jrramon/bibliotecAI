@@ -22,8 +22,13 @@
       <%= f.submit "Buscar candidatos", class: "btn btn-ghost" %>
     <% end %>
 
-    <%= turbo_frame_tag "book_candidates" do %>
+    <%= turbo_frame_tag "book_candidates", class: "candidate-frame" do %>
       <p class="empty-mini">Los resultados aparecerán aquí.</p>
     <% end %>
+
+    <div class="candidate-spinner" aria-hidden="true">
+      <span class="spinner"></span>
+      <span class="label">Buscando candidatos…</span>
+    </div>
   </section>
 </section>

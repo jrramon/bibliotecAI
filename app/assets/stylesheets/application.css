@@ -1715,6 +1715,34 @@ dialog.modal-dialog::backdrop {
   gap: 8px;
   margin-bottom: 18px;
 }
+
+/* Spinner feedback while the candidate frame is fetching.
+   Turbo sets `busy` on the <turbo-frame> element during the request. */
+.candidate-spinner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px;
+  color: var(--ink-3);
+  font-size: 13px;
+  font-style: italic;
+}
+turbo-frame.candidate-frame[busy] + .candidate-spinner { display: flex; }
+turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid color-mix(in oklab, var(--accent), transparent 70%);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
 .catalog-search-form input[type="text"] {
   flex: 1;
   background: var(--bg-sunken);
