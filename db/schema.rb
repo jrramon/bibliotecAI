@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_21_141503) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_21_143326) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -140,6 +140,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_141503) do
     t.index ["library_id"], name: "index_memberships_on_library_id"
     t.index ["user_id", "library_id"], name: "index_memberships_on_user_id_and_library_id", unique: true
     t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "reading_statuses", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.integer "state", default: 0, null: false
+    t.datetime "started_at"
+    t.datetime "finished_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_reading_statuses_on_book_id"
+    t.index ["user_id", "book_id"], name: "index_reading_statuses_on_user_id_and_book_id", unique: true
+    t.index ["user_id", "state"], name: "index_reading_statuses_on_user_id_and_state"
+    t.index ["user_id"], name: "index_reading_statuses_on_user_id"
   end
 
   create_table "shelf_photos", force: :cascade do |t|
@@ -310,6 +324,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_141503) do
   add_foreign_key "libraries", "users", column: "owner_id"
   add_foreign_key "memberships", "libraries"
   add_foreign_key "memberships", "users"
+  add_foreign_key "reading_statuses", "books"
+  add_foreign_key "reading_statuses", "users"
   add_foreign_key "shelf_photos", "libraries"
   add_foreign_key "shelf_photos", "users", column: "uploaded_by_user_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

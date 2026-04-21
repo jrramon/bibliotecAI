@@ -9,6 +9,7 @@ class LibrariesController < ApplicationController
   def show
     @query = params[:q].to_s.strip
     @books = Book.search_in_library(@library, query: @query, viewer: current_user).recent
+    @reading_books = current_user.reading_statuses.active.for_library(@library).includes(:book).map(&:book) if @query.blank?
   end
 
   def settings

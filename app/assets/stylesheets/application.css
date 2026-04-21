@@ -1655,6 +1655,18 @@ dialog.modal-dialog::backdrop {
 }
 .library-show .back-link:hover { color: var(--accent); }
 
+.back-link-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  font-family: var(--mono);
+}
+.back-link-top:hover { color: var(--accent); }
+
 /* ==========================================================================
    Devise page wrappers (auth)
    ========================================================================== */
@@ -1869,6 +1881,38 @@ turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
   font-family: var(--serif);
   font-size: 12px;
 }
+.chip-moss {
+  background: color-mix(in oklab, var(--moss), white 70%);
+  border-color: color-mix(in oklab, var(--moss), white 55%);
+  color: var(--moss);
+  text-transform: none;
+  letter-spacing: 0;
+}
+[data-theme="dark"] .chip-moss {
+  background: color-mix(in oklab, var(--moss), black 35%);
+  color: color-mix(in oklab, var(--moss), white 30%);
+}
+
+.reading-now { margin: 18px 0 30px; }
+.reading-now .section-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink-2);
+  margin: 0 0 10px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.reading-now .section-title .count {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.reading-now .reading-now-shelf { min-height: 240px; padding-top: 8px; }
+
 [data-theme="dark"] .chip-cdu {
   background: color-mix(in oklab, var(--accent-2), black 40%);
   color: color-mix(in oklab, var(--accent-2), white 30%);

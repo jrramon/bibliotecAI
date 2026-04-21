@@ -15,6 +15,9 @@ Rails.application.routes.draw do
         get :candidates
         post :apply_candidate
         patch :note
+        post :start_reading
+        post :finish_reading
+        delete :stop_reading
       end
       resources :comments, only: %i[create destroy]
     end

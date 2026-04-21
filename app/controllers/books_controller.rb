@@ -1,7 +1,7 @@
 class BooksController < ApplicationController
   before_action :authenticate_user!
   before_action :set_library
-  before_action :set_book, only: %i[show edit update destroy fetch_cover candidates apply_candidate note]
+  before_action :set_book, only: %i[show edit update destroy fetch_cover candidates apply_candidate note start_reading finish_reading stop_reading]
 
   def show
   end
@@ -49,6 +49,30 @@ class BooksController < ApplicationController
     n.body = params.dig(:user_book_note, :body).to_s
     n.save!
     redirect_to [@library, @book], notice: n.body.blank? ? "Nota borrada." : "Nota guardada."
+  end
+
+  def start_reading
+    status = @book.reading_statuses.find_or_initialize_by(user: current_user)
+    status.state = :reading
+    status.started_at ||= Time.current
+    status.finished_at = nil
+    status.save!
+    redirect_to [@library, @book], notice: "Marcado como leyendo."
+  end
+
+  def finish_reading
+    status = @book.reading_statuses.find_or_initialize_by(user: current_user)
+    status.state = :read
+    status.started_at ||= Time.current
+    status.finished_at = Time.current
+    status.save!
+    redirect_to [@library, @book], notice: "¡Marcado como leído!"
+  end
+
+  def stop_reading
+    status = @book.reading_statuses.find_by(user: current_user)
+    status&.destroy
+    redirect_to [@library, @book], notice: "Estado de lectura eliminado."
   end
 
   def apply_candidate

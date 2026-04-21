@@ -1,4 +1,8 @@
 <section class="page book-show">
+  <%= link_to library_path(@library), class: "back-link back-link-top" do %>
+    ← Volver a <%= @library.name %>
+  <% end %>
+
   <div class="detail">
     <div class="detail-cover-wrap">
       <% if @book.cover_image.attached? %>
@@ -127,7 +131,25 @@
         <dt>Añadido el</dt><dd><%= l(@book.created_at, format: :long) %></dd>
       </dl>
 
+      <% status = @book.reading_status_for(current_user) %>
       <div class="action-row">
+        <% if status.nil? %>
+          <%= button_to start_reading_library_book_path(@library, @book), method: :post, class: "btn btn-primary" do %>
+            📖 Empezar a leer
+          <% end %>
+        <% elsif status.reading? %>
+          <%= button_to finish_reading_library_book_path(@library, @book), method: :post, class: "btn btn-primary" do %>
+            ✓ Marcar como leído
+          <% end %>
+          <%= button_to stop_reading_library_book_path(@library, @book), method: :delete, class: "btn btn-ghost" do %>
+            Dejar de leer
+          <% end %>
+        <% elsif status.read? %>
+          <span class="chip chip-moss">Leído <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+          <%= button_to start_reading_library_book_path(@library, @book), method: :post, class: "btn btn-ghost" do %>
+            Releer
+          <% end %>
+        <% end %>
         <%= link_to "Editar", edit_library_book_path(@library, @book), class: "btn btn-ghost" %>
         <%= button_to "Eliminar", library_book_path(@library, @book),
                       method: :delete,

@@ -43,6 +43,19 @@
     <% end %>
   <% end %>
 
+  <% if @reading_books&.any? %>
+    <section class="reading-now">
+      <h2 class="section-title">Leyendo ahora <span class="count">(<%= @reading_books.size %>)</span></h2>
+      <div class="shelf reading-now-shelf">
+        <div class="bookend" aria-hidden="true"></div>
+        <% @reading_books.each do |book| %>
+          <%= render "books/spine", book: book, library: @library %>
+        <% end %>
+        <div class="bookend" aria-hidden="true"></div>
+      </div>
+    </section>
+  <% end %>
+
   <% if @books.any? %>
     <%# The three layouts (spines / grid / list) all render at once; CSS
         shows exactly one based on <html data-shelf-layout>, so switching
