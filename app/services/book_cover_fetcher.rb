@@ -11,7 +11,19 @@ class BookCoverFetcher
   GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
   OPEN_LIBRARY_COVERS = "https://covers.openlibrary.org/b/isbn"
   TIMEOUT = 8
-  USER_AGENT = "BibliotecAI/1.0 (https://bibliotecai.local)"
+  # Google Books 503s unauthenticated clients that look like bots (our old
+  # "BibliotecAI/1.0" UA triggered that). Pose as Chrome, add the Accept
+  # headers every browser sends, and retry transient 5xx once.
+  USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " \
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  BROWSER_HEADERS = {
+    "Accept" => "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language" => "en-US,en;q=0.9,es;q=0.8",
+    "Accept-Encoding" => "identity",
+    "Cache-Control" => "no-cache",
+    "Pragma" => "no-cache"
+  }.freeze
+  MAX_RETRIES = 2
   LOG_TAG = "[BookCoverFetcher]"
 
   def self.call(...) = new(...).call
@@ -29,10 +41,13 @@ class BookCoverFetcher
     end
 
     google = fetch_google
-    if google && download_and_attach(google[:url], source: "google_books")
-      @book.update(isbn: google[:isbn]) if google[:isbn].present? && @book.isbn.blank?
-      log "✓ cover attached from google_books (isbn=#{google[:isbn].inspect})"
-      return :google_books
+    if google
+      Array(google[:urls]).each do |url|
+        next unless download_and_attach(url, source: "google_books")
+        @book.update(isbn: google[:isbn]) if google[:isbn].present? && @book.isbn.blank?
+        log "✓ cover attached from google_books (isbn=#{google[:isbn].inspect})"
+        return :google_books
+      end
     end
 
     isbn = @book.isbn.presence || google&.[](:isbn)
@@ -85,15 +100,19 @@ class BookCoverFetcher
       return nil
     end
 
-    # Google returns zoom=1 + curl edges by default. Bump to zoom=2, drop curl,
-    # force https so ActiveStorage can store it without mixed-content warnings.
-    url = thumb.sub("&edge=curl", "").sub("&zoom=1", "&zoom=2").sub(/\Ahttp:/, "https:")
+    # Google's default thumbnail has `edge=curl` (page-curl effect) and
+    # `zoom=1` (≈128×192). Drop the curl effect and force https. We try
+    # zoom=2 first (≈256×384) and fall back to zoom=1 because older scans
+    # often only ship the small one — the larger size returns a 334-byte
+    # placeholder for those books.
+    base_url = thumb.sub("&edge=curl", "").sub(/\Ahttp:/, "https:")
+    urls = [base_url.sub("&zoom=1", "&zoom=2"), base_url].uniq
     isbn_ids = Array(info["industryIdentifiers"])
     isbn = isbn_ids.find { |id| id["type"] == "ISBN_13" }&.dig("identifier") ||
       isbn_ids.find { |id| id["type"] == "ISBN_10" }&.dig("identifier")
 
-    log "google: matched \"#{info["title"]}\" by #{Array(info["authors"]).join(", ")} → thumb=#{url} isbn=#{isbn.inspect}"
-    {url: url, isbn: isbn}
+    log "google: matched \"#{info["title"]}\" by #{Array(info["authors"]).join(", ")} → thumbs=#{urls.inspect} isbn=#{isbn.inspect}"
+    {urls: urls, isbn: isbn}
   rescue JSON::ParserError, Net::ReadTimeout, Net::OpenTimeout, SocketError => e
     log "google: #{e.class}: #{e.message}", level: :warn
     nil
@@ -145,13 +164,36 @@ class BookCoverFetcher
     parts.join("+")
   end
 
-  def http_get(uri)
-    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
-      open_timeout: TIMEOUT, read_timeout: TIMEOUT) do |http|
-      req = Net::HTTP::Get.new(uri.request_uri)
-      req["User-Agent"] = USER_AGENT
-      http.request(req)
+  def http_get(uri, accept: nil, retries: MAX_RETRIES)
+    response = nil
+    (retries + 1).times do |attempt|
+      begin
+        response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
+          open_timeout: TIMEOUT, read_timeout: TIMEOUT) do |http|
+          req = Net::HTTP::Get.new(uri.request_uri)
+          req["User-Agent"] = USER_AGENT
+          BROWSER_HEADERS.each { |k, v| req[k] = v }
+          req["Accept"] = accept if accept
+          http.request(req)
+        end
+      rescue Net::ReadTimeout, Net::OpenTimeout => e
+        if attempt < retries
+          log "#{e.class} from #{uri.host} (attempt #{attempt + 1}/#{retries + 1}), retrying…", level: :warn
+          sleep(0.4 * (attempt + 1))
+          next
+        end
+        raise
+      end
+
+      if response.is_a?(Net::HTTPServiceUnavailable) && attempt < retries
+        log "HTTP 503 from #{uri.host} (attempt #{attempt + 1}/#{retries + 1}), retrying…", level: :warn
+        sleep(0.4 * (attempt + 1))
+        next
+      end
+
+      break
     end
+    response
   end
 
   def log(message, level: :info)
