@@ -14,6 +14,7 @@ Rails.application.routes.draw do
         post :fetch_cover
         get :candidates
         post :apply_candidate
+        patch :note
       end
       resources :comments, only: %i[create destroy]
     end

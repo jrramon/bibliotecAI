@@ -12,6 +12,12 @@ class Book < ApplicationRecord
   end
 
   has_many :comments, dependent: :destroy
+  has_many :user_book_notes, dependent: :destroy
+
+  def note_for(user)
+    return nil unless user
+    user_book_notes.find_or_initialize_by(user: user)
+  end
 
   validates :title, presence: true, length: {maximum: 240}
   validates :subtitle, length: {maximum: 240}, allow_blank: true

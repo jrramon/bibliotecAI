@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_21_081923) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_21_083733) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -274,6 +274,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_081923) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "user_book_notes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "book_id", null: false
+    t.text "body", default: "", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["book_id"], name: "index_user_book_notes_on_book_id"
+    t.index ["user_id", "book_id"], name: "index_user_book_notes_on_user_id_and_book_id", unique: true
+    t.index ["user_id"], name: "index_user_book_notes_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -305,4 +316,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_081923) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_book_notes", "books"
+  add_foreign_key "user_book_notes", "users"
 end

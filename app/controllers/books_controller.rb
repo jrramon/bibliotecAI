@@ -1,7 +1,7 @@
 class BooksController < ApplicationController
   before_action :authenticate_user!
   before_action :set_library
-  before_action :set_book, only: %i[show edit update destroy fetch_cover candidates apply_candidate]
+  before_action :set_book, only: %i[show edit update destroy fetch_cover candidates apply_candidate note]
 
   def show
   end
@@ -42,6 +42,13 @@ class BooksController < ApplicationController
     @query = params[:q].presence || "#{@book.title} #{@book.author}".strip
     @candidates = BookCandidates.call(@query)
     render partial: "books/candidates", locals: {candidates: @candidates, query: @query, book: @book}
+  end
+
+  def note
+    n = @book.note_for(current_user)
+    n.body = params.dig(:user_book_note, :body).to_s
+    n.save!
+    redirect_to [@library, @book], notice: n.body.blank? ? "Nota borrada." : "Nota guardada."
   end
 
   def apply_candidate
@@ -86,9 +93,11 @@ class BooksController < ApplicationController
   end
 
   def book_params
+    # :notes stays out of the permitted list — personal notes are per-user now,
+    # edited via #note and stored in user_book_notes.
     permitted = params.expect(book: [
       :title, :subtitle, :author, :publisher, :published_year, :page_count, :language,
-      :isbn, :goodreads_url, :notes, :synopsis, :cover_image, :cdu, :genres_csv
+      :isbn, :goodreads_url, :synopsis, :cover_image, :cdu, :genres_csv
     ])
     if permitted[:genres_csv]
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)

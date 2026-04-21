@@ -42,34 +42,40 @@
         </div>
       <% end %>
 
+      <% my_note = @book.note_for(current_user) %>
       <div class="personal-notes-wrap" data-controller="modal">
-        <% if @book.notes.present? %>
+        <% if my_note.persisted? && my_note.body.present? %>
           <div class="personal-notes">
-            <h3>Notas personales</h3>
-            <p><%= simple_format @book.notes %></p>
+            <h3>Mi nota <span class="private-tag">solo tú</span></h3>
+            <p><%= simple_format my_note.body %></p>
             <button type="button" class="btn-link notes-edit"
                     data-action="modal#open"
-                    aria-label="Editar notas personales">Editar nota</button>
+                    aria-label="Editar mi nota personal">Editar nota</button>
           </div>
         <% else %>
           <button type="button" class="btn btn-ghost notes-add"
-                  data-action="modal#open">＋ Añadir nota personal</button>
+                  data-action="modal#open">＋ Añadir mi nota personal</button>
         <% end %>
 
         <dialog class="modal-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
           <div class="modal-card">
             <header>
-              <h3>Notas personales</h3>
+              <h3>Mi nota personal</h3>
               <button type="button" class="modal-close"
                       data-action="modal#close"
                       aria-label="Cerrar">✕</button>
             </header>
-            <%= simple_form_for [@library, @book], html: {class: "modal-form"} do |f| %>
-              <%= f.input :notes, label: false, as: :text,
-                          input_html: {rows: 8, autofocus: true, placeholder: "Tus apuntes, recuerdos, citas favoritas…"} %>
+            <p class="modal-hint">Solo tú verás esto. Los demás miembros de la biblioteca no tienen acceso a tus notas personales.</p>
+            <%= form_with url: note_library_book_path(@library, @book),
+                          method: :patch,
+                          scope: :user_book_note,
+                          html: {class: "modal-form"} do |f| %>
+              <%= f.text_area :body, rows: 8, autofocus: true,
+                              value: my_note.body,
+                              placeholder: "Tus apuntes, recuerdos, citas favoritas…" %>
               <div class="modal-actions">
                 <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
-                <%= f.button :submit, "Guardar nota", class: "btn btn-primary" %>
+                <%= f.submit "Guardar nota", class: "btn btn-primary" %>
               </div>
             <% end %>
           </div>

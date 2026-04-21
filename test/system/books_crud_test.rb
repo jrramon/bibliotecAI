@@ -24,13 +24,14 @@ class BooksCrudTest < ApplicationSystemTestCase
     assert_text "Arturo Pérez-Reverte"
     assert_text "9788420455976"
 
-    # Notas personales are added from the book show modal, not the edit form
-    click_on "＋ Añadir nota personal"
+    # Personal notes live per-user in a modal, not on the edit form.
+    click_on "＋ Añadir mi nota personal"
     within("dialog.modal-dialog") do
-      fill_in "book_notes", with: "Guerra Civil desde la trinchera."
+      fill_in "user_book_note_body", with: "Guerra Civil desde la trinchera."
       click_on "Guardar nota"
     end
     assert_text "Guerra Civil desde la trinchera."
+    assert_text "solo tú"
 
     click_on "Editar"
     fill_in "Autor", with: "A. Pérez-Reverte"

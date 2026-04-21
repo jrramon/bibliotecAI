@@ -1060,6 +1060,29 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0 0 8px;
   font-family: var(--sans);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.personal-notes .private-tag {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent-2), white 75%);
+  color: var(--accent-2);
+  font-weight: 500;
+  text-transform: none;
+}
+[data-theme="dark"] .personal-notes .private-tag {
+  background: color-mix(in oklab, var(--accent-2), black 40%);
+  color: color-mix(in oklab, var(--accent-2), white 30%);
+}
+.modal-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-style: italic;
 }
 .personal-notes p {
   margin: 0;
