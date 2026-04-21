@@ -10,6 +10,9 @@ Rails.application.routes.draw do
     end
     resources :invitations, only: %i[create]
     resources :books, except: %i[index] do
+      member do
+        post :fetch_cover
+      end
       resources :comments, only: %i[create destroy]
     end
     resources :shelf_photos, only: %i[new create show]

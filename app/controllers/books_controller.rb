@@ -1,9 +1,17 @@
 class BooksController < ApplicationController
   before_action :authenticate_user!
   before_action :set_library
-  before_action :set_book, only: %i[show edit update destroy]
+  before_action :set_book, only: %i[show edit update destroy fetch_cover]
 
   def show
+  end
+
+  def fetch_cover
+    result = BookCoverFetcher.call(@book)
+    redirect_to [@library, @book], **cover_flash(result)
+  rescue => e
+    Rails.logger.warn("[BooksController#fetch_cover] #{e.class}: #{e.message}")
+    redirect_to [@library, @book], alert: "Error al buscar portada: #{e.message}"
   end
 
   def new
@@ -51,5 +59,14 @@ class BooksController < ApplicationController
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)
     end
     permitted
+  end
+
+  def cover_flash(result)
+    case result
+    when :google_books then {notice: "Portada encontrada en Google Books."}
+    when :open_library then {notice: "Portada encontrada en Open Library."}
+    when :already_attached then {notice: "Ya tenía portada."}
+    else {alert: "No se encontró portada."}
+    end
   end
 end

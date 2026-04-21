@@ -11,6 +11,10 @@
           <% end %>
           <span class="dc-stamp" aria-hidden="true">函</span>
         </div>
+        <%= button_to "Buscar portada",
+                      fetch_cover_library_book_path(@library, @book),
+                      method: :post,
+                      class: "btn btn-ghost btn-find-cover" %>
       <% end %>
     </div>
 
