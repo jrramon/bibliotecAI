@@ -14,4 +14,25 @@ class BookTest < ActiveSupport::TestCase
     assert_equal Book.normalize("Episodios Nacionales (Primera serie)"),
       Book.normalize("Episodios nacionales, Primera serie")
   end
+
+  test "genres are trimmed and deduplicated on assignment" do
+    lib = create(:library)
+    book = lib.books.create!(added_by_user: lib.owner, title: "Test",
+      genres: [" Novela histórica ", "Novela histórica", "Guerra Civil "])
+    assert_equal ["Novela histórica", "Guerra Civil"], book.genres
+  end
+
+  test "genres accept a comma-separated single element" do
+    lib = create(:library)
+    book = lib.books.create!(added_by_user: lib.owner, title: "Test",
+      genres: ["Ensayo, Psicología, Ensayo"])
+    assert_equal ["Ensayo", "Psicología"], book.genres
+  end
+
+  test "cdu and genres persist" do
+    lib = create(:library)
+    book = lib.books.create!(added_by_user: lib.owner, title: "X", cdu: "82-31", genres: ["Novela"])
+    assert_equal "82-31", book.reload.cdu
+    assert_equal ["Novela"], book.genres
+  end
 end
