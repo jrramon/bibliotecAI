@@ -18,7 +18,6 @@
                 hint: "Separados por coma" %>
     <%= f.input :goodreads_url, label: "URL de Goodreads", input_html: {type: "url", placeholder: "https://..."} %>
     <%= f.input :synopsis, label: "Sinopsis", as: :text, input_html: {rows: 4}, hint: "Descripción del libro (de Google Books o añadida a mano)" %>
-    <%= f.input :notes, label: "Notas personales", as: :text, input_html: {rows: 4} %>
     <%= f.input :cover_image, label: "Portada", as: :file, input_html: {accept: "image/jpeg,image/png,image/webp,image/heic"} %>
   </div>
 

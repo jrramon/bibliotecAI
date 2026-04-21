@@ -18,12 +18,19 @@ class BooksCrudTest < ApplicationSystemTestCase
     fill_in "Título", with: "Línea de fuego"
     fill_in "Autor", with: "Arturo Pérez-Reverte"
     fill_in "ISBN", with: "9788420455976"
-    fill_in "Notas", with: "Guerra Civil desde la trinchera."
     click_on "Añadir libro"
 
     assert_selector "h1", text: "Línea de fuego"
     assert_text "Arturo Pérez-Reverte"
     assert_text "9788420455976"
+
+    # Notas personales are added from the book show modal, not the edit form
+    click_on "＋ Añadir nota personal"
+    within("dialog.modal-dialog") do
+      fill_in "book_notes", with: "Guerra Civil desde la trinchera."
+      click_on "Guardar nota"
+    end
+    assert_text "Guerra Civil desde la trinchera."
 
     click_on "Editar"
     fill_in "Autor", with: "A. Pérez-Reverte"

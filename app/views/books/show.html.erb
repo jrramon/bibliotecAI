@@ -42,12 +42,39 @@
         </div>
       <% end %>
 
-      <% if @book.notes.present? %>
-        <div class="personal-notes">
-          <h3>Notas personales</h3>
-          <p><%= simple_format @book.notes %></p>
-        </div>
-      <% end %>
+      <div class="personal-notes-wrap" data-controller="modal">
+        <% if @book.notes.present? %>
+          <div class="personal-notes">
+            <h3>Notas personales</h3>
+            <p><%= simple_format @book.notes %></p>
+            <button type="button" class="btn-link notes-edit"
+                    data-action="modal#open"
+                    aria-label="Editar notas personales">Editar nota</button>
+          </div>
+        <% else %>
+          <button type="button" class="btn btn-ghost notes-add"
+                  data-action="modal#open">＋ Añadir nota personal</button>
+        <% end %>
+
+        <dialog class="modal-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
+          <div class="modal-card">
+            <header>
+              <h3>Notas personales</h3>
+              <button type="button" class="modal-close"
+                      data-action="modal#close"
+                      aria-label="Cerrar">✕</button>
+            </header>
+            <%= simple_form_for [@library, @book], html: {class: "modal-form"} do |f| %>
+              <%= f.input :notes, label: false, as: :text,
+                          input_html: {rows: 8, autofocus: true, placeholder: "Tus apuntes, recuerdos, citas favoritas…"} %>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
+                <%= f.button :submit, "Guardar nota", class: "btn btn-primary" %>
+              </div>
+            <% end %>
+          </div>
+        </dialog>
+      </div>
 
       <% if @book.genres.any? || @book.cdu.present? %>
         <div class="chips">
