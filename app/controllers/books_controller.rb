@@ -56,7 +56,7 @@ class BooksController < ApplicationController
       attach_remote_cover(data[:thumbnail_url])
     end
 
-    redirect_to edit_library_book_path(@library, @book), notice: "Datos aplicados desde Google Books."
+    redirect_to [@library, @book], notice: "Datos aplicados desde Google Books."
   rescue => e
     Rails.logger.warn("[BooksController#apply_candidate] #{e.class}: #{e.message}")
     redirect_to edit_library_book_path(@library, @book), alert: "No se pudo aplicar el candidato."
