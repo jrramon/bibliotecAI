@@ -3,7 +3,12 @@
 
   <div class="form-inputs">
     <%= f.input :title, label: "Título", required: true, autofocus: @book.new_record? %>
+    <%= f.input :subtitle, label: "Subtítulo" %>
     <%= f.input :author, label: "Autor" %>
+    <%= f.input :publisher, label: "Editorial" %>
+    <%= f.input :published_year, label: "Año de publicación", as: :integer %>
+    <%= f.input :page_count, label: "Páginas", as: :integer %>
+    <%= f.input :language, label: "Idioma", hint: "Código ISO de 2 letras (es, en, pt…)" %>
     <%= f.input :isbn, label: "ISBN" %>
     <%= f.input :cdu, label: "CDU", hint: "Clasificación Decimal Universal (ej. 82-31, 330, 94(460))" %>
     <%= f.input :genres,
@@ -12,7 +17,8 @@
                 input_html: {value: @book.genres.join(", "), name: "book[genres_csv]", placeholder: "Novela histórica, Guerra Civil"},
                 hint: "Separados por coma" %>
     <%= f.input :goodreads_url, label: "URL de Goodreads", input_html: {type: "url", placeholder: "https://..."} %>
-    <%= f.input :notes, label: "Notas", as: :text, input_html: {rows: 4} %>
+    <%= f.input :synopsis, label: "Sinopsis", as: :text, input_html: {rows: 4}, hint: "Descripción del libro (de Google Books o añadida a mano)" %>
+    <%= f.input :notes, label: "Notas personales", as: :text, input_html: {rows: 4} %>
     <%= f.input :cover_image, label: "Portada", as: :file, input_html: {accept: "image/jpeg,image/png,image/webp,image/heic"} %>
   </div>
 

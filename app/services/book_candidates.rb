@@ -6,13 +6,14 @@ require "uri"
 # can present before the user decides which metadata to apply to a book.
 class BookCandidates
   Candidate = Struct.new(
-    :volume_id, :title, :authors, :publisher, :published_date,
-    :description, :thumbnail_url, :isbn_10, :isbn_13, :page_count,
+    :volume_id, :title, :subtitle, :authors, :publisher, :published_date,
+    :description, :thumbnail_url, :isbn_10, :isbn_13, :page_count, :language,
     keyword_init: true
   ) do
     def isbn = isbn_13 || isbn_10
     def year = published_date.to_s[0, 4]
     def author = authors.to_a.join(", ")
+    def published_year = year.presence&.to_i
   end
 
   GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
@@ -64,6 +65,7 @@ class BookCandidates
     Candidate.new(
       volume_id: item["id"],
       title: info["title"],
+      subtitle: info["subtitle"],
       authors: info["authors"],
       publisher: info["publisher"],
       published_date: info["publishedDate"],
@@ -71,7 +73,8 @@ class BookCandidates
       thumbnail_url: thumb,
       isbn_10: isbn_10,
       isbn_13: isbn_13,
-      page_count: info["pageCount"]
+      page_count: info["pageCount"],
+      language: info["language"]
     )
   end
 

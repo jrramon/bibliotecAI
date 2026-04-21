@@ -14,11 +14,18 @@ class Book < ApplicationRecord
   has_many :comments, dependent: :destroy
 
   validates :title, presence: true, length: {maximum: 240}
+  validates :subtitle, length: {maximum: 240}, allow_blank: true
   validates :author, length: {maximum: 180}, allow_blank: true
+  validates :publisher, length: {maximum: 180}, allow_blank: true
   validates :isbn, length: {maximum: 32}, allow_blank: true
   validates :cdu, length: {maximum: 32}, allow_blank: true
+  validates :language, length: {maximum: 8}, allow_blank: true
+  validates :google_books_id, length: {maximum: 32}, allow_blank: true
+  validates :published_year, numericality: {only_integer: true, greater_than: 0, less_than_or_equal_to: -> { Date.current.year + 1 }}, allow_nil: true
+  validates :page_count, numericality: {only_integer: true, greater_than: 0, less_than: 100_000}, allow_nil: true
   validates :goodreads_url, format: {with: URI::DEFAULT_PARSER.make_regexp(%w[http https])}, allow_blank: true
   validates :notes, length: {maximum: 4_000}, allow_blank: true
+  validates :synopsis, length: {maximum: 5_000}, allow_blank: true
   validate :cover_image_is_supported
 
   normalizes :genres, with: ->(values) {

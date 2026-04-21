@@ -23,12 +23,22 @@
         <%= link_to @library.name, @library %>
       </p>
       <h1><%= @book.title %></h1>
+      <% if @book.subtitle.present? %>
+        <p class="subtitle"><%= @book.subtitle %></p>
+      <% end %>
       <% if @book.author.present? %>
         <p class="by">por <%= @book.author %></p>
       <% end %>
 
+      <% if @book.synopsis.present? %>
+        <p class="description"><span class="dropcap"><%= @book.synopsis %></span></p>
+      <% end %>
+
       <% if @book.notes.present? %>
-        <p class="description"><span class="dropcap"><%= @book.notes %></span></p>
+        <div class="personal-notes">
+          <h3>Notas personales</h3>
+          <p><%= simple_format @book.notes %></p>
+        </div>
       <% end %>
 
       <% if @book.genres.any? || @book.cdu.present? %>
@@ -43,14 +53,30 @@
       <% end %>
 
       <dl class="bib">
+        <% if @book.publisher.present? %>
+          <dt>Editorial</dt><dd><%= @book.publisher %></dd>
+        <% end %>
+        <% if @book.published_year.present? %>
+          <dt>Año</dt><dd><%= @book.published_year %></dd>
+        <% end %>
+        <% if @book.page_count.present? %>
+          <dt>Páginas</dt><dd><%= @book.page_count %></dd>
+        <% end %>
+        <% if @book.language.present? %>
+          <dt>Idioma</dt><dd><%= @book.language.upcase %></dd>
+        <% end %>
         <% if @book.isbn.present? %>
-          <dt>ISBN</dt><dd><%= @book.isbn %></dd>
+          <dt>ISBN</dt><dd><code><%= @book.isbn %></code></dd>
         <% end %>
         <% if @book.cdu.present? %>
           <dt>CDU</dt><dd><code><%= @book.cdu %></code></dd>
         <% end %>
         <% if @book.genres.any? %>
           <dt>Géneros</dt><dd><%= @book.genres.join(" · ") %></dd>
+        <% end %>
+        <% if @book.google_books_id.present? %>
+          <dt>Google Books</dt>
+          <dd><%= link_to "Ver ficha", "https://books.google.com/books?id=#{@book.google_books_id}", target: "_blank", rel: "noopener" %></dd>
         <% end %>
         <% if @book.goodreads_url.present? %>
           <dt>Goodreads</dt>

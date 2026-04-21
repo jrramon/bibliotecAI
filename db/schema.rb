@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_20_143613) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_21_081923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,11 +66,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_20_143613) do
     t.datetime "updated_at", null: false
     t.string "cdu", limit: 32
     t.string "genres", default: [], array: true
+    t.string "subtitle", limit: 240
+    t.text "synopsis"
+    t.string "publisher", limit: 180
+    t.integer "published_year"
+    t.integer "page_count"
+    t.string "language", limit: 8
+    t.string "google_books_id", limit: 32
     t.index ["added_by_user_id"], name: "index_books_on_added_by_user_id"
     t.index ["cdu"], name: "index_books_on_cdu", where: "((cdu IS NOT NULL) AND ((cdu)::text <> ''::text))"
     t.index ["genres"], name: "index_books_on_genres", using: :gin
+    t.index ["google_books_id"], name: "index_books_on_google_books_id", where: "((google_books_id IS NOT NULL) AND ((google_books_id)::text <> ''::text))"
+    t.index ["language"], name: "index_books_on_language", where: "((language IS NOT NULL) AND ((language)::text <> ''::text))"
     t.index ["library_id", "slug"], name: "index_books_on_library_id_and_slug", unique: true
     t.index ["library_id"], name: "index_books_on_library_id"
+    t.index ["published_year"], name: "index_books_on_published_year", where: "(published_year IS NOT NULL)"
   end
 
   create_table "comments", force: :cascade do |t|

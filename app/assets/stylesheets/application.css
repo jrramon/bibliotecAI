@@ -1028,12 +1028,44 @@ input, textarea, select { font: inherit; color: inherit; }
   margin: 0 0 6px;
   color: var(--ink);
 }
+.detail-info .subtitle {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  font-style: italic;
+  color: var(--ink-2);
+  line-height: 1.25;
+  margin: 0 0 10px;
+  max-width: 58ch;
+}
 .detail-info .by {
   font-family: var(--serif);
   font-style: italic;
   font-size: 20px;
   color: var(--ink-2);
   margin-bottom: 20px;
+}
+.personal-notes {
+  margin: 20px 0;
+  padding: 14px 18px;
+  background: var(--bg-sunken);
+  border-left: 2px solid var(--accent-2);
+  border-radius: 0 6px 6px 0;
+}
+.personal-notes h3 {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 8px;
+  font-family: var(--sans);
+  font-weight: 500;
+}
+.personal-notes p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
 }
 .detail-info .description {
   font-size: 15px;

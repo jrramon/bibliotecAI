@@ -35,20 +35,27 @@ class BookCoverFetcher
   def call
     log "book ##{@book.id} \"#{@book.title}\" / #{@book.author.presence || "(no author)"}"
 
-    if @book.cover_image.attached?
-      log "already has cover, skipping"
+    has_cover = @book.cover_image.attached?
+    needs_metadata = metadata_blank?
+    if has_cover && !needs_metadata
+      log "already has cover and metadata, skipping"
       return :already_attached
     end
 
     google = fetch_google
     if google
-      Array(google[:urls]).each do |url|
-        next unless download_and_attach(url, source: "google_books")
-        @book.update(isbn: google[:isbn]) if google[:isbn].present? && @book.isbn.blank?
-        log "✓ cover attached from google_books (isbn=#{google[:isbn].inspect})"
-        return :google_books
+      enrich_from_google(google) if needs_metadata
+
+      if !has_cover
+        Array(google[:urls]).each do |url|
+          next unless download_and_attach(url, source: "google_books")
+          log "✓ cover attached from google_books (isbn=#{google[:isbn].inspect})"
+          return :google_books
+        end
       end
     end
+
+    return :already_attached if has_cover
 
     isbn = @book.isbn.presence || google&.[](:isbn)
     if isbn.present?
@@ -67,6 +74,10 @@ class BookCoverFetcher
   end
 
   private
+
+  def metadata_blank?
+    @book.publisher.blank? || @book.published_year.blank? || @book.synopsis.blank?
+  end
 
   def fetch_google
     query = build_query
@@ -112,7 +123,17 @@ class BookCoverFetcher
       isbn_ids.find { |id| id["type"] == "ISBN_10" }&.dig("identifier")
 
     log "google: matched \"#{info["title"]}\" by #{Array(info["authors"]).join(", ")} → thumbs=#{urls.inspect} isbn=#{isbn.inspect}"
-    {urls: urls, isbn: isbn}
+    {
+      urls: urls,
+      isbn: isbn,
+      volume_id: item["id"],
+      subtitle: info["subtitle"],
+      publisher: info["publisher"],
+      published_year: info["publishedDate"].to_s[0, 4].presence&.to_i,
+      page_count: info["pageCount"],
+      language: info["language"],
+      synopsis: info["description"]
+    }
   rescue JSON::ParserError, Net::ReadTimeout, Net::OpenTimeout, SocketError => e
     log "google: #{e.class}: #{e.message}", level: :warn
     nil
@@ -120,6 +141,22 @@ class BookCoverFetcher
 
   def open_library_url(isbn)
     "#{OPEN_LIBRARY_COVERS}/#{URI.encode_www_form_component(isbn)}-L.jpg"
+  end
+
+  # Fills any blank metadata fields on the Book with whatever Google returned
+  # alongside the cover — never overwrites a non-blank column.
+  def enrich_from_google(data)
+    updates = {}
+    updates[:isbn] = data[:isbn] if data[:isbn].present? && @book.isbn.blank?
+    updates[:google_books_id] = data[:volume_id] if data[:volume_id].present? && @book.google_books_id.blank?
+    updates[:subtitle] = data[:subtitle] if data[:subtitle].present? && @book.subtitle.blank?
+    updates[:publisher] = data[:publisher] if data[:publisher].present? && @book.publisher.blank?
+    updates[:published_year] = data[:published_year] if data[:published_year].present? && @book.published_year.blank?
+    updates[:page_count] = data[:page_count] if data[:page_count].present? && @book.page_count.blank?
+    updates[:language] = data[:language] if data[:language].present? && @book.language.blank?
+    updates[:synopsis] = data[:synopsis] if data[:synopsis].present? && @book.synopsis.blank?
+    @book.update(updates) if updates.any?
+    log "enriched #{updates.keys.inspect}" if updates.any?
   end
 
   def download_and_attach(url, source:)

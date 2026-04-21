@@ -41,10 +41,16 @@
                           class: "btn btn-primary btn-small",
                           form: {data: {turbo_frame: "_top"}} do %>
               <%= hidden_field_tag "candidate[title]", c.title %>
+              <%= hidden_field_tag "candidate[subtitle]", c.subtitle %>
               <%= hidden_field_tag "candidate[author]", c.author %>
               <%= hidden_field_tag "candidate[isbn]", c.isbn %>
               <%= hidden_field_tag "candidate[publisher]", c.publisher %>
               <%= hidden_field_tag "candidate[published_date]", c.published_date %>
+              <%= hidden_field_tag "candidate[published_year]", c.published_year %>
+              <%= hidden_field_tag "candidate[page_count]", c.page_count %>
+              <%= hidden_field_tag "candidate[language]", c.language %>
+              <%= hidden_field_tag "candidate[synopsis]", c.description %>
+              <%= hidden_field_tag "candidate[google_books_id]", c.volume_id %>
               <%= hidden_field_tag "candidate[thumbnail_url]", c.thumbnail_url %>
               Aplicar este
             <% end %>

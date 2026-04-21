@@ -45,11 +45,19 @@ class BooksController < ApplicationController
   end
 
   def apply_candidate
-    data = params.require(:candidate).permit(:title, :author, :isbn, :publisher, :published_date, :thumbnail_url)
+    data = params.require(:candidate).permit(
+      :title, :subtitle, :author, :isbn, :publisher, :published_date, :published_year,
+      :page_count, :language, :synopsis, :google_books_id, :thumbnail_url
+    )
+
     updates = {}
-    updates[:title] = data[:title] if data[:title].present?
-    updates[:author] = data[:author] if data[:author].present?
-    updates[:isbn] = data[:isbn] if data[:isbn].present?
+    %i[title subtitle author publisher isbn synopsis language google_books_id].each do |key|
+      updates[key] = data[key] if data[key].present?
+    end
+    updates[:published_year] = data[:published_year].to_i if data[:published_year].present?
+    updates[:published_year] ||= data[:published_date].to_s[0, 4].to_i if data[:published_date].to_s[0, 4].present? && data[:published_date].to_s[0, 4].to_i > 0
+    updates[:page_count] = data[:page_count].to_i if data[:page_count].present?
+
     @book.update(updates) if updates.any?
 
     if data[:thumbnail_url].present?
@@ -78,7 +86,10 @@ class BooksController < ApplicationController
   end
 
   def book_params
-    permitted = params.expect(book: [:title, :author, :isbn, :goodreads_url, :notes, :cover_image, :cdu, :genres_csv])
+    permitted = params.expect(book: [
+      :title, :subtitle, :author, :publisher, :published_year, :page_count, :language,
+      :isbn, :goodreads_url, :notes, :synopsis, :cover_image, :cdu, :genres_csv
+    ])
     if permitted[:genres_csv]
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)
     end
