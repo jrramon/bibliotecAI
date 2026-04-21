@@ -116,9 +116,13 @@ class BooksController < ApplicationController
 
   # Tries both zoom=2 and zoom=1 variants (same logic as BookCoverFetcher)
   # so user-picked candidates also recover from the 334-byte placeholder case.
+  # Logs each attempt so failures are visible in log/development.log via
+  # `grep CoverApply`.
   def attach_remote_cover(url)
     base = url.sub("&edge=curl", "").sub(/\Ahttp:/, "https:")
     urls = [base.sub("&zoom=1", "&zoom=2"), base].uniq
+    Rails.logger.info "[CoverApply] book ##{@book.id} trying #{urls.size} urls"
+
     urls.each do |candidate_url|
       uri = URI(candidate_url)
       response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 8, read_timeout: 8) do |http|
@@ -127,17 +131,42 @@ class BooksController < ApplicationController
         BookCandidates::BROWSER_HEADERS.each { |k, v| req[k] = v }
         http.request(req)
       end
-      next unless response.is_a?(Net::HTTPSuccess)
+
+      unless response.is_a?(Net::HTTPSuccess)
+        Rails.logger.info "[CoverApply] #{candidate_url} → HTTP #{response.code}"
+        next
+      end
+
       body = response.body.to_s
-      next if body.bytesize < 2_000
-      next if BookCoverFetcher::PLACEHOLDER_HASHES.include?(Digest::SHA256.hexdigest(body))
-      next unless BookCoverFetcher.plausible_cover?(body)
+      if body.bytesize < 2_000
+        Rails.logger.info "[CoverApply] #{candidate_url} → too small (#{body.bytesize}B)"
+        next
+      end
+
+      if BookCoverFetcher::PLACEHOLDER_HASHES.include?(Digest::SHA256.hexdigest(body))
+        Rails.logger.info "[CoverApply] #{candidate_url} → known placeholder"
+        next
+      end
+
+      unless BookCoverFetcher.plausible_cover?(body)
+        dims = BookCoverFetcher.sniff_dimensions(body)
+        Rails.logger.info "[CoverApply] #{candidate_url} → implausible dims=#{dims.inspect}"
+        next
+      end
+
       content_type = response["content-type"].to_s.split(";").first
-      next unless content_type&.start_with?("image/")
+      unless content_type&.start_with?("image/")
+        Rails.logger.info "[CoverApply] #{candidate_url} → unexpected content-type #{content_type.inspect}"
+        next
+      end
 
       @book.cover_image.purge if @book.cover_image.attached?
       @book.cover_image.attach(io: StringIO.new(body), filename: "cover-chosen-#{@book.id}.jpg", content_type: content_type)
-      break
+      Rails.logger.info "[CoverApply] ✓ attached #{body.bytesize}B (#{content_type}) from #{candidate_url}"
+      return true
     end
+
+    Rails.logger.warn "[CoverApply] ✗ no usable cover for book ##{@book.id}"
+    false
   end
 end
