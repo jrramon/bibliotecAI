@@ -38,6 +38,18 @@ ActiveJob::Base.queue_adapter = :inline
 trap("INT")  { puts "[poller] stopping"; exit 0 }
 trap("TERM") { puts "[poller] stopping"; exit 0 }
 
+STALE_AFTER = 120 # seconds
+# Reclaim any :processing records left stuck by an earlier poller crash
+# (e.g. the host terminal was closed mid-claude-call). Anything with an
+# updated_at older than STALE_AFTER goes back to :pending so it'll get
+# another attempt.
+[ShelfPhoto, CoverPhoto].each do |klass|
+  stale = klass.processing.where("updated_at < ?", STALE_AFTER.seconds.ago).to_a
+  next if stale.empty?
+  puts "[poller] reclaiming #{stale.size} stale #{klass.name}(s) stuck in processing"
+  stale.each { |r| r.update(status: :pending, error_message: "reclaimed: stale processing") }
+end
+
 puts "[poller] ready, polling every #{interval}s"
 loop do
   shelf_pending = ShelfPhoto.pending.order(:created_at).to_a
