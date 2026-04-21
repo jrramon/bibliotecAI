@@ -9,7 +9,9 @@ class CoverPhotosController < ApplicationController
     )
 
     if @cover_photo.save
-      CoverIdentificationJob.perform_later(@cover_photo.id)
+      # Processed by the host `bin/shelf-photo-poller` (which can reach the
+      # local Claude CLI). No ActiveJob enqueue here — the web container
+      # has no `claude` binary on its PATH.
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
