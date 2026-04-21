@@ -2,8 +2,15 @@
 # and seeing results in the browser, you must do so from the web console (running inside the dev process),
 # not a terminal started via bin/rails console! Add "console" to any action or any ERB template view
 # to make the web console appear.
+# dev: Solid Cable on the main DB. We need a cross-process adapter so
+# that broadcasts from the host photo-worker reach subscribers in the
+# web container. PG LISTEN/NOTIFY (the `postgresql` adapter) fits but
+# has an 8 KB payload cap which Turbo Stream replacements blow past.
+# Solid Cable stores messages in a table (no size limit) and polls.
 development:
-  adapter: async
+  adapter: solid_cable
+  polling_interval: 0.1.seconds
+  message_retention: 1.hour
 
 test:
   adapter: test

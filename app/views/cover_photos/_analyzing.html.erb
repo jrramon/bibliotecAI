@@ -1,19 +1,12 @@
-<%# Replaces the modal form while the host poller runs Claude on the
-    uploaded cover photo. Subscribes to broadcasts targeted at
-    [cover_photo, :status] — on completion the job broadcasts a replace
-    of #new-book-form with books/new_modal_form (pre-filled), or with
+<%# Renders while the host poller runs Claude on the uploaded cover
+    photo. Subscribes to broadcasts targeted at [cover_photo, :status]
+    — on completion the job broadcasts a replace of #new-book-form
+    with books/new_form (pre-filled), or with
     cover_photos/identification_failed on error. Expects locals:
     `library`, `cover_photo`, `book`. %>
 <div id="new-book-form">
-  <div class="modal-card modal-card--wide cover-analyzing">
+  <div class="new-book-card cover-analyzing">
     <%= turbo_stream_from [cover_photo, :status] %>
-
-    <header>
-      <h3>Analizando portada…</h3>
-      <button type="button" class="modal-close"
-              data-action="modal#close"
-              aria-label="Cerrar">✕</button>
-    </header>
 
     <div class="cover-analyzing-body">
       <figure class="cover-upload-preview">
@@ -23,6 +16,7 @@
         <div class="spinner-sumi" aria-hidden="true"></div>
         <p class="analyzing-title">Claude está leyendo la portada</p>
         <p class="analyzing-sub">Normalmente tarda 5–15 segundos.</p>
+        <%= link_to "Cancelar", library_path(library), class: "btn btn-ghost btn-small" %>
       </div>
     </div>
   </div>

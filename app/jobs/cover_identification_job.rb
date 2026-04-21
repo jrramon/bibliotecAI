@@ -33,7 +33,7 @@ class CoverIdentificationJob < ApplicationJob
 
   def partial_for(cover_photo)
     case cover_photo.status
-    when "completed" then "books/new_modal_form"
+    when "completed" then "books/new_form"
     when "failed" then "cover_photos/identification_failed"
     else "cover_photos/analyzing"
     end

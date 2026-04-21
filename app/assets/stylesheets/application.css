@@ -1254,13 +1254,27 @@ dialog.modal-dialog::backdrop {
    Add-book modal — live spine preview + swatch picker
    ========================================================================== */
 
-.add-book-modal-root { display: inline-block; }
-
-.modal-dialog--wide { max-width: 96vw; }
-.modal-card--wide {
-  width: min(720px, 94vw);
-  padding: 20px 24px 22px;
+/* Full-page add-book card — mirrors the original modal look */
+.new-book-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(20, 15, 10, 0.12);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 780px;
 }
+.form-actions--split {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+  padding-top: 8px;
+  border-top: 1px dashed var(--rule-soft);
+}
+.form-actions--split .spacer { flex: 1 1 auto; }
 .book-preview-grid {
   display: grid;
   grid-template-columns: 150px 1fr;
@@ -1461,13 +1475,6 @@ dialog.modal-dialog::backdrop {
   clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 .cover-upload-form { margin: 0; }
-.modal-actions--split {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: flex-start;
-}
-.modal-actions--split .spacer { flex: 1 1 auto; }
 .btn-small { padding: 6px 10px; font-size: 12px; }
 
 .cover-identified-hint {

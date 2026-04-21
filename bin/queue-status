@@ -30,5 +30,17 @@ psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
   ORDER BY id DESC
   LIMIT 10;"
 
-echo "=== Host poller process ==="
-pgrep -lf 'shelf-photo-poller|bin/rails runner' || echo '  (no poller running on host — start with bin/shelf-photo-poller)'
+echo "=== Host worker process ==="
+PID_FILE="tmp/photo-worker.pid"
+if [ -f "$PID_FILE" ]; then
+  WORKER_PID=$(cat "$PID_FILE")
+  if kill -0 "$WORKER_PID" 2>/dev/null; then
+    echo "  alive  pid=$WORKER_PID"
+    ps -p "$WORKER_PID" -o pid,etime,command | tail -n +2
+  else
+    echo "  stale PID file (pid=$WORKER_PID not running)"
+    echo "  start with: bin/shelf-photo-poller"
+  fi
+else
+  echo "  (no worker running on host — start with bin/shelf-photo-poller)"
+fi

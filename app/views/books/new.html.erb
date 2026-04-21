@@ -1,12 +1,15 @@
 <section class="page book-new">
+  <%= link_to library_path(@library), class: "back-link back-link-top" do %>
+    ← Volver a <%= @library.name %>
+  <% end %>
+
   <header class="page-head">
     <div class="title-group">
+      <p class="eyebrow">Biblioteca · <%= @library.name %></p>
       <h1 class="page-title">Nuevo <span class="accent">libro</span></h1>
-      <p class="sub">Añade un volumen a «<%= @library.name %>».</p>
+      <p class="sub">Sube una foto de la portada para identificarlo con Claude, o escribe los datos a mano.</p>
     </div>
   </header>
 
-  <div class="card">
-    <%= render "form" %>
-  </div>
+  <%= render "books/new_form", library: @library, book: @book %>
 </section>

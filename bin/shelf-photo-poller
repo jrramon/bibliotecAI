@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Polls ShelfPhoto.pending and processes each through BookIdentificationJob,
-# which shells out to the host-installed Claude CLI. Runs inline (no fork)
-# so it sidesteps the macOS arm64 pg-gem crash that kills Solid Queue.
+# Thin wrapper around bin/photo-worker.rb. Kept under the old name so
+# existing muscle memory still works. The actual logic lives in the Ruby
+# file — edit it there, not here. Re-run this wrapper to pick up changes.
 #
 # Usage:
-#   bin/shelf-photo-poller          # loop, 5s interval
+#   bin/shelf-photo-poller           # default INTERVAL=5s
 #   INTERVAL=15 bin/shelf-photo-poller
 set -euo pipefail
 
@@ -19,64 +19,6 @@ export DATABASE_USERNAME="${DATABASE_USERNAME:-rails_dev}"
 export DATABASE_PASSWORD="${DATABASE_PASSWORD:-aqwe123}"
 export CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude)}"
 export RAILS_ENV="${RAILS_ENV:-development}"
-INTERVAL="${INTERVAL:-5}"
 
-echo "[poller] starting  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN  interval=${INTERVAL}s"
-
-exec bundle exec bin/rails runner - <<RUBY
-\$stdout.sync = true
-\$stderr.sync = true
-interval = ${INTERVAL}.to_i
-Rails.logger = Logger.new(\$stdout)
-Rails.logger.level = Logger::INFO
-
-# Run every ActiveJob inline in this process so the main poll thread
-# never contends for the ActiveRecord connection pool with background
-# :async workers spawned by ActiveStorage::AnalyzeJob.
-ActiveJob::Base.queue_adapter = :inline
-
-trap("INT")  { puts "[poller] stopping"; exit 0 }
-trap("TERM") { puts "[poller] stopping"; exit 0 }
-
-STALE_AFTER = 120 # seconds
-# Reclaim any :processing records left stuck by an earlier poller crash
-# (e.g. the host terminal was closed mid-claude-call). Anything with an
-# updated_at older than STALE_AFTER goes back to :pending so it'll get
-# another attempt.
-[ShelfPhoto, CoverPhoto].each do |klass|
-  stale = klass.processing.where("updated_at < ?", STALE_AFTER.seconds.ago).to_a
-  next if stale.empty?
-  puts "[poller] reclaiming #{stale.size} stale #{klass.name}(s) stuck in processing"
-  stale.each { |r| r.update(status: :pending, error_message: "reclaimed: stale processing") }
-end
-
-puts "[poller] ready, polling every #{interval}s"
-loop do
-  shelf_pending = ShelfPhoto.pending.order(:created_at).to_a
-  cover_pending = CoverPhoto.pending.order(:created_at).to_a
-  if shelf_pending.any? || cover_pending.any?
-    puts "[poller] shelf=#{shelf_pending.size} cover=#{cover_pending.size} pending"
-    shelf_pending.each do |p|
-      puts "[poller] shelf → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
-      begin
-        BookIdentificationJob.new.perform(p.id)
-        puts "[poller] ✓ shelf #{p.id} done (status=#{p.reload.status})"
-      rescue => e
-        warn "[poller] ! shelf #{p.id} failed: #{e.class}: #{e.message}"
-        p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil
-      end
-    end
-    cover_pending.each do |p|
-      puts "[poller] cover → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
-      begin
-        CoverIdentificationJob.new.perform(p.id)
-        puts "[poller] ✓ cover #{p.id} done (status=#{p.reload.status})"
-      rescue => e
-        warn "[poller] ! cover #{p.id} failed: #{e.class}: #{e.message}"
-        p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil
-      end
-    end
-  end
-  sleep interval
-end
-RUBY
+echo "[wrapper] starting photo-worker  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN"
+exec bundle exec bin/rails runner bin/photo-worker.rb

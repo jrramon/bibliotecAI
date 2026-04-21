@@ -1,6 +1,11 @@
-<%# Body of the add-book modal: live spine preview + uploaded-cover
+<%# Full-page add-book form: live spine preview + uploaded-cover
     thumbnail on the left, minimal form on the right (title, author,
-    stamp, colour). Full detail goes in the edit page.
+    stamp, colour). Full detail is set later on the edit page.
+
+    Wrapped in a #new-book-form div so the cover-identification Turbo
+    Stream broadcasts can swap this partial in place with a pre-filled
+    copy (once Claude finishes reading the uploaded cover) or with the
+    "Analizando portada…" state while that runs.
 
     Expects locals:
       library       — Library
@@ -9,14 +14,7 @@
                       will be attached to the book on create). %>
 <% cover_photo = local_assigns[:cover_photo] %>
 <div id="new-book-form">
-  <div class="modal-card modal-card--wide book-preview-layout" data-controller="book-preview">
-    <header>
-      <h3>Añadir libro</h3>
-      <button type="button" class="modal-close"
-              data-action="modal#close"
-              aria-label="Cerrar">✕</button>
-    </header>
-
+  <div class="new-book-card book-preview-layout" data-controller="book-preview">
     <% if cover_photo&.completed? %>
       <p class="cover-identified-hint">
         📷 Datos identificados desde la portada. Revísalos y edita lo que haga falta.
@@ -118,11 +116,11 @@
             </div>
           </fieldset>
 
-          <div class="modal-actions modal-actions--split">
+          <div class="form-actions form-actions--split">
             <button type="button" class="btn btn-ghost btn-small"
                     data-action="cover-upload#pick">📷 Identificar desde foto</button>
             <div class="spacer"></div>
-            <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
+            <%= link_to "Cancelar", library_path(library), class: "btn btn-ghost" %>
             <%= f.submit "＋ Añadir a la estantería", class: "btn btn-primary" %>
           </div>
         <% end %>

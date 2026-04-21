@@ -32,7 +32,7 @@ class BooksController < ApplicationController
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
             "new-book-form",
-            partial: "books/new_modal_form",
+            partial: "books/new_form",
             locals: {library: @library, book: @book}
           ), status: :unprocessable_entity
         end

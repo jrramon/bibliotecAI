@@ -27,7 +27,7 @@ class CoverPhotosController < ApplicationController
         format.turbo_stream do
           render turbo_stream: turbo_stream.replace(
             "new-book-form",
-            partial: "books/new_modal_form",
+            partial: "books/new_form",
             locals: {library: @library, book: @library.books.build.tap { |b|
               @cover_photo.errors.full_messages.each { |msg| b.errors.add(:base, msg) }
             }}

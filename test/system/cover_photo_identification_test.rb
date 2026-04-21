@@ -20,23 +20,21 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
     visit library_path(@library)
     click_on "＋ Añadir libro"
 
-    within("dialog[open]") do
-      find("[data-action~='cover-upload#pick']").click
-      attach_file(
-        "image",
-        Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
-        make_visible: true
-      )
-    end
+    find("[data-action~='cover-upload#pick']").click
+    attach_file(
+      "image",
+      Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
+      make_visible: true
+    )
 
-    assert_selector ".cover-analyzing", text: /analizando portada/i
+    assert_selector ".cover-analyzing"
 
     photo = @library.cover_photos.last
     assert_not_nil photo
     CoverIdentificationJob.new.perform(photo.id)
 
-    # Job broadcasts the pre-filled form back into the modal via turbo_stream_from.
-    assert_field "book[title]", with: "Sanshiro", wait: 5
+    # Job broadcasts the pre-filled form back into #new-book-form via turbo_stream_from.
+    assert_field "book[title]", with: "Sanshiro", wait: 10
     assert_field "book[author]", with: "Natsume Soseki"
     assert_selector ".cover-identified-hint", text: /identificados desde la portada/i
   end
@@ -49,20 +47,16 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
 
     visit library_path(@library)
     click_on "＋ Añadir libro"
-    within("dialog[open]") do
-      find("[data-action~='cover-upload#pick']").click
-      attach_file("image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
-        make_visible: true)
-    end
+    find("[data-action~='cover-upload#pick']").click
+    attach_file("image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
+      make_visible: true)
 
     assert_selector ".cover-analyzing"
     photo = @library.cover_photos.last
     CoverIdentificationJob.new.perform(photo.id)
 
-    assert_field "book[title]", with: "Sanshiro", wait: 5
-    within("dialog[open]") do
-      click_on "＋ Añadir a la estantería"
-    end
+    assert_field "book[title]", with: "Sanshiro", wait: 10
+    click_on "＋ Añadir a la estantería"
 
     assert_selector ".shelved-celebration", wait: 5
     book = @library.books.find_by(title: "Sanshiro")
@@ -75,11 +69,9 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
 
     visit library_path(@library)
     click_on "＋ Añadir libro"
-    within("dialog[open]") do
-      find("[data-action~='cover-upload#pick']").click
-      attach_file("image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
-        make_visible: true)
-    end
+    find("[data-action~='cover-upload#pick']").click
+    attach_file("image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s,
+      make_visible: true)
 
     assert_selector ".cover-analyzing"
     photo = @library.cover_photos.last

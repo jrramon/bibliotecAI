@@ -2,27 +2,21 @@
     Gives the user a way to retry with the text form. Expects `library`,
     `cover_photo`, `book`. %>
 <div id="new-book-form">
-  <div class="modal-card modal-card--wide cover-analyzing cover-analyzing--failed">
-    <header>
-      <h3>No pude leer la portada</h3>
-      <button type="button" class="modal-close"
-              data-action="modal#close"
-              aria-label="Cerrar">✕</button>
-    </header>
-
+  <div class="new-book-card cover-analyzing cover-analyzing--failed">
     <div class="cover-analyzing-body">
       <figure class="cover-upload-preview">
         <%= image_tag cover_photo.image.variant(:thumb), alt: "Portada subida" %>
       </figure>
       <div class="cover-analyzing-copy">
-        <p class="analyzing-title">Claude no pudo identificar el libro.</p>
+        <p class="analyzing-title">No pude leer la portada</p>
         <p class="analyzing-sub"><%= cover_photo.error_message.to_s.truncate(140) %></p>
         <p class="analyzing-sub">Puedes escribir los datos a mano.</p>
       </div>
     </div>
 
-    <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" data-action="modal#close">Cerrar</button>
+    <div class="form-actions">
+      <%= link_to "Cancelar", library_path(library), class: "btn btn-ghost" %>
+      <%= link_to "Introducir datos a mano", new_library_book_path(library), class: "btn btn-primary" %>
     </div>
   </div>
 </div>
