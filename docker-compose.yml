@@ -35,6 +35,7 @@ services:
       SELENIUM_URL: http://chrome:4444
       RAILS_ENV: development
       RAILS_LOG_TO_STDOUT: "true"
+      GOOGLE_BOOKS_API_KEY: ${GOOGLE_BOOKS_API_KEY:-}
     stdin_open: true
     tty: true
 

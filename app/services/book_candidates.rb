@@ -38,11 +38,19 @@ class BookCandidates
   def call
     return [] if @query.blank?
 
+    params = {q: @query, maxResults: @max, printType: "books"}
+    api_key = ENV["GOOGLE_BOOKS_API_KEY"].presence
+    params[:key] = api_key if api_key
+
     uri = URI(GOOGLE_BOOKS_URL)
-    uri.query = URI.encode_www_form(q: @query, maxResults: @max, printType: "books")
+    uri.query = URI.encode_www_form(params)
 
     response = http_get(uri)
-    return [] unless response.is_a?(Net::HTTPSuccess)
+    unless response.is_a?(Net::HTTPSuccess)
+      Rails.logger.warn "[BookCandidates] #{response.code} for q=#{@query.inspect} " \
+        "key=#{api_key ? "present" : "missing"} body=#{response.body.to_s[0, 200].inspect}"
+      return []
+    end
 
     payload = JSON.parse(response.body)
     Array(payload["items"]).map { |item| build(item) }.compact

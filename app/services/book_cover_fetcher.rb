@@ -128,13 +128,17 @@ class BookCoverFetcher
       return nil
     end
 
+    params = {q: query, maxResults: 3, printType: "books"}
+    api_key = ENV["GOOGLE_BOOKS_API_KEY"].presence
+    params[:key] = api_key if api_key
+
     uri = URI(GOOGLE_BOOKS_URL)
-    uri.query = URI.encode_www_form(q: query, maxResults: 3, printType: "books")
-    log "google: GET #{uri}"
+    uri.query = URI.encode_www_form(params)
+    log "google: GET #{uri.to_s.sub(/([?&])key=[^&]+/, '\\1key=***')} (key=#{api_key ? "present" : "missing"})"
 
     response = http_get(uri)
     unless response.is_a?(Net::HTTPSuccess)
-      log "google: HTTP #{response.code}"
+      log "google: HTTP #{response.code} body=#{response.body.to_s[0, 200].inspect}", level: :warn
       return nil
     end
 
