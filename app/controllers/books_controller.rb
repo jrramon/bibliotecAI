@@ -61,11 +61,16 @@ class BooksController < ApplicationController
     %i[title subtitle author publisher isbn synopsis language google_books_id].each do |key|
       updates[key] = data[key] if data[key].present?
     end
-    updates[:published_year] = data[:published_year].to_i if data[:published_year].present?
-    updates[:published_year] ||= data[:published_date].to_s[0, 4].to_i if data[:published_date].to_s[0, 4].present? && data[:published_date].to_s[0, 4].to_i > 0
-    updates[:page_count] = data[:page_count].to_i if data[:page_count].present?
+    year = (data[:published_year].presence || data[:published_date].to_s[0, 4]).to_i
+    updates[:published_year] = year if year > 0
+    pages = data[:page_count].to_i
+    updates[:page_count] = pages if pages > 0
 
-    @book.update(updates) if updates.any?
+    if updates.any? && !@book.update(updates)
+      Rails.logger.warn "[apply_candidate] update failed for ##{@book.id}: #{@book.errors.full_messages.to_sentence}"
+      return redirect_to edit_library_book_path(@library, @book),
+        alert: "No se pudieron aplicar los datos: #{@book.errors.full_messages.to_sentence}"
+    end
 
     if data[:thumbnail_url].present?
       attach_remote_cover(data[:thumbnail_url])
