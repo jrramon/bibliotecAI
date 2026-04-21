@@ -44,6 +44,9 @@
               <span class="count"><%= current_user.libraries.count %></span>
             <% end %>
           </nav>
+          <% if @library&.persisted? %>
+            <%= render "shared/members_widget", library: @library %>
+          <% end %>
         </aside>
       <% end %>
 

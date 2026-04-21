@@ -207,6 +207,14 @@
                       form: {data: {turbo_confirm: "¿Eliminar este libro?"}} %>
       </div>
 
+      <% readers = @book.readers.to_a %>
+      <% if readers.any? %>
+        <div class="read-by">
+          <span class="label">Leído por</span>
+          <%= avatar_stack(readers, max: 5, size: :sm) %>
+        </div>
+      <% end %>
+
       <% if past_reads.any? %>
         <section class="reading-history">
           <h3>Historial de lectura · <%= pluralize(past_reads.size, "vez", plural: "veces") %></h3>

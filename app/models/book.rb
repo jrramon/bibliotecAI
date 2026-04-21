@@ -32,6 +32,16 @@ class Book < ApplicationRecord
     reading_statuses.where(user: user).completed.ordered
   end
 
+  # Distinct users (library members) that have at least one completed read
+  # of this book, ordered by the most recent finish.
+  def readers
+    User
+      .joins(:reading_statuses)
+      .merge(ReadingStatus.completed.where(book_id: id))
+      .order("MAX(reading_statuses.finished_at) DESC NULLS LAST")
+      .group("users.id")
+  end
+
   validates :title, presence: true, length: {maximum: 240}
   validates :subtitle, length: {maximum: 240}, allow_blank: true
   validates :author, length: {maximum: 180}, allow_blank: true

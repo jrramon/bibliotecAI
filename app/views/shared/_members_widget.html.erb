@@ -1,0 +1,30 @@
+<%# Sidebar widget: members of the library currently in scope, with a tiny
+    "leyendo ahora" line. Expects a local `library`. %>
+<% members = library.users.to_a %>
+<% reading_now = User
+     .joins(:reading_statuses)
+     .merge(ReadingStatus.active.for_library(library))
+     .distinct
+     .to_a %>
+<section class="members-widget" aria-label="Miembros de la biblioteca">
+  <span class="nav-label">Miembros</span>
+  <%= avatar_stack(members, max: 5, size: :md) %>
+  <% if reading_now.any? %>
+    <p class="reading-now-line">
+      <%
+        names = reading_now.first(2).map { |u| u.email.split("@").first }
+        rest = reading_now.size - names.size
+        label = if names.size == 1
+          "#{names.first} está leyendo ahora"
+        elsif rest.zero?
+          "#{names.join(" y ")} están leyendo ahora"
+        else
+          "#{names.join(", ")} y #{rest} más están leyendo"
+        end
+      %>
+      <%= label %>
+    </p>
+  <% else %>
+    <p class="reading-now-line">Nadie leyendo ahora mismo.</p>
+  <% end %>
+</section>

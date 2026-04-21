@@ -2129,6 +2129,87 @@ html[data-shelf-layout="list"] .books-layout--list { display: block; }
 .spine-slot-8 { --spine-color: #756B5C; --spine-ink: #F5F1E8; }
 .spine-slot-9 { --spine-color: #8E4B2B; --spine-ink: #F5F1E8; }
 
+/* ==========================================================================
+   Avatars + AvatarStack — reuses the 10 spine colours for stable, per-user
+   colour. No remote images; initials on a coloured disc.
+   ========================================================================== */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  user-select: none;
+  flex: 0 0 auto;
+}
+.avatar-sm { width: 22px; height: 22px; font-size: 9px; }
+.avatar-md { width: 28px; height: 28px; font-size: 10px; }
+.avatar-lg { width: 40px; height: 40px; font-size: 13px; }
+
+.avatar-slot-0 { background: #8B2E2A; color: #F5F1E8; }
+.avatar-slot-1 { background: #3F3A33; color: #F5F1E8; }
+.avatar-slot-2 { background: #C9B896; color: #1C1917; }
+.avatar-slot-3 { background: #6B7A5A; color: #F5F1E8; }
+.avatar-slot-4 { background: #A84B43; color: #F5F1E8; }
+.avatar-slot-5 { background: #2B4A5C; color: #EDE3CE; }
+.avatar-slot-6 { background: #D7B787; color: #3A2A18; }
+.avatar-slot-7 { background: #5C4A3A; color: #F5F1E8; }
+.avatar-slot-8 { background: #756B5C; color: #F5F1E8; }
+.avatar-slot-9 { background: #8E4B2B; color: #F5F1E8; }
+
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+.avatar-stack .avatar {
+  box-shadow: 0 0 0 2px var(--bg);
+  margin-left: -6px;
+}
+.avatar-stack .avatar:first-child { margin-left: 0; }
+.avatar-more {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* "Leído por" block on book detail */
+.read-by {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--sans);
+}
+.read-by .label { white-space: nowrap; }
+
+/* Sidebar members widget */
+.members-widget {
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--rule);
+  margin-top: 6px;
+}
+.members-widget .nav-label { margin-bottom: 8px; }
+.members-widget .reading-now-line {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: var(--serif);
+  font-style: italic;
+  line-height: 1.4;
+}
+
 .shelf {
   position: relative;
   display: flex;
