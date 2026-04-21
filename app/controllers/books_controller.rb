@@ -57,21 +57,35 @@ class BooksController < ApplicationController
       :page_count, :language, :synopsis, :google_books_id, :thumbnail_url
     )
 
-    updates = {}
-    %i[title subtitle author publisher isbn synopsis language google_books_id].each do |key|
-      updates[key] = data[key] if data[key].present?
-    end
+    # Full replacement of the Google-Books-backed fields: if a field is
+    # missing from the new candidate we clear it (nil-ify) rather than
+    # leave the previous candidate's value lingering. Fields NOT managed by
+    # Google Books (cdu, genres, goodreads_url, user notes) stay untouched.
+    updates = {
+      title: data[:title].presence || @book.title,   # keep existing if candidate has none
+      subtitle: data[:subtitle].presence,
+      author: data[:author].presence,
+      publisher: data[:publisher].presence,
+      isbn: data[:isbn].presence,
+      synopsis: data[:synopsis].presence,
+      language: data[:language].presence,
+      google_books_id: data[:google_books_id].presence
+    }
     year = (data[:published_year].presence || data[:published_date].to_s[0, 4]).to_i
-    updates[:published_year] = year if year > 0
+    updates[:published_year] = (year > 0) ? year : nil
     pages = data[:page_count].to_i
-    updates[:page_count] = pages if pages > 0
+    updates[:page_count] = (pages > 0) ? pages : nil
 
-    if updates.any? && !@book.update(updates)
+    unless @book.update(updates)
       Rails.logger.warn "[apply_candidate] update failed for ##{@book.id}: #{@book.errors.full_messages.to_sentence}"
       return redirect_to edit_library_book_path(@library, @book),
         alert: "No se pudieron aplicar los datos: #{@book.errors.full_messages.to_sentence}"
     end
 
+    # Always replace the cover too: if the new candidate has a thumbnail
+    # use it; otherwise drop the previous one so the book clearly reflects
+    # the new selection instead of keeping a wrong cover from an earlier try.
+    @book.cover_image.purge if @book.cover_image.attached?
     if data[:thumbnail_url].present?
       attach_remote_cover(data[:thumbnail_url])
     end

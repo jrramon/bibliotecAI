@@ -79,4 +79,43 @@ class BookCandidatesTest < ApplicationSystemTestCase
 
     assert_text "Sin resultados"
   end
+
+  test "applying a candidate over a book with prior data asks to confirm and overwrites" do
+    @book.update!(
+      subtitle: "prior subtitle", publisher: "Prior", published_year: 1999,
+      page_count: 123, language: "en", synopsis: "Lingering synopsis from earlier."
+    )
+    sparse = BookCandidates::Candidate.new(
+      volume_id: "sparse",
+      title: "Only Title Set",
+      subtitle: nil,
+      authors: ["Just Someone"],
+      publisher: nil,
+      published_date: nil,
+      description: nil,
+      thumbnail_url: "",
+      isbn_10: nil,
+      isbn_13: nil,
+      page_count: nil,
+      language: nil
+    )
+    BookCandidates.stubs(:call).returns([sparse])
+
+    visit edit_library_book_path(@library, @book)
+    click_on "Buscar candidatos"
+
+    accept_confirm do
+      within first(".candidate") { click_on "Aplicar este" }
+    end
+
+    assert_text "Datos aplicados desde Google Books"
+    @book.reload
+    assert_equal "Only Title Set", @book.title
+    assert_equal "Just Someone", @book.author
+    assert_nil @book.subtitle
+    assert_nil @book.publisher
+    assert_nil @book.published_year
+    assert_nil @book.page_count
+    assert_nil @book.synopsis
+  end
 end

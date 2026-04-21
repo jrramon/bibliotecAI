@@ -1,4 +1,8 @@
 <%= turbo_frame_tag "book_candidates" do %>
+  <% has_prior_data = book.synopsis.present? || book.publisher.present? || book.published_year.present? ||
+                      book.page_count.present? || book.language.present? || book.cover_image.attached? ||
+                      book.google_books_id.present? %>
+  <% confirm_msg = has_prior_data ? "Este libro ya tiene datos cargados. ¿Quieres sobrescribirlos con los de este candidato?" : nil %>
   <% if candidates.empty? %>
     <p class="empty-mini">Sin resultados para «<%= query %>». Prueba con otro query.</p>
   <% else %>
@@ -39,7 +43,7 @@
             <%= button_to apply_candidate_library_book_path(book.library, book),
                           method: :post,
                           class: "btn btn-primary btn-small",
-                          form: {data: {turbo_frame: "_top"}} do %>
+                          form: {data: {turbo_frame: "_top", turbo_confirm: confirm_msg}.compact} do %>
               <%= hidden_field_tag "candidate[title]", c.title %>
               <%= hidden_field_tag "candidate[subtitle]", c.subtitle %>
               <%= hidden_field_tag "candidate[author]", c.author %>
