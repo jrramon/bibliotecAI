@@ -42,6 +42,24 @@ class Book < ApplicationRecord
   scope :with_cdu, ->(code) { where("cdu LIKE ?", "#{code}%") }
   scope :with_genre, ->(g) { where("? = ANY(genres)", g) }
 
+  # Searches a library's books by title, synopsis, and — scoped to the
+  # viewer — their own personal notes. Empty query returns everything.
+  def self.search_in_library(library, query:, viewer:)
+    scope = library.books
+    return scope if query.blank?
+
+    term = "%#{sanitize_sql_like(query.downcase)}%"
+    scope
+      .left_joins(:user_book_notes)
+      .where(
+        "LOWER(books.title) LIKE :t " \
+        "OR LOWER(COALESCE(books.synopsis, '')) LIKE :t " \
+        "OR (user_book_notes.user_id = :uid AND LOWER(COALESCE(user_book_notes.body, '')) LIKE :t)",
+        t: term, uid: viewer&.id
+      )
+      .distinct
+  end
+
   # Transliterates + lowercases + collapses non-alphanum so that near-duplicate
   # titles from successive Claude passes ("1984" vs "1984 ", "Episodios
   # Nacionales" vs "episodios nacionales (primera serie)") can be deduped.

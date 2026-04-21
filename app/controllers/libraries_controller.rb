@@ -7,7 +7,8 @@ class LibrariesController < ApplicationController
   end
 
   def show
-    @books = @library.books.recent
+    @query = params[:q].to_s.strip
+    @books = Book.search_in_library(@library, query: @query, viewer: current_user).recent
   end
 
   def settings

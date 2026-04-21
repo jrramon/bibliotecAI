@@ -17,7 +17,7 @@
   <dl class="stat-row">
     <div>
       <dt>Libros</dt>
-      <dd><%= @books.size %></dd>
+      <dd><%= @library.books.count %></dd>
     </div>
     <div>
       <dt>Miembros</dt>
@@ -28,6 +28,20 @@
       <dd><%= @library.shelf_photos.count %></dd>
     </div>
   </dl>
+
+  <%= form_with url: library_path(@library), method: :get, local: true, class: "book-search" do |f| %>
+    <%= f.search_field :q,
+                       value: @query,
+                       placeholder: "Buscar por título, sinopsis o tus notas",
+                       autocomplete: "off",
+                       aria: {label: "Buscar libros"} %>
+    <% if @query.present? %>
+      <span class="book-search-count">
+        <%= pluralize(@books.size, "resultado", plural: "resultados") %> para «<%= @query %>»
+      </span>
+      <%= link_to "Limpiar", library_path(@library), class: "book-search-clear" %>
+    <% end %>
+  <% end %>
 
   <% if @books.any? %>
     <ul class="book-grid">
@@ -55,6 +69,15 @@
         </li>
       <% end %>
     </ul>
+  <% elsif @query.present? %>
+    <div class="empty-state hero-empty">
+      <span class="kanji" aria-hidden="true">索</span>
+      <h2>Sin resultados</h2>
+      <p>Ningún libro coincide con «<%= @query %>» en el título, sinopsis o tus notas personales.</p>
+      <p class="cta">
+        <%= link_to "Ver todos los libros", library_path(@library), class: "btn btn-ghost" %>
+      </p>
+    </div>
   <% else %>
     <div class="empty-state hero-empty">
       <span class="kanji" aria-hidden="true">本</span>
