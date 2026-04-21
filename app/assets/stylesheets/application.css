@@ -696,6 +696,9 @@ input, textarea, select { font: inherit; color: inherit; }
 .form-inputs input[type="email"],
 .form-inputs input[type="password"],
 .form-inputs input[type="text"],
+.form-inputs input[type="number"],
+.form-inputs input[type="url"],
+.form-inputs input[type="search"],
 .form-inputs textarea,
 .form-inputs select {
   background: var(--bg-sunken);
@@ -709,6 +712,13 @@ input, textarea, select { font: inherit; color: inherit; }
   font-family: inherit;
   width: 100%;
 }
+.form-inputs .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.form-inputs .form-row .form-col { margin: 0; }
 .form-inputs textarea {
   resize: vertical;
   min-height: 88px;

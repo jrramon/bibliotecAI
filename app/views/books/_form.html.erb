@@ -6,9 +6,11 @@
     <%= f.input :subtitle, label: "Subtítulo" %>
     <%= f.input :author, label: "Autor" %>
     <%= f.input :publisher, label: "Editorial" %>
-    <%= f.input :published_year, label: "Año de publicación", as: :integer %>
-    <%= f.input :page_count, label: "Páginas", as: :integer %>
-    <%= f.input :language, label: "Idioma", hint: "Código ISO de 2 letras (es, en, pt…)" %>
+    <div class="form-row">
+      <%= f.input :published_year, label: "Año de publicación", as: :integer, wrapper_html: {class: "form-col"} %>
+      <%= f.input :page_count, label: "Páginas", as: :integer, wrapper_html: {class: "form-col"} %>
+      <%= f.input :language, label: "Idioma", hint: "Código ISO (es, en…)", wrapper_html: {class: "form-col"} %>
+    </div>
     <%= f.input :isbn, label: "ISBN" %>
     <%= f.input :cdu, label: "CDU", hint: "Clasificación Decimal Universal (ej. 82-31, 330, 94(460))" %>
     <%= f.input :genres,
