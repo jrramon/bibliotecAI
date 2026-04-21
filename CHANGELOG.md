@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Slice 10: Tweaks panel (theme + shelf layout) — floating bottom-right button opens a panel with Paleta (Washi / Sepia / Sumi) and Estantería (Lomos / Cuadrícula / Lista) segmented controls. Choice persists in `localStorage` and is re-applied to `<html data-theme>` / `<html data-shelf-layout>` by an inline head script before first paint (no flash of default theme). New Stimulus `tweaks_controller.js`. 4 system tests.
 - Slice 9: Dashboard + library header polish — `libraries#index` becomes a card grid (mini-spine strip + title + excerpt + libros/miembros/fotos stats); `libraries#show` gets an eyebrow, serif page title, and a three-cell stat row above the book grid. Shared `hero-empty` empty state with kanji watermark replaces the old flat message.
 - fix: deduplicate identified books per library on re-upload (Book.normalize).
 - ops: drop Solid Queue for the identification path. The macOS arm64 pg-gem segfaults in forked Solid Queue workers even with `OBJC_DISABLE_INITIALIZE_FORK_SAFETY`, so `ShelfPhotosController#create` no longer enqueues through ActiveJob. Instead `bin/shelf-photo-poller` runs on the host, polls `ShelfPhoto.pending`, and invokes `BookIdentificationJob` inline (no fork). `bin/queue-status` reports photo state and whether the poller is alive. Storage reverts to a plain bind-mount so the host poller can read the blobs. ActiveJob adapter back to `:async` for the small in-process jobs (ActiveStorage analyze).

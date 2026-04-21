@@ -1,0 +1,39 @@
+<div class="tweaks-wrap" data-controller="tweaks">
+  <button type="button"
+          class="tweaks-toggle"
+          data-action="tweaks#open"
+          aria-label="Abrir panel de ajustes">
+    <span class="kanji" aria-hidden="true">調</span>
+  </button>
+
+  <section class="tweaks" data-tweaks-target="panel" hidden>
+    <header class="row between">
+      <h4>Ajustes <span class="badge">visual</span></h4>
+      <button type="button" class="btn-icon" data-action="tweaks#close" aria-label="Cerrar">✕</button>
+    </header>
+
+    <div class="group">
+      <div class="group-label">Paleta</div>
+      <div class="seg" role="group" aria-label="Paleta">
+        <% [["light", "Washi"], ["sepia", "Sepia"], ["dark", "Sumi"]].each do |value, label| %>
+          <button type="button"
+                  data-tweaks-target="themeButton"
+                  data-value="<%= value %>"
+                  data-action="tweaks#setTheme"><%= label %></button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="group">
+      <div class="group-label">Estantería</div>
+      <div class="seg" role="group" aria-label="Estilo de estantería">
+        <% [["spine", "Lomos"], ["grid", "Cuadrícula"], ["list", "Lista"]].each do |value, label| %>
+          <button type="button"
+                  data-tweaks-target="layoutButton"
+                  data-value="<%= value %>"
+                  data-action="tweaks#setLayout"><%= label %></button>
+        <% end %>
+      </div>
+    </div>
+  </section>
+</div>

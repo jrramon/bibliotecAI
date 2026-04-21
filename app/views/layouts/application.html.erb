@@ -16,6 +16,20 @@
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <%# Pre-apply saved palette/layout from localStorage before any paint so
+        the page doesn't flash the default theme on reload. %>
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("bibliotecai:tweaks");
+          if (!raw) return;
+          var s = JSON.parse(raw);
+          if (s && s.theme) document.documentElement.setAttribute("data-theme", s.theme);
+          if (s && s.layout) document.documentElement.setAttribute("data-shelf-layout", s.layout);
+        } catch (_) { /* ignore */ }
+      })();
+    </script>
   </head>
 
   <body>
@@ -54,5 +68,9 @@
         <%= yield %>
       </main>
     </div>
+
+    <% if user_signed_in? %>
+      <%= render "shared/tweaks_panel" %>
+    <% end %>
   </body>
 </html>
