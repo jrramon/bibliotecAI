@@ -21,6 +21,26 @@
     <%= f.input :goodreads_url, label: "URL de Goodreads", input_html: {type: "url", placeholder: "https://..."} %>
     <%= f.input :synopsis, label: "Sinopsis", as: :text, input_html: {rows: 4}, hint: "Descripción del libro (de Google Books o añadida a mano)" %>
     <%= f.input :cover_image, label: "Portada", as: :file, input_html: {accept: "image/jpeg,image/png,image/webp,image/heic"} %>
+    <%= f.input :stamp,
+                label: "Sello del lomo",
+                input_html: {maxlength: 2, placeholder: "函"},
+                hint: "1-2 caracteres sobre el lomo (por defecto: primer kanji del título o inicial del autor)" %>
+
+    <fieldset class="swatches inline-swatches">
+      <legend>Color del lomo</legend>
+      <div class="swatch-grid">
+        <label class="swatch swatch-auto <%= "is-selected" if @book.spine_palette.nil? %>">
+          <%= f.radio_button :spine_palette, "", checked: @book.spine_palette.nil? %>
+          <span class="swatch-label" aria-label="Aleatorio">⤫</span>
+        </label>
+        <% 10.times do |slot| %>
+          <label class="swatch spine-slot-<%= slot %> <%= "is-selected" if @book.spine_palette == slot %>">
+            <%= f.radio_button :spine_palette, slot, checked: @book.spine_palette == slot %>
+            <span class="swatch-check" aria-hidden="true">✓</span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
   </div>
 
   <div class="form-actions">

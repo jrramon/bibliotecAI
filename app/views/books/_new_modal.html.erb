@@ -1,0 +1,14 @@
+<%# Full add-book modal scaffold: trigger button + <dialog>. Renders its
+    own Stimulus `modal` controller so it's self-contained and can be
+    dropped into any page that has a library in scope. %>
+<div data-controller="modal" class="add-book-modal-root">
+  <button type="button"
+          class="btn btn-ghost add-book-trigger"
+          data-action="modal#open">＋ Añadir libro</button>
+
+  <dialog class="modal-dialog modal-dialog--wide"
+          data-modal-target="dialog"
+          data-action="click->modal#backdropClick">
+    <%= render "books/new_modal_form", library: library, book: library.books.build %>
+  </dialog>
+</div>

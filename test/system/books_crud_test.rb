@@ -14,14 +14,20 @@ class BooksCrudTest < ApplicationSystemTestCase
     assert_text "Aún no hay libros"
 
     click_on "＋ Añadir libro"
+    within("dialog[open]") do
+      fill_in "book[title]", with: "Línea de fuego"
+      fill_in "book[author]", with: "Arturo Pérez-Reverte"
+      click_on "＋ Añadir a la estantería"
+    end
 
-    fill_in "Título", with: "Línea de fuego"
-    fill_in "Autor", with: "Arturo Pérez-Reverte"
-    fill_in "ISBN", with: "9788420455976"
-    click_on "Añadir libro"
-
-    assert_selector "h1", text: "Línea de fuego"
+    # The "Shelved" celebration redirects to the book detail after a short delay.
+    assert_selector "h1", text: "Línea de fuego", wait: 6
     assert_text "Arturo Pérez-Reverte"
+
+    # ISBN lives in the full edit form (the modal only captures title/author/colour).
+    click_on "Editar"
+    fill_in "ISBN", with: "9788420455976"
+    click_on "Guardar cambios"
     assert_text "9788420455976"
 
     # Personal notes live per-user in a modal, not on the edit form.

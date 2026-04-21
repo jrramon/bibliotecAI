@@ -1,0 +1,96 @@
+<%# Body of the add-book modal: live spine preview on the left, minimal
+    form on the right (title, author, stamp, colour). Full detail goes in
+    the edit page.
+
+    Wrapped in a turbo-frame so the create action can swap it for the
+    "Shelved" celebration on success, or swap it for itself + errors on
+    422. Expects locals: `library`, `book` (may be unsaved with errors). %>
+<div id="new-book-form">
+  <div class="modal-card modal-card--wide book-preview-layout" data-controller="book-preview">
+    <header>
+      <h3>Añadir libro</h3>
+      <button type="button" class="modal-close"
+              data-action="modal#close"
+              aria-label="Cerrar">✕</button>
+    </header>
+
+    <div class="book-preview-grid">
+      <aside class="spine-preview-panel" aria-hidden="true">
+        <div class="spine spine-slot-<%= book.spine_palette || 0 %> spine-preview"
+             data-book-preview-target="spine">
+          <span class="spine-mark" data-book-preview-target="stampOut">
+            <%= book.stamp.presence || "函" %>
+          </span>
+          <span class="spine-title" data-book-preview-target="titleOut">
+            <%= book.title.presence || "Título" %>
+          </span>
+          <span class="spine-author" data-book-preview-target="authorOut">
+            <%= book.author.to_s.split(/\s+/).last.presence || "Autor" %>
+          </span>
+        </div>
+      </aside>
+
+      <div class="book-preview-form">
+        <%= form_with model: [library, book], html: {class: "modal-form", novalidate: true} do |f| %>
+          <% if book.errors.any? %>
+            <ul class="form-errors">
+              <% book.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          <% end %>
+
+          <label class="field">
+            <span class="field-label">Título <em>*</em></span>
+            <%= f.text_field :title,
+                             required: true,
+                             autofocus: true,
+                             autocomplete: "off",
+                             data: {action: "input->book-preview#updateTitle"} %>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Autor</span>
+            <%= f.text_field :author,
+                             autocomplete: "off",
+                             data: {action: "input->book-preview#updateAuthor"} %>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Sello <em>opcional</em></span>
+            <%= f.text_field :stamp,
+                             maxlength: 2,
+                             autocomplete: "off",
+                             placeholder: "函",
+                             data: {action: "input->book-preview#updateStamp"} %>
+          </label>
+
+          <fieldset class="swatches">
+            <legend>Color del lomo</legend>
+            <div class="swatch-grid">
+              <label class="swatch swatch-auto <%= "is-selected" if book.spine_palette.nil? %>">
+                <%= f.radio_button :spine_palette, "",
+                                   checked: book.spine_palette.nil?,
+                                   data: {action: "change->book-preview#updateSlot"} %>
+                <span class="swatch-label" aria-label="Aleatorio">⤫</span>
+              </label>
+              <% 10.times do |slot| %>
+                <label class="swatch spine-slot-<%= slot %> <%= "is-selected" if book.spine_palette == slot %>">
+                  <%= f.radio_button :spine_palette, slot,
+                                     checked: book.spine_palette == slot,
+                                     data: {action: "change->book-preview#updateSlot"} %>
+                  <span class="swatch-check" aria-hidden="true">✓</span>
+                </label>
+              <% end %>
+            </div>
+          </fieldset>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
+            <%= f.submit "＋ Añadir a la estantería", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

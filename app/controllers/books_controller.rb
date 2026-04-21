@@ -21,9 +21,21 @@ class BooksController < ApplicationController
   def create
     @book = @library.books.build(book_params.merge(added_by_user: current_user))
     if @book.save
-      redirect_to [@library, @book], notice: "Libro añadido."
+      respond_to do |format|
+        format.turbo_stream { render :shelved }
+        format.html { redirect_to [@library, @book], notice: "Libro añadido." }
+      end
     else
-      render :new, status: :unprocessable_entity
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "new-book-form",
+            partial: "books/new_modal_form",
+            locals: {library: @library, book: @book}
+          ), status: :unprocessable_entity
+        end
+        format.html { render :new, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -166,7 +178,7 @@ class BooksController < ApplicationController
     return nil if raw.to_s == "none"
     return Time.current if raw.blank?
     Date.iso8601(raw.to_s).to_time
-  rescue Date::Error, ArgumentError
+  rescue ArgumentError
     Time.current
   end
 

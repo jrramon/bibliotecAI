@@ -1,0 +1,12 @@
+<%= turbo_stream.replace "new-book-form" do %>
+  <div id="new-book-form">
+    <div class="modal-card modal-card--wide shelved-celebration"
+         data-controller="shelved-celebration"
+         data-shelved-celebration-href-value="<%= library_book_path(@library, @book) %>"
+         data-shelved-celebration-delay-ms-value="<%= Rails.env.test? ? 3000 : 1400 %>">
+      <span class="kanji" aria-hidden="true">函</span>
+      <p class="shelved-label">Shelved</p>
+      <p class="shelved-title">«<%= @book.title %>»</p>
+    </div>
+  </div>
+<% end %>

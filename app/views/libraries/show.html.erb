@@ -9,7 +9,7 @@
     </div>
     <div class="header-ctas">
       <%= link_to "＋ Subir foto de estantería", new_library_shelf_photo_path(@library), class: "btn btn-seal" %>
-      <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-ghost" %>
+      <%= render "books/new_modal", library: @library %>
       <%= link_to "Configuración", settings_library_path(@library), class: "btn btn-ghost" %>
     </div>
   </header>
