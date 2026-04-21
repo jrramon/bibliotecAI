@@ -31,7 +31,15 @@
       <% end %>
 
       <% if @book.synopsis.present? %>
-        <p class="description"><span class="dropcap"><%= @book.synopsis %></span></p>
+        <div class="description expandable" data-controller="expandable">
+          <div class="expandable-body" data-expandable-target="body">
+            <span class="dropcap"><%= @book.synopsis %></span>
+          </div>
+          <button type="button"
+                  class="expandable-toggle"
+                  data-action="expandable#toggle"
+                  data-expandable-target="toggle">[más]</button>
+        </div>
       <% end %>
 
       <% if @book.notes.present? %>
