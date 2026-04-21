@@ -2,6 +2,8 @@ require "net/http"
 require "json"
 require "uri"
 require "digest"
+require "mini_magick"
+require "tempfile"
 
 # Fetches a book cover from Google Books (primary) with an Open Library
 # fallback via ISBN. Attaches the downloaded image to `book.cover_image`
@@ -16,6 +18,37 @@ class BookCoverFetcher
   PLACEHOLDER_HASHES = %w[
     12557f8948b8bdc6af436e3a8b3adddd45f7f7d2b67c5832e799cdf4686f72bb
   ].freeze
+
+  # Book covers are ~2:3 portrait. Google Books occasionally serves a
+  # partial image (e.g. 300×48 — just the top title strip). Anything
+  # shorter than wide or under the minimum dimensions is treated as
+  # invalid.
+  MIN_HEIGHT = 120
+  MIN_WIDTH = 80
+  MIN_ASPECT_RATIO = 1.10   # height / width — real covers are ≥ 1.3
+
+  def self.plausible_cover?(body)
+    dims = sniff_dimensions(body)
+    return true unless dims # if we can't tell, be permissive
+
+    width, height = dims
+    return false if width < MIN_WIDTH || height < MIN_HEIGHT
+    return false if height.to_f / width < MIN_ASPECT_RATIO
+    true
+  end
+
+  # Reads image dimensions from the bytes without writing to disk.
+  # Returns [width, height] or nil if we couldn't determine.
+  def self.sniff_dimensions(body)
+    Tempfile.create(["cover-check", ".img"], binmode: true) do |f|
+      f.write(body)
+      f.flush
+      image = MiniMagick::Image.open(f.path)
+      [image.width, image.height]
+    end
+  rescue => _
+    nil
+  end
 
   GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
   OPEN_LIBRARY_COVERS = "https://covers.openlibrary.org/b/isbn"
@@ -193,6 +226,12 @@ class BookCoverFetcher
     content_type = response["content-type"].to_s.split(";").first
     unless content_type&.start_with?("image/")
       log "#{source}: unexpected content-type #{content_type.inspect}"
+      return false
+    end
+
+    unless self.class.plausible_cover?(body)
+      dims = self.class.sniff_dimensions(body)
+      log "#{source}: implausible cover dims=#{dims.inspect} — rejecting (likely partial/thumbnail strip)"
       return false
     end
 
