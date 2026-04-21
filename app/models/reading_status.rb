@@ -4,8 +4,8 @@ class ReadingStatus < ApplicationRecord
 
   enum :state, {reading: 0, read: 1, dropped: 2}, default: :reading
 
-  validates :user_id, uniqueness: {scope: :book_id}
-
   scope :for_library, ->(library) { joins(:book).where(books: {library_id: library.id}) }
   scope :active, -> { where(state: :reading) }
+  scope :completed, -> { where(state: :read) }
+  scope :ordered, -> { order(created_at: :desc) }
 end

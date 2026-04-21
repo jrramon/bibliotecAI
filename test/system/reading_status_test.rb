@@ -9,31 +9,53 @@ class ReadingStatusTest < ApplicationSystemTestCase
     @book = create(:book, library: @library, added_by_user: @alice, title: "Quiet")
   end
 
-  test "user starts, finishes, and restarts a book" do
+  test "user starts, finishes, and restarts a book — past cycles are preserved" do
     sign_in_as(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Empezar a leer"
     assert_text "Marcado como leyendo"
-    assert_selector "button", text: "Marcar como leído"
-    assert_selector "button", text: "Dejar de leer"
 
     click_on "Marcar como leído"
     assert_text "¡Marcado como leído!"
     assert_selector ".chip.chip-moss", text: /Le[ií]do/i
 
     click_on "Releer"
-    assert_text "Marcado como leyendo"
+    assert_text "Releyendo (vez 2)"
+
+    # One completed + one active in DB
+    assert_equal 2, @book.reading_statuses.where(user: @alice).count
+    assert_equal 1, @book.reading_statuses.where(user: @alice).completed.count
+    assert_equal 1, @book.reading_statuses.where(user: @alice).active.count
   end
 
-  test "stop reading removes the status" do
-    create(:reading_status, user: @alice, book: @book, state: :reading)
+  test "stop reading marks the current attempt as dropped and keeps the row" do
+    status = create(:reading_status, user: @alice, book: @book, state: :reading)
     sign_in_as(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Dejar de leer"
-    assert_text "Estado de lectura eliminado"
-    assert_selector "button", text: "Empezar a leer"
+    assert_text "abandonada"
+    status.reload
+    assert status.dropped?
+    assert_not_nil status.finished_at
+  end
+
+  test "three reads are each recorded and surfaced as a history" do
+    sign_in_as(@alice)
+    visit library_book_path(@library, @book)
+
+    click_on "Empezar a leer"
+    click_on "Marcar como leído"
+    click_on "Releer"
+    click_on "Marcar como leído"
+    click_on "Releer"
+    click_on "Marcar como leído"
+
+    assert_selector ".reading-history h3", text: /historial de lectura/i
+    assert_selector ".reading-history h3", text: /3 veces/i
+    assert_selector ".reading-log li", count: 3
+    assert_equal 3, @book.reading_statuses.where(user: @alice).completed.count
   end
 
   test "leyendo ahora section on library show lists only the viewer's active reads" do

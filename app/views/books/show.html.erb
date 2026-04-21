@@ -132,6 +132,7 @@
       </dl>
 
       <% status = @book.reading_status_for(current_user) %>
+      <% past_reads = @book.completed_reads_for(current_user) %>
       <div class="action-row">
         <% if status.nil? %>
           <%= button_to start_reading_library_book_path(@library, @book), method: :post, class: "btn btn-primary" do %>
@@ -144,10 +145,14 @@
           <%= button_to stop_reading_library_book_path(@library, @book), method: :delete, class: "btn btn-ghost" do %>
             Dejar de leer
           <% end %>
-        <% elsif status.read? %>
-          <span class="chip chip-moss">Leído <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+        <% else %>
+          <% if status.read? %>
+            <span class="chip chip-moss">Leído <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+          <% elsif status.dropped? %>
+            <span class="chip" style="opacity: .7;">Abandonado <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+          <% end %>
           <%= button_to start_reading_library_book_path(@library, @book), method: :post, class: "btn btn-ghost" do %>
-            Releer
+            <%= past_reads.any? ? "Releer" : "Empezar a leer" %>
           <% end %>
         <% end %>
         <%= link_to "Editar", edit_library_book_path(@library, @book), class: "btn btn-ghost" %>
@@ -156,6 +161,23 @@
                       class: "btn btn-ghost",
                       form: {data: {turbo_confirm: "¿Eliminar este libro?"}} %>
       </div>
+
+      <% if past_reads.any? %>
+        <section class="reading-history">
+          <h3>Historial de lectura · <%= pluralize(past_reads.size, "vez", plural: "veces") %></h3>
+          <ol class="reading-log">
+            <% past_reads.each_with_index do |entry, idx| %>
+              <li>
+                <span class="idx"><%= past_reads.size - idx %></span>
+                <span class="range">
+                  <% if entry.started_at %><%= l(entry.started_at.to_date, format: :short) %><% end %>
+                  <% if entry.finished_at %>→ <%= l(entry.finished_at.to_date, format: :short) %><% end %>
+                </span>
+              </li>
+            <% end %>
+          </ol>
+        </section>
+      <% end %>
     </div>
   </div>
 

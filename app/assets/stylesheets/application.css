@@ -1913,6 +1913,54 @@ turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
 }
 .reading-now .reading-now-shelf { min-height: 240px; padding-top: 8px; }
 
+.reading-history {
+  margin: 24px 0 16px;
+  padding: 14px 18px;
+  background: var(--bg-sunken);
+  border-left: 2px solid var(--moss);
+  border-radius: 0 6px 6px 0;
+}
+.reading-history h3 {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 10px;
+  font-family: var(--sans);
+  font-weight: 500;
+}
+.reading-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reading-log li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+  font-family: var(--serif);
+}
+.reading-log .idx {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.reading-log .range { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+
 [data-theme="dark"] .chip-cdu {
   background: color-mix(in oklab, var(--accent-2), black 40%);
   color: color-mix(in oklab, var(--accent-2), white 30%);

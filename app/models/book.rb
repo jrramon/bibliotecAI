@@ -20,9 +20,16 @@ class Book < ApplicationRecord
     user_book_notes.find_or_initialize_by(user: user)
   end
 
+  # Latest reading attempt of this book by `user`, across all cycles.
   def reading_status_for(user)
     return nil unless user
-    reading_statuses.find_by(user: user)
+    reading_statuses.where(user: user).ordered.first
+  end
+
+  # All completed reads of this book by `user`, most recent first.
+  def completed_reads_for(user)
+    return ReadingStatus.none unless user
+    reading_statuses.where(user: user).completed.ordered
   end
 
   validates :title, presence: true, length: {maximum: 240}

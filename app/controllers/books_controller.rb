@@ -51,28 +51,37 @@ class BooksController < ApplicationController
     redirect_to [@library, @book], notice: n.body.blank? ? "Nota borrada." : "Nota guardada."
   end
 
+  # Each start is a new reading attempt; previous attempts (read / dropped)
+  # are preserved as history. If there's already an active :reading, we
+  # don't create a duplicate.
   def start_reading
-    status = @book.reading_statuses.find_or_initialize_by(user: current_user)
-    status.state = :reading
-    status.started_at ||= Time.current
-    status.finished_at = nil
-    status.save!
-    redirect_to [@library, @book], notice: "Marcado como leyendo."
+    active = @book.reading_statuses.active.find_by(user: current_user)
+    if active
+      redirect_to [@library, @book], notice: "Ya estás leyendo este libro."
+    else
+      @book.reading_statuses.create!(user: current_user, state: :reading, started_at: Time.current)
+      past = @book.completed_reads_for(current_user).count
+      msg = past.zero? ? "Marcado como leyendo." : "Releyendo (vez #{past + 1})."
+      redirect_to [@library, @book], notice: msg
+    end
   end
 
   def finish_reading
-    status = @book.reading_statuses.find_or_initialize_by(user: current_user)
-    status.state = :read
-    status.started_at ||= Time.current
-    status.finished_at = Time.current
-    status.save!
-    redirect_to [@library, @book], notice: "¡Marcado como leído!"
+    active = @book.reading_statuses.active.find_by(user: current_user)
+    if active
+      active.update!(state: :read, finished_at: Time.current)
+      redirect_to [@library, @book], notice: "¡Marcado como leído!"
+    else
+      @book.reading_statuses.create!(user: current_user, state: :read, started_at: Time.current, finished_at: Time.current)
+      redirect_to [@library, @book], notice: "Marcado como leído."
+    end
   end
 
+  # Marks the current attempt as dropped (not deleted) so the history stays.
   def stop_reading
-    status = @book.reading_statuses.find_by(user: current_user)
-    status&.destroy
-    redirect_to [@library, @book], notice: "Estado de lectura eliminado."
+    active = @book.reading_statuses.active.find_by(user: current_user)
+    active&.update!(state: :dropped, finished_at: Time.current)
+    redirect_to [@library, @book], notice: "Lectura actual marcada como abandonada."
   end
 
   def apply_candidate
