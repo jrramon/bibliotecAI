@@ -1,10 +1,13 @@
-<%# Body of the add-book modal: live spine preview on the left, minimal
-    form on the right (title, author, stamp, colour). Full detail goes in
-    the edit page.
+<%# Body of the add-book modal: live spine preview + uploaded-cover
+    thumbnail on the left, minimal form on the right (title, author,
+    stamp, colour). Full detail goes in the edit page.
 
-    Wrapped in a turbo-frame so the create action can swap it for the
-    "Shelved" celebration on success, or swap it for itself + errors on
-    422. Expects locals: `library`, `book` (may be unsaved with errors). %>
+    Expects locals:
+      library       — Library
+      book          — Book (new or with errors)
+      cover_photo   — optional CoverPhoto (Claude-identified; its image
+                      will be attached to the book on create). %>
+<% cover_photo = local_assigns[:cover_photo] %>
 <div id="new-book-form">
   <div class="modal-card modal-card--wide book-preview-layout" data-controller="book-preview">
     <header>
@@ -13,6 +16,12 @@
               data-action="modal#close"
               aria-label="Cerrar">✕</button>
     </header>
+
+    <% if cover_photo&.completed? %>
+      <p class="cover-identified-hint">
+        📷 Datos identificados desde la portada. Revísalos y edita lo que haga falta.
+      </p>
+    <% end %>
 
     <div class="book-preview-grid">
       <aside class="spine-preview-panel" aria-hidden="true">
@@ -28,9 +37,29 @@
             <%= book.author.to_s.split(/\s+/).last.presence || "Autor" %>
           </span>
         </div>
+        <% if cover_photo&.image&.attached? %>
+          <figure class="uploaded-cover-thumb">
+            <%= image_tag cover_photo.image.variant(:thumb), alt: "Portada subida" %>
+          </figure>
+        <% end %>
       </aside>
 
-      <div class="book-preview-form">
+      <div class="book-preview-form" data-controller="cover-upload">
+        <%# Upload form sits as a sibling to the book form — HTML forbids
+            nested <form> elements. The Stimulus `cover-upload` controller
+            bridges the two: the button inside the book form triggers the
+            file input in this form, which auto-submits on change. %>
+        <%= form_with url: library_cover_photos_path(library),
+                      method: :post,
+                      multipart: true,
+                      html: {class: "cover-upload-form"} do |g| %>
+          <%= g.file_field :image,
+                           accept: "image/jpeg,image/png,image/webp,image/heic",
+                           data: {cover_upload_target: "input",
+                                  action: "change->cover-upload#submit"},
+                           class: "visually-hidden" %>
+        <% end %>
+
         <%= form_with model: [library, book], html: {class: "modal-form", novalidate: true} do |f| %>
           <% if book.errors.any? %>
             <ul class="form-errors">
@@ -38,6 +67,10 @@
                 <li><%= msg %></li>
               <% end %>
             </ul>
+          <% end %>
+
+          <% if cover_photo %>
+            <%= hidden_field_tag "book[cover_photo_id]", cover_photo.id %>
           <% end %>
 
           <label class="field">
@@ -85,7 +118,10 @@
             </div>
           </fieldset>
 
-          <div class="modal-actions">
+          <div class="modal-actions modal-actions--split">
+            <button type="button" class="btn btn-ghost btn-small"
+                    data-action="cover-upload#pick">📷 Identificar desde foto</button>
+            <div class="spacer"></div>
             <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
             <%= f.submit "＋ Añadir a la estantería", class: "btn btn-primary" %>
           </div>

@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       resources :comments, only: %i[create destroy]
     end
     resources :shelf_photos, only: %i[new create show]
+    resources :cover_photos, only: %i[create]
   end
 
   get "invitations/:token", to: "invitations#show", as: :invitation

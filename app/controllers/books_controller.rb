@@ -20,7 +20,9 @@ class BooksController < ApplicationController
 
   def create
     @book = @library.books.build(book_params.merge(added_by_user: current_user))
+    cover_photo_id = params.dig(:book, :cover_photo_id).presence
     if @book.save
+      attach_cover_from_photo(@book, cover_photo_id) if cover_photo_id
       respond_to do |format|
         format.turbo_stream { render :shelved }
         format.html { redirect_to [@library, @book], notice: "Libro añadido." }
@@ -172,6 +174,22 @@ class BooksController < ApplicationController
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)
     end
     permitted
+  end
+
+  # When the add-book modal was opened from a cover photo, the user-submitted
+  # form carries `book[cover_photo_id]`. Pull that CoverPhoto's uploaded image
+  # across so the new book has a cover without a separate upload.
+  def attach_cover_from_photo(book, cover_photo_id)
+    photo = @library.cover_photos.find_by(id: cover_photo_id)
+    return unless photo&.image&.attached?
+    blob = photo.image.blob
+    book.cover_image.attach(
+      io: StringIO.new(blob.download),
+      filename: blob.filename.to_s,
+      content_type: blob.content_type
+    )
+  rescue => e
+    Rails.logger.warn("[BooksController#attach_cover_from_photo] #{e.class}: #{e.message}")
   end
 
   def parse_finished_on(raw)

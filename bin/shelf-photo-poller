@@ -40,16 +40,27 @@ trap("TERM") { puts "[poller] stopping"; exit 0 }
 
 puts "[poller] ready, polling every #{interval}s"
 loop do
-  pending = ShelfPhoto.pending.order(:created_at).to_a
-  if pending.any?
-    puts "[poller] #{pending.size} pending"
-    pending.each do |p|
-      puts "[poller] → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
+  shelf_pending = ShelfPhoto.pending.order(:created_at).to_a
+  cover_pending = CoverPhoto.pending.order(:created_at).to_a
+  if shelf_pending.any? || cover_pending.any?
+    puts "[poller] shelf=#{shelf_pending.size} cover=#{cover_pending.size} pending"
+    shelf_pending.each do |p|
+      puts "[poller] shelf → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
       begin
         BookIdentificationJob.new.perform(p.id)
-        puts "[poller] ✓ #{p.id} done (status=#{p.reload.status})"
+        puts "[poller] ✓ shelf #{p.id} done (status=#{p.reload.status})"
       rescue => e
-        warn "[poller] ! #{p.id} failed: #{e.class}: #{e.message}"
+        warn "[poller] ! shelf #{p.id} failed: #{e.class}: #{e.message}"
+        p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil
+      end
+    end
+    cover_pending.each do |p|
+      puts "[poller] cover → #{p.id}  lib=#{p.library.name}  file=#{p.image.filename}"
+      begin
+        CoverIdentificationJob.new.perform(p.id)
+        puts "[poller] ✓ cover #{p.id} done (status=#{p.reload.status})"
+      rescue => e
+        warn "[poller] ! cover #{p.id} failed: #{e.class}: #{e.message}"
         p.update(status: :failed, error_message: "#{e.class}: #{e.message}") rescue nil
       end
     end

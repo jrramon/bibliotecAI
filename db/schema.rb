@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_21_144428) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_21_195438) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -92,6 +92,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_144428) do
     t.datetime "updated_at", null: false
     t.index ["book_id"], name: "index_comments_on_book_id"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "cover_photos", force: :cascade do |t|
+    t.bigint "library_id", null: false
+    t.bigint "uploaded_by_user_id", null: false
+    t.integer "status", default: 0, null: false
+    t.jsonb "claude_raw_response"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["library_id", "created_at"], name: "index_cover_photos_on_library_id_and_created_at"
+    t.index ["library_id"], name: "index_cover_photos_on_library_id"
+    t.index ["uploaded_by_user_id"], name: "index_cover_photos_on_uploaded_by_user_id"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -319,6 +332,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_21_144428) do
   add_foreign_key "books", "users", column: "added_by_user_id"
   add_foreign_key "comments", "books"
   add_foreign_key "comments", "users"
+  add_foreign_key "cover_photos", "libraries"
+  add_foreign_key "cover_photos", "users", column: "uploaded_by_user_id"
   add_foreign_key "invitations", "libraries"
   add_foreign_key "invitations", "users", column: "invited_by_id"
   add_foreign_key "libraries", "users", column: "owner_id"
