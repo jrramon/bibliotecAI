@@ -139,17 +139,62 @@
             📖 Empezar a leer
           <% end %>
         <% elsif status.reading? %>
-          <%= button_to finish_reading_library_book_path(@library, @book), method: :post, class: "btn btn-primary" do %>
-            ✓ Marcar como leído
-          <% end %>
+          <div class="split-btn" data-controller="dropdown">
+            <%= button_to finish_reading_library_book_path(@library, @book),
+                          method: :post,
+                          class: "btn btn-primary split-btn-main" do %>
+              ✓ Marcar como leído
+            <% end %>
+            <button type="button"
+                    class="btn btn-primary split-btn-chevron"
+                    data-action="dropdown#toggle"
+                    aria-label="Más opciones">▾</button>
+
+            <div class="split-menu" data-dropdown-target="menu" hidden>
+              <%= button_to finish_reading_library_book_path(@library, @book),
+                            method: :post,
+                            class: "split-menu-item",
+                            params: {finished_on: Date.current.iso8601} do %>
+                <strong>Hoy</strong>
+                <span><%= l(Date.current, format: :long) %></span>
+              <% end %>
+
+              <%= form_with url: finish_reading_library_book_path(@library, @book),
+                            method: :post,
+                            class: "split-menu-form",
+                            local: true do %>
+                <label for="finished_on">Elegir fecha</label>
+                <div class="row" style="gap: 6px;">
+                  <%= date_field_tag :finished_on, Date.current.iso8601, max: Date.current.iso8601 %>
+                  <%= submit_tag "Guardar", class: "btn btn-ghost btn-small" %>
+                </div>
+              <% end %>
+
+              <%= button_to finish_reading_library_book_path(@library, @book),
+                            method: :post,
+                            class: "split-menu-item",
+                            params: {finished_on: "none"} do %>
+                <strong>Hace tiempo</strong>
+                <span>sin fecha concreta</span>
+              <% end %>
+            </div>
+          </div>
           <%= button_to stop_reading_library_book_path(@library, @book), method: :delete, class: "btn btn-ghost" do %>
             Dejar de leer
           <% end %>
         <% else %>
           <% if status.read? %>
-            <span class="chip chip-moss">Leído <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+            <span class="chip chip-moss">
+              <% if status.finished_at %>
+                Leído · <%= l(status.finished_at.to_date, format: :short) %>
+              <% else %>
+                Leído · sin fecha
+              <% end %>
+            </span>
           <% elsif status.dropped? %>
-            <span class="chip" style="opacity: .7;">Abandonado <%= l(status.finished_at.to_date, format: :short) if status.finished_at %></span>
+            <span class="chip" style="opacity: .7;">
+              Abandonado<% if status.finished_at %> · <%= l(status.finished_at.to_date, format: :short) %><% end %>
+            </span>
           <% end %>
           <%= button_to start_reading_library_book_path(@library, @book), method: :post, class: "btn btn-ghost" do %>
             <%= past_reads.any? ? "Releer" : "Empezar a leer" %>
@@ -170,9 +215,21 @@
               <li>
                 <span class="idx"><%= past_reads.size - idx %></span>
                 <span class="range">
-                  <% if entry.started_at %><%= l(entry.started_at.to_date, format: :short) %><% end %>
-                  <% if entry.finished_at %>→ <%= l(entry.finished_at.to_date, format: :short) %><% end %>
+                  <% if entry.started_at && entry.finished_at %>
+                    <%= l(entry.started_at.to_date, format: :short) %> → <%= l(entry.finished_at.to_date, format: :short) %>
+                  <% elsif entry.finished_at %>
+                    terminado <%= l(entry.finished_at.to_date, format: :short) %>
+                  <% else %>
+                    sin fecha
+                  <% end %>
                 </span>
+                <%= button_to library_book_reading_status_path(@library, @book, entry),
+                              method: :delete,
+                              class: "reading-log-delete",
+                              form: {data: {turbo_confirm: "¿Borrar esta entrada del historial?"}},
+                              aria: {label: "Borrar esta entrada"} do %>
+                  🗑
+                <% end %>
               </li>
             <% end %>
           </ol>

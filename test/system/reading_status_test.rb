@@ -41,6 +41,39 @@ class ReadingStatusTest < ApplicationSystemTestCase
     assert_not_nil status.finished_at
   end
 
+  test "finish reading with a past date records finished_at in the past" do
+    sign_in_as(@alice)
+    visit library_book_path(@library, @book)
+
+    click_on "Empezar a leer"
+    find(".split-btn-chevron").click
+
+    # <input type="date"> under Selenium chokes on fill_in under some locales;
+    # set the value directly via JS and submit the form.
+    input = find(".split-menu input[name='finished_on']")
+    page.execute_script("arguments[0].value='2019-07-12'", input.native)
+    within(".split-menu") { click_on "Guardar" }
+
+    assert_text "12 de julio de 2019"
+    status = @book.reading_statuses.where(user: @alice).ordered.first
+    assert status.read?
+    assert_equal Date.new(2019, 7, 12), status.finished_at.to_date
+  end
+
+  test "finish reading with 'Hace tiempo' stores no finished_at" do
+    sign_in_as(@alice)
+    visit library_book_path(@library, @book)
+
+    click_on "Empezar a leer"
+    find(".split-btn-chevron").click
+    within(".split-menu") { click_on "Hace tiempo" }
+
+    assert_text "sin fecha"
+    status = @book.reading_statuses.where(user: @alice).ordered.first
+    assert status.read?
+    assert_nil status.finished_at
+  end
+
   test "three reads are each recorded and surfaced as a history" do
     sign_in_as(@alice)
     visit library_book_path(@library, @book)
@@ -56,6 +89,24 @@ class ReadingStatusTest < ApplicationSystemTestCase
     assert_selector ".reading-history h3", text: /3 veces/i
     assert_selector ".reading-log li", count: 3
     assert_equal 3, @book.reading_statuses.where(user: @alice).completed.count
+  end
+
+  test "deleting a history entry removes that reading record" do
+    create(:reading_status, user: @alice, book: @book, state: :read,
+      started_at: 2.years.ago, finished_at: 2.years.ago + 1.week)
+    create(:reading_status, user: @alice, book: @book, state: :read,
+      started_at: 1.year.ago, finished_at: 1.year.ago + 1.week)
+
+    sign_in_as(@alice)
+    visit library_book_path(@library, @book)
+
+    assert_selector ".reading-log li", count: 2
+    accept_confirm do
+      first(".reading-log-delete").click
+    end
+    assert_text "Entrada del historial borrada"
+    assert_selector ".reading-log li", count: 1
+    assert_equal 1, @book.reading_statuses.where(user: @alice).completed.count
   end
 
   test "leyendo ahora section on library show lists only the viewer's active reads" do

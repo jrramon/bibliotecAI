@@ -1939,11 +1939,32 @@ turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
 }
 .reading-log li {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   font-size: 13px;
   color: var(--ink-2);
   font-family: var(--serif);
+}
+.reading-log form { margin: 0; }
+.reading-log-delete {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  cursor: pointer;
+  opacity: .35;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 4px;
+  color: var(--ink-3);
+  transition: opacity .15s ease, background-color .15s ease, color .15s ease;
+}
+.reading-log-delete:hover,
+.reading-log-delete:focus-visible {
+  opacity: 1;
+  color: var(--vermillion);
+  background: var(--bg-raised);
+  outline: none;
 }
 .reading-log .idx {
   flex: 0 0 auto;
@@ -1959,7 +1980,109 @@ turbo-frame.candidate-frame[busy] { opacity: 0.35; transition: opacity 120ms; }
   font-size: 11px;
   color: var(--ink-3);
 }
-.reading-log .range { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.reading-log .range { flex: 1 1 auto; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+
+/* ==========================================================================
+   Split button with dropdown (used by "Marcar como leído")
+   ========================================================================== */
+
+.split-btn {
+  position: relative;
+  display: inline-flex;
+  /* button_to wraps each button in its own <form>. Flatten the two forms so
+     the main button and the chevron sit side by side visually. */
+}
+.split-btn > form { margin: 0; }
+.split-btn-main {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  padding-right: 14px;
+}
+.split-btn-chevron {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  padding: 9px 12px;
+  border-left: 1px solid color-mix(in oklab, var(--sumi), white 30%);
+  min-width: 40px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.split-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 240px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(30, 20, 10, 0.22);
+  padding: 6px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.split-menu[hidden] { display: none; }
+.split-menu form { margin: 0; }
+.split-menu-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--ink);
+  font-family: inherit;
+}
+.split-menu-item:hover { background: var(--bg-sunken); }
+.split-menu-item strong {
+  font-family: var(--serif);
+  font-weight: 450;
+  font-size: 14px;
+}
+.split-menu-item span {
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  font-family: var(--mono);
+}
+
+.split-menu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px dashed var(--rule);
+  border-bottom: 1px dashed var(--rule);
+}
+.split-menu-form label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.split-menu-form input[type="date"] {
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  font-family: inherit;
+  flex: 1;
+}
+.split-menu-form input[type="date"]:focus {
+  border-color: var(--accent);
+}
+.split-menu-form input[type="submit"] {
+  padding: 6px 10px;
+  font-size: 12px;
+}
 
 [data-theme="dark"] .chip-cdu {
   background: color-mix(in oklab, var(--accent-2), black 40%);

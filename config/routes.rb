@@ -19,6 +19,7 @@ Rails.application.routes.draw do
         post :finish_reading
         delete :stop_reading
       end
+      resources :reading_statuses, only: %i[destroy]
       resources :comments, only: %i[create destroy]
     end
     resources :shelf_photos, only: %i[new create show]

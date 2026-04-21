@@ -66,15 +66,20 @@ class BooksController < ApplicationController
     end
   end
 
+  # Accepts `finished_on` as:
+  # - nil / missing  → today
+  # - "none"         → finished_at is nil (read long ago, date unknown)
+  # - an ISO date    → that date
   def finish_reading
+    finished_at = parse_finished_on(params[:finished_on])
     active = @book.reading_statuses.active.find_by(user: current_user)
     if active
-      active.update!(state: :read, finished_at: Time.current)
-      redirect_to [@library, @book], notice: "¡Marcado como leído!"
+      active.update!(state: :read, finished_at: finished_at)
     else
-      @book.reading_statuses.create!(user: current_user, state: :read, started_at: Time.current, finished_at: Time.current)
-      redirect_to [@library, @book], notice: "Marcado como leído."
+      @book.reading_statuses.create!(user: current_user, state: :read,
+        started_at: nil, finished_at: finished_at)
     end
+    redirect_to [@library, @book], notice: finish_notice(finished_at)
   end
 
   # Marks the current attempt as dropped (not deleted) so the history stays.
@@ -155,6 +160,20 @@ class BooksController < ApplicationController
       permitted[:genres] = permitted.delete(:genres_csv).to_s.split(",").map(&:strip).reject(&:empty?)
     end
     permitted
+  end
+
+  def parse_finished_on(raw)
+    return nil if raw.to_s == "none"
+    return Time.current if raw.blank?
+    Date.iso8601(raw.to_s).to_time
+  rescue Date::Error, ArgumentError
+    Time.current
+  end
+
+  def finish_notice(finished_at)
+    return "Marcado como leído (sin fecha)." if finished_at.nil?
+    return "¡Marcado como leído!" if finished_at.to_date == Date.current
+    "Marcado como leído · #{I18n.l(finished_at.to_date, format: :long)}."
   end
 
   def cover_flash(result)
