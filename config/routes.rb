@@ -12,6 +12,8 @@ Rails.application.routes.draw do
     resources :books, except: %i[index] do
       member do
         post :fetch_cover
+        get :candidates
+        post :apply_candidate
       end
       resources :comments, only: %i[create destroy]
     end

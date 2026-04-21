@@ -9,4 +9,21 @@
   <div class="card">
     <%= render "form" %>
   </div>
+
+  <section class="catalog-lookup">
+    <h2 class="section-title">Buscar en Google Books</h2>
+    <p class="sub">Para corregir título, autor, ISBN o portada. Pulsa "Aplicar" en el candidato correcto.</p>
+
+    <%= form_with url: candidates_library_book_path(@library, @book),
+                  method: :get,
+                  data: {turbo_frame: "book_candidates"},
+                  class: "catalog-search-form" do |f| %>
+      <%= f.text_field :q, value: "#{@book.title} #{@book.author}".strip, placeholder: "Título + autor", autocomplete: "off" %>
+      <%= f.submit "Buscar candidatos", class: "btn btn-ghost" %>
+    <% end %>
+
+    <%= turbo_frame_tag "book_candidates" do %>
+      <p class="empty-mini">Los resultados aparecerán aquí.</p>
+    <% end %>
+  </section>
 </section>

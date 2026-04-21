@@ -1,7 +1,7 @@
 class BooksController < ApplicationController
   before_action :authenticate_user!
   before_action :set_library
-  before_action :set_book, only: %i[show edit update destroy fetch_cover]
+  before_action :set_book, only: %i[show edit update destroy fetch_cover candidates apply_candidate]
 
   def show
   end
@@ -38,6 +38,30 @@ class BooksController < ApplicationController
     end
   end
 
+  def candidates
+    @query = params[:q].presence || "#{@book.title} #{@book.author}".strip
+    @candidates = BookCandidates.call(@query)
+    render partial: "books/candidates", locals: {candidates: @candidates, query: @query, book: @book}
+  end
+
+  def apply_candidate
+    data = params.require(:candidate).permit(:title, :author, :isbn, :publisher, :published_date, :thumbnail_url)
+    updates = {}
+    updates[:title] = data[:title] if data[:title].present?
+    updates[:author] = data[:author] if data[:author].present?
+    updates[:isbn] = data[:isbn] if data[:isbn].present?
+    @book.update(updates) if updates.any?
+
+    if data[:thumbnail_url].present?
+      attach_remote_cover(data[:thumbnail_url])
+    end
+
+    redirect_to edit_library_book_path(@library, @book), notice: "Datos aplicados desde Google Books."
+  rescue => e
+    Rails.logger.warn("[BooksController#apply_candidate] #{e.class}: #{e.message}")
+    redirect_to edit_library_book_path(@library, @book), alert: "No se pudo aplicar el candidato."
+  end
+
   def destroy
     @book.destroy
     redirect_to library_path(@library), notice: "Libro eliminado."
@@ -67,6 +91,31 @@ class BooksController < ApplicationController
     when :open_library then {notice: "Portada encontrada en Open Library."}
     when :already_attached then {notice: "Ya tenía portada."}
     else {alert: "No se encontró portada."}
+    end
+  end
+
+  # Tries both zoom=2 and zoom=1 variants (same logic as BookCoverFetcher)
+  # so user-picked candidates also recover from the 334-byte placeholder case.
+  def attach_remote_cover(url)
+    base = url.sub("&edge=curl", "").sub(/\Ahttp:/, "https:")
+    urls = [base.sub("&zoom=1", "&zoom=2"), base].uniq
+    urls.each do |candidate_url|
+      uri = URI(candidate_url)
+      response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 8, read_timeout: 8) do |http|
+        req = Net::HTTP::Get.new(uri.request_uri)
+        req["User-Agent"] = BookCandidates::USER_AGENT
+        BookCandidates::BROWSER_HEADERS.each { |k, v| req[k] = v }
+        http.request(req)
+      end
+      next unless response.is_a?(Net::HTTPSuccess)
+      body = response.body.to_s
+      next if body.bytesize < 2_000
+      content_type = response["content-type"].to_s.split(";").first
+      next unless content_type&.start_with?("image/")
+
+      @book.cover_image.purge if @book.cover_image.attached?
+      @book.cover_image.attach(io: StringIO.new(body), filename: "cover-chosen-#{@book.id}.jpg", content_type: content_type)
+      break
     end
   end
 end
