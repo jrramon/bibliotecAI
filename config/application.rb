@@ -30,5 +30,12 @@ module App
 
     # ImageMagick is installed in dev/prod containers; libvips is not.
     config.active_storage.variant_processor = :mini_magick
+
+    # Serve attachments via the proxy controller instead of a signed redirect.
+    # That cuts the request count per image in half (no 302 hop) and lets us
+    # send a long Cache-Control header so the browser can reuse covers across
+    # navigations.
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
+    config.active_storage.touch_attachment_records_on_variant_create = false
   end
 end

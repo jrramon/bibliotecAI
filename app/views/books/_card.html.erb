@@ -1,7 +1,12 @@
 <li class="book-card">
   <%= link_to [library, book], class: "book-card-link" do %>
     <% if book.cover_image.attached? %>
-      <%= image_tag book.cover_image.variant(:card), class: "book-cover-image", alt: book.title %>
+      <%= image_tag book.cover_image.variant(:card),
+                    class: "book-cover-image",
+                    alt: book.title,
+                    loading: "lazy",
+                    decoding: "async",
+                    width: 200, height: 300 %>
     <% else %>
       <div class="book-cover placeholder spine-slot-<%= book.spine_slot %>">
         <span class="cov-title"><%= book.title %></span>

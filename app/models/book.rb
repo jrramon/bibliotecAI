@@ -7,7 +7,7 @@ class Book < ApplicationRecord
   belongs_to :added_by_user, class_name: "User"
 
   has_one_attached :cover_image do |attachable|
-    attachable.variant :card, resize_to_limit: [300, 450]
+    attachable.variant :card, resize_to_limit: [300, 450], preprocessed: true
     attachable.variant :hero, resize_to_limit: [800, 1200]
   end
 
