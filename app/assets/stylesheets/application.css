@@ -1557,6 +1557,184 @@ dialog.modal-dialog::backdrop {
   .cover-analyzing .cover-analyzing-body { grid-template-columns: 1fr; }
 }
 
+/* ==========================================================================
+   Global ⌘K search in the header
+   ========================================================================== */
+
+.header-search {
+  position: relative;
+  flex: 1 1 420px;
+  max-width: 520px;
+  margin: 0 24px;
+}
+.header-search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.header-search-form input[type="search"] {
+  width: 100%;
+  padding: 9px 64px 9px 14px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-1);
+  outline: none;
+  transition: border-color 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
+}
+.header-search-form input[type="search"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 46, 42, 0.08);
+}
+.header-search-kbd {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  gap: 2px;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.header-search-kbd kbd {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 5px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  color: var(--ink-3);
+  line-height: 1;
+}
+
+.header-search-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 22px 50px rgba(20, 15, 10, 0.25);
+  padding: 10px 8px;
+  z-index: 80;
+}
+
+.search-hint {
+  padding: 12px 10px;
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.search-section + .search-section { margin-top: 4px; border-top: 1px dashed var(--rule-soft); padding-top: 6px; }
+.search-section-title {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 4px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.search-section-title .count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  opacity: 0.7;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.search-list { list-style: none; margin: 0; padding: 0; }
+.search-hit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--ink-1);
+  transition: background-color 100ms ease;
+}
+.search-hit:hover,
+.search-hit:focus-visible {
+  background: var(--bg-sunken);
+  outline: none;
+}
+.search-hit .hit-icon {
+  flex: 0 0 auto;
+  width: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.search-hit .hit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.search-hit .hit-title {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-hit .hit-meta {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* ==========================================================================
+   Sidebar tags rail (top genres in the current library)
+   ========================================================================== */
+
+.tags-rail {
+  padding: 16px 20px 18px;
+  border-top: 1px solid var(--rule);
+}
+.tags-rail .nav-label { margin-bottom: 8px; }
+.tags-rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: background-color 120ms var(--ease-out);
+}
+.tag-chip:hover { background: var(--bg-raised); color: var(--ink-1); }
+.tag-chip-count {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-3);
+}
+
 /* Expandable long-text (synopsis, etc.) — 2-line clamp with a [más] toggle */
 .description.expandable { display: block; }
 .expandable-body {

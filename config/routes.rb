@@ -26,6 +26,8 @@ Rails.application.routes.draw do
     resources :cover_photos, only: %i[create]
   end
 
+  get "/search", to: "search#show", as: :search
+
   get "invitations/:token", to: "invitations#show", as: :invitation
 
   authenticated :user do

@@ -1,0 +1,24 @@
+<%# Top genres across the viewer's libraries (or just the current library
+    if one is in scope). Each chip links to the library filtered by that
+    genre. Expects local `scope` (an ActiveRecord scope that yields Books). %>
+<% counts = scope.where.not(genres: [])
+                 .pluck(:genres)
+                 .flatten
+                 .tally
+                 .sort_by { |_g, n| -n }
+                 .first(10) %>
+<% if counts.any? %>
+  <section class="tags-rail" aria-label="Géneros frecuentes">
+    <span class="nav-label">Géneros</span>
+    <ul class="tags-rail-list">
+      <% counts.each do |genre, n| %>
+        <li>
+          <%= link_to library_path(library, genre: genre), class: "tag-chip" do %>
+            <span class="tag-chip-name"><%= genre %></span>
+            <span class="tag-chip-count"><%= n %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>

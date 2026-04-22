@@ -10,4 +10,18 @@ class User < ApplicationRecord
   has_many :reading_statuses, dependent: :destroy
   has_many :reading_books, -> { merge(ReadingStatus.active) },
     through: :reading_statuses, source: :book
+
+  # Distinct members (themselves + all other users) of every library the
+  # viewer belongs to, whose email matches `query`. Scoping keeps the
+  # global search private to each user's own tenants.
+  def self.search_within_viewer_libraries(query, viewer:, limit: 10)
+    return none if query.blank? || viewer.nil?
+    term = "%#{sanitize_sql_like(query.downcase)}%"
+    joins(:memberships)
+      .where(memberships: {library_id: viewer.libraries.select(:id)})
+      .where("LOWER(users.email) LIKE ?", term)
+      .distinct
+      .order(:email)
+      .limit(limit)
+  end
 end

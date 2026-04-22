@@ -8,8 +8,11 @@ class LibrariesController < ApplicationController
 
   def show
     @query = params[:q].to_s.strip
-    @books = Book.search_in_library(@library, query: @query, viewer: current_user).recent
-    @reading_books = current_user.reading_statuses.active.for_library(@library).includes(:book).map(&:book) if @query.blank?
+    @genre = params[:genre].to_s.strip.presence
+    @books = Book.search_in_library(@library, query: @query, viewer: current_user)
+    @books = @books.with_genre(@genre) if @genre
+    @books = @books.recent
+    @reading_books = current_user.reading_statuses.active.for_library(@library).includes(:book).map(&:book) if @query.blank? && @genre.nil?
   end
 
   def settings

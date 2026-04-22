@@ -46,6 +46,7 @@
           </nav>
           <% if @library&.persisted? %>
             <%= render "shared/members_widget", library: @library %>
+            <%= render "shared/tags_rail", library: @library, scope: @library.books %>
           <% end %>
         </aside>
       <% end %>
@@ -53,6 +54,9 @@
       <header class="header">
         <% unless user_signed_in? %>
           <%= render "shared/brand" %>
+        <% end %>
+        <% if user_signed_in? %>
+          <%= render "shared/header_search" %>
         <% end %>
         <div class="header-actions">
           <% if user_signed_in? %>

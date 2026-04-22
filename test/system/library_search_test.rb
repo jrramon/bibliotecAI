@@ -22,7 +22,7 @@ class LibrarySearchTest < ApplicationSystemTestCase
     sign_in_as(@alice)
     visit library_path(@library)
 
-    find("input[type=search]").set("Quiet").send_keys(:return)
+    find(".book-search input[type=search]").set("Quiet").send_keys(:return)
 
     assert_text "1 resultado para «Quiet»"
     assert_selector ".book-grid li", count: 1

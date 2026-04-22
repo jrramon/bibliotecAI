@@ -1,0 +1,77 @@
+<%# Results popover body — three sections, each optional. Keyboard nav
+    (↑↓/Enter) is driven by the `.search-hit` class + data-action below. %>
+<% total = books.size + members.size + notes.size %>
+<% if query.blank? %>
+  <p class="search-hint">Escribe para buscar en tus bibliotecas.</p>
+<% elsif total.zero? %>
+  <p class="search-hint">Sin resultados para «<%= query %>».</p>
+<% else %>
+  <% if books.any? %>
+    <section class="search-section" aria-label="Libros">
+      <h4 class="search-section-title">Libros <span class="count"><%= books.size %></span></h4>
+      <ul class="search-list">
+        <% books.each do |book| %>
+          <li>
+            <%= link_to [book.library, book],
+                        class: "search-hit",
+                        data: {search_target: "hit", action: "keydown->search#navigate"} do %>
+              <span class="hit-icon" aria-hidden="true">📖</span>
+              <span class="hit-body">
+                <span class="hit-title"><%= book.title %></span>
+                <span class="hit-meta">
+                  <% if book.author.present? %><%= book.author %> · <% end %>
+                  <%= book.library.name %>
+                </span>
+              </span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if members.any? %>
+    <section class="search-section" aria-label="Miembros">
+      <h4 class="search-section-title">Miembros <span class="count"><%= members.size %></span></h4>
+      <ul class="search-list">
+        <% members.each do |member| %>
+          <li>
+            <% member_library = member.libraries.where(id: current_user.libraries.select(:id)).first %>
+            <%= link_to member_library ? library_path(member_library) : "#",
+                        class: "search-hit",
+                        data: {search_target: "hit", action: "keydown->search#navigate"} do %>
+              <span class="hit-icon" aria-hidden="true"><%= avatar_for(member, size: :sm) %></span>
+              <span class="hit-body">
+                <span class="hit-title"><%= member.email %></span>
+                <% if member_library %>
+                  <span class="hit-meta"><%= member_library.name %></span>
+                <% end %>
+              </span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if notes.any? %>
+    <section class="search-section" aria-label="Mis notas">
+      <h4 class="search-section-title">Mis notas <span class="count"><%= notes.size %></span></h4>
+      <ul class="search-list">
+        <% notes.each do |note| %>
+          <li>
+            <%= link_to [note.book.library, note.book],
+                        class: "search-hit",
+                        data: {search_target: "hit", action: "keydown->search#navigate"} do %>
+              <span class="hit-icon" aria-hidden="true">📝</span>
+              <span class="hit-body">
+                <span class="hit-title">«<%= note.body.to_s.truncate(80) %>»</span>
+                <span class="hit-meta">en <%= note.book.title %> · <%= note.book.library.name %></span>
+              </span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+<% end %>

@@ -1,0 +1,6 @@
+<%# Results pane for the global ⌘K search. Rendered inside a turbo-frame
+    on the page and updated live as the user types (Stimulus
+    `search_controller.js` debounces + hits this endpoint). %>
+<turbo-frame id="search-results" target="_top">
+  <%= render "search/results", query: @query, books: @books, members: @members, notes: @notes %>
+</turbo-frame>

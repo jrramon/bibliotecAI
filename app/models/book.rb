@@ -83,6 +83,24 @@ class Book < ApplicationRecord
       .distinct
   end
 
+  # Books whose title/author/synopsis match `query`, across every library
+  # the viewer is a member of. No personal-notes fallback — those surface
+  # as separate UserBookNote results in the global search.
+  def self.search_for_viewer(query, viewer:, limit: 10)
+    return none if query.blank? || viewer.nil?
+    term = "%#{sanitize_sql_like(query.downcase)}%"
+    where(library_id: viewer.libraries.select(:id))
+      .where(
+        "LOWER(books.title) LIKE :t " \
+        "OR LOWER(COALESCE(books.author, '')) LIKE :t " \
+        "OR LOWER(COALESCE(books.synopsis, '')) LIKE :t",
+        t: term
+      )
+      .includes(:library)
+      .order(:title)
+      .limit(limit)
+  end
+
   # Transliterates + lowercases + collapses non-alphanum so that near-duplicate
   # titles from successive Claude passes ("1984" vs "1984 ", "Episodios
   # Nacionales" vs "episodios nacionales (primera serie)") can be deduped.

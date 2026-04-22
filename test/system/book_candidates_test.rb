@@ -42,7 +42,7 @@ class BookCandidatesTest < ApplicationSystemTestCase
     assert_selector "h2", text: "Buscar en Google Books"
 
     # Input prefilled with current title + author
-    assert_equal "Typo Titlle Wrong Author", find("input[name='q']").value
+    assert_equal "Typo Titlle Wrong Author", find(".catalog-search-form input[name='q']").value
 
     click_on "Buscar candidatos"
     assert_selector ".candidate", count: 2
