@@ -1298,6 +1298,45 @@ dialog.modal-dialog::backdrop {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(139, 46, 42, 0.08);
 }
+/* Stacked field (label on top of input) inside any modal-form. Without
+   this, `<label class="field">` collapses to inline layout and the
+   input ends up next to the label instead of below it. */
+.modal-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.modal-form .field-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.modal-form .field-label em {
+  font-style: normal;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+.modal-form .field input[type="text"],
+.modal-form .field input[type="email"],
+.modal-form .field input[type="url"],
+.modal-form .field input[type="search"] {
+  width: 100%;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-1);
+  outline: none;
+}
+.modal-form .field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 46, 42, 0.08);
+}
 .modal-actions {
   display: flex;
   gap: 10px;
