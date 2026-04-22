@@ -4,7 +4,7 @@ class TweaksPanelTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "panel toggles open and applies palette to <html>" do
@@ -47,6 +47,7 @@ class TweaksPanelTest < ApplicationSystemTestCase
   end
 
   test "guest users don't see the tweaks panel" do
+    visit libraries_path
     click_on "Cerrar sesión"
     assert_selector ".header-actions a", text: "Iniciar sesión"
 

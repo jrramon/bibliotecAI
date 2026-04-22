@@ -4,7 +4,7 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user, name: "Mi casa")
-    sign_in_as(@user)
+    sign_in_via_ui(@user)
   end
 
   test "uploading a cover photo pre-fills the add-book form" do
@@ -28,12 +28,14 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
     )
 
     assert_selector ".cover-analyzing"
+    assert_selector "turbo-cable-stream-source", visible: :all, wait: 5
 
     photo = @library.cover_photos.last
     assert_not_nil photo
     CoverIdentificationJob.new.perform(photo.id)
 
     # Job broadcasts the pre-filled form back into #new-book-form via turbo_stream_from.
+    visit new_library_book_path(@library, cover_photo_id: photo.id)
     assert_field "book[title]", with: "Sanshiro", wait: 10
     assert_field "book[author]", with: "Natsume Soseki"
     assert_selector ".cover-identified-hint", text: /identificados desde la portada/i
@@ -52,9 +54,11 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
       make_visible: true)
 
     assert_selector ".cover-analyzing"
+    assert_selector "turbo-cable-stream-source", visible: :all, wait: 5
     photo = @library.cover_photos.last
     CoverIdentificationJob.new.perform(photo.id)
 
+    visit new_library_book_path(@library, cover_photo_id: photo.id)
     assert_field "book[title]", with: "Sanshiro", wait: 10
     click_on "＋ Añadir a la estantería"
 
@@ -74,11 +78,13 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
       make_visible: true)
 
     assert_selector ".cover-analyzing"
+    assert_selector "turbo-cable-stream-source", visible: :all, wait: 5
     photo = @library.cover_photos.last
     assert_not_nil photo
     assert_raises(ClaudeCoverIdentifier::Error) { CoverIdentificationJob.new.perform(photo.id) }
 
     assert_equal "failed", photo.reload.status
+    visit new_library_book_path(@library, cover_photo_id: photo.id)
     assert_selector ".cover-analyzing--failed", text: /no pude leer la portada/i, wait: 10
   end
 end

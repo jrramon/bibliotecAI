@@ -5,7 +5,7 @@ class BookCandidatesTest < ApplicationSystemTestCase
     @user = create(:user)
     @library = create(:library, owner: @user)
     @book = create(:book, library: @library, added_by_user: @user, title: "Typo Titlle", author: "Wrong Author")
-    sign_in_as(@user)
+    fast_sign_in(@user)
 
     @fake_candidates = [
       BookCandidates::Candidate.new(

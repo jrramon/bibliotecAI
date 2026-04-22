@@ -10,7 +10,7 @@ class BookCommentsTest < ApplicationSystemTestCase
   end
 
   test "member posts a comment and sees it in the thread" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     assert_selector "h3", text: "Notas y comentarios"
@@ -28,7 +28,7 @@ class BookCommentsTest < ApplicationSystemTestCase
   test "non-author cannot see delete button on another user's comment" do
     create(:comment, book: @book, user: @alice, body: "Nota de Alice.")
 
-    sign_in_as(@bob)
+    fast_sign_in(@bob)
     visit library_book_path(@library, @book)
 
     assert_selector ".comment .cm-body", text: "Nota de Alice."

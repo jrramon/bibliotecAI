@@ -1,4 +1,5 @@
 require "test_helper"
+require "warden/test/helpers"
 
 if ENV["SELENIUM_URL"].present?
   Capybara.server_host = "0.0.0.0"
@@ -24,6 +25,8 @@ if ENV["SELENIUM_URL"].present?
 end
 
 class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+  include Warden::Test::Helpers
+
   if ENV["SELENIUM_URL"].blank?
     driven_by :selenium, using: :headless_chrome, screen_size: [1400, 1400]
   end
@@ -34,11 +37,27 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     setup { Capybara.current_driver = :remote_chrome }
   end
 
+  setup do
+    Warden.test_mode!
+  end
+
   teardown do
+    Warden.test_reset!
     Capybara.reset_sessions!
   end
 
   def sign_in_as(user, password: "supersecret123")
+    fast_sign_in(user, password: password)
+    visit libraries_path
+    assert_selector "header.header", text: user.display_name, wait: 5
+  end
+
+  def fast_sign_in(user, password: "supersecret123")
+    user.update!(password: password) unless user.valid_password?(password)
+    login_as(user, scope: :user)
+  end
+
+  def sign_in_via_ui(user, password: "supersecret123")
     user.update!(password: password) unless user.valid_password?(password)
     visit new_user_session_path
     fill_in "user_email", with: user.email

@@ -24,7 +24,7 @@ class ShelfPhotoResultsTest < ApplicationSystemTestCase
     @photo.save!
     # Also create a matching Book in the library so the link is rendered
     create(:book, library: @library, added_by_user: @user, title: "Quiet", author: "Susan Cain")
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "show page surfaces identified, rejected, and unidentified entries" do

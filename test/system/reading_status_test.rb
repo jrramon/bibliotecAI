@@ -10,7 +10,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
   end
 
   test "user starts, finishes, and restarts a book — past cycles are preserved" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Empezar a leer"
@@ -31,7 +31,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
 
   test "stop reading marks the current attempt as dropped and keeps the row" do
     status = create(:reading_status, user: @alice, book: @book, state: :reading)
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Dejar de leer"
@@ -42,7 +42,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
   end
 
   test "finish reading with a past date records finished_at in the past" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Empezar a leer"
@@ -61,7 +61,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
   end
 
   test "finish reading with 'Hace tiempo' stores no finished_at" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Empezar a leer"
@@ -75,7 +75,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
   end
 
   test "three reads are each recorded and surfaced as a history" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "Empezar a leer"
@@ -97,7 +97,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
     create(:reading_status, user: @alice, book: @book, state: :read,
       started_at: 1.year.ago, finished_at: 1.year.ago + 1.week)
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     assert_selector ".reading-log li", count: 2
@@ -115,7 +115,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
     create(:reading_status, user: @alice, book: alice_reading, state: :reading)
     create(:reading_status, user: @bob, book: bob_reading, state: :reading)
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
 
     within ".reading-now" do
@@ -126,7 +126,7 @@ class ReadingStatusTest < ApplicationSystemTestCase
   end
 
   test "leyendo ahora section is hidden when the user has no active reads in this library" do
-    sign_in_as(@bob)
+    fast_sign_in(@bob)
     visit library_path(@library)
     assert_no_selector ".reading-now"
   end

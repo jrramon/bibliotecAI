@@ -5,7 +5,7 @@ class BookCoverLookupTest < ApplicationSystemTestCase
     @user = create(:user)
     @library = create(:library, owner: @user)
     @book = create(:book, library: @library, added_by_user: @user, title: "Quiet", author: "Susan Cain")
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "no cover → Buscar portada button present; clicking it flashes the result" do

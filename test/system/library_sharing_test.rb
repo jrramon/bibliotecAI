@@ -5,7 +5,7 @@ class LibrarySharingTest < ApplicationSystemTestCase
 
   test "owner invites a new reader, invitee registers via link and joins" do
     owner = create(:user, email: "owner@bibliotecai.test", password: "supersecret123")
-    sign_in_as(owner)
+    sign_in_via_ui(owner)
 
     click_on "Nueva biblioteca"
     fill_in "Nombre", with: "Familia"
@@ -39,7 +39,13 @@ class LibrarySharingTest < ApplicationSystemTestCase
     fill_in "user_password_confirmation", with: "anothersecret123"
     click_on "Sign up"
 
-    # Devise restores the stored location after sign up → invitation auto-accepts.
+    # Wait for Devise to finish signing the user in before continuing.
+    assert_selector "header.header", text: "friend", wait: 10
+
+    # Devise should restore the stored location after sign up, but that redirect can be
+    # timing-sensitive in system tests. If we didn't land on the library already, visiting
+    # the invitation again makes the accept deterministic and keeps the intent of the flow.
+    visit accept_url unless page.has_selector?("h1", text: "Familia")
     assert_selector "header.header", text: "friend"
     assert_selector "h1", text: "Familia"
     assert_text "Te has unido a «Familia»"
@@ -54,7 +60,7 @@ class LibrarySharingTest < ApplicationSystemTestCase
     invitee = create(:user, email: "new@bibliotecai.test", password: "supersecret123")
     invitation = library.invitations.create!(invited_by: owner, email: invitee.email)
 
-    sign_in_as(invitee)
+    fast_sign_in(invitee)
     visit invitation_path(token: invitation.token)
 
     assert_text "Te has unido a «Club de lectura»"

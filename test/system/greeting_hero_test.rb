@@ -9,7 +9,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
   end
 
   test "greets the viewer with the local part of their email" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     assert_selector ".greeting-title", text: /(buenos d[ií]as|buenas tardes|buenas noches), alice/i
   end
@@ -19,7 +19,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
       title: "El elogio de la sombra", author: "Junichirō Tanizaki",
       synopsis: "El secreto de la belleza está en la sombra. Un ensayo imprescindible sobre la estética japonesa.")
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
 
     assert_selector ".pull-quote blockquote"
@@ -31,7 +31,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
     @alice.update!(last_seen_at: 2.hours.ago)
     create(:book, library: @library, added_by_user: @bob, title: "New arrival", created_at: 30.minutes.ago)
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
 
     assert_selector ".greeting-delta", text: /1 novedad/i
@@ -41,7 +41,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
     @alice.update!(last_seen_at: 2.hours.ago)
     # No new activity by others.
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
 
     assert_selector ".greeting-delta--quiet"
@@ -49,7 +49,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
 
   test "touches last_seen_at on the first dashboard visit of the window" do
     assert_nil @alice.reload.last_seen_at
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     assert_not_nil @alice.reload.last_seen_at
   end

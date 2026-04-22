@@ -11,5 +11,9 @@
     </div>
   </header>
 
-  <%= render "books/new_form", library: @library, book: @book %>
+  <% if defined?(@cover_photo) && @cover_photo&.failed? %>
+    <%= render "cover_photos/identification_failed", library: @library, cover_photo: @cover_photo, book: @book %>
+  <% else %>
+    <%= render "books/new_form", library: @library, book: @book, cover_photo: defined?(@cover_photo) ? @cover_photo : nil %>
+  <% end %>
 </section>

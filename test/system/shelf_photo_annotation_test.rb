@@ -4,7 +4,7 @@ class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "annotated image is attached when Claude returns unidentified boxes" do

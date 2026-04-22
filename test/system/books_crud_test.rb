@@ -4,7 +4,7 @@ class BooksCrudTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
     @library = create(:library, name: "Mi casa", owner: @user)
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "user adds a book, sees it in the grid, edits, and deletes it" do

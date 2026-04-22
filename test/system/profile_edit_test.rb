@@ -3,7 +3,7 @@ require "application_system_test_case"
 class ProfileEditTest < ApplicationSystemTestCase
   setup do
     @user = create(:user, email: "alice@bibliotecai.test", password: "supersecret123")
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "header has a link to the profile page" do

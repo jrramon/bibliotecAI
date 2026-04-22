@@ -15,7 +15,24 @@ class BooksController < ApplicationController
   end
 
   def new
+    @cover_photo = cover_photo_from_params
     @book = @library.books.build
+
+    if @cover_photo&.completed?
+      @book.assign_attributes(
+        title: @cover_photo.title,
+        subtitle: @cover_photo.subtitle,
+        author: @cover_photo.author,
+        publisher: @cover_photo.publisher,
+        isbn: @cover_photo.isbn,
+        published_year: @cover_photo.published_year&.to_i,
+        page_count: @cover_photo.page_count&.to_i,
+        language: @cover_photo.language,
+        synopsis: @cover_photo.synopsis,
+        cdu: @cover_photo.cdu,
+        genres: @cover_photo.genres
+      )
+    end
   end
 
   def create
@@ -157,6 +174,12 @@ class BooksController < ApplicationController
 
   def set_library
     @library = current_user.libraries.friendly.find(params[:library_id])
+  end
+
+  def cover_photo_from_params
+    id = params[:cover_photo_id].presence
+    return nil unless id
+    @library.cover_photos.find_by(id: id)
   end
 
   def set_book

@@ -19,7 +19,7 @@ class LibrarySearchTest < ApplicationSystemTestCase
   end
 
   test "matches on title" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
 
     find(".book-search input[type=search]").set("Quiet").send_keys(:return)
@@ -31,7 +31,7 @@ class LibrarySearchTest < ApplicationSystemTestCase
   end
 
   test "matches on synopsis" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library, q: "introverts")
 
     assert_text "1 resultado"
@@ -43,7 +43,7 @@ class LibrarySearchTest < ApplicationSystemTestCase
     @agile.user_book_notes.create!(user: @alice, body: "Nota secreta: serendipia leerlo")
     @quiet.user_book_notes.create!(user: @bob, body: "Anotación de Bob con la palabra serendipia")
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library, q: "serendipia")
 
     assert_text "1 resultado"
@@ -53,13 +53,13 @@ class LibrarySearchTest < ApplicationSystemTestCase
   end
 
   test "empty search shows all books" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
     assert_selector ".book-grid li", count: 3
   end
 
   test "no matches renders the search-specific empty state" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library, q: "zzzzzz-no-match")
 
     assert_text "Sin resultados"

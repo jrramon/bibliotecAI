@@ -6,7 +6,7 @@ class ShelfLayoutsTest < ApplicationSystemTestCase
     @library = create(:library, owner: @user, name: "Mi casa")
     @book_a = create(:book, library: @library, added_by_user: @user, title: "Alfa", author: "First Author")
     @book_b = create(:book, library: @library, added_by_user: @user, title: "Beta", author: "Second Author")
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "all three layouts are in the DOM; CSS toggles which one is visible" do

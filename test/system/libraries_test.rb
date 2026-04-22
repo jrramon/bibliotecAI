@@ -3,7 +3,7 @@ require "application_system_test_case"
 class LibrariesTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "user creates a library and lands on its page" do

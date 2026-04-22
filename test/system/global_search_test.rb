@@ -14,7 +14,7 @@ class GlobalSearchTest < ApplicationSystemTestCase
   end
 
   test "typing in the header search finds a book in one of my libraries" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     fill_in "q", with: "Sanshiro"
     assert_selector ".search-section-title", text: /libros/i, wait: 5
@@ -22,14 +22,14 @@ class GlobalSearchTest < ApplicationSystemTestCase
   end
 
   test "the search does not surface books from libraries I don't belong to" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     fill_in "q", with: "Private stuff"
     assert_text(/sin resultados/i, wait: 5)
   end
 
   test "the search finds members of my libraries" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     fill_in "q", with: "bob@"
     assert_selector ".search-section-title", text: /miembros/i, wait: 5
@@ -40,7 +40,7 @@ class GlobalSearchTest < ApplicationSystemTestCase
     create(:user_book_note, user: @alice, book: @book, body: "Me recordó a la abuela de Kumamoto")
     create(:user_book_note, user: @bob, book: @book, body: "Bob leyó esto")
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     fill_in "q", with: "kumamoto"
     assert_selector ".search-section-title", text: /mis notas/i, wait: 5
@@ -54,7 +54,7 @@ class GlobalSearchTest < ApplicationSystemTestCase
     create(:book, library: @library, added_by_user: @alice, title: "Foo", genres: ["Novela histórica", "Ensayo"])
     create(:book, library: @library, added_by_user: @alice, title: "Bar", genres: ["Novela histórica"])
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
 
     within(".tags-rail") do

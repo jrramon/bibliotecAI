@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  test_fast:
     runs-on: ubuntu-latest
 
     services:
@@ -39,19 +39,102 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick google-chrome-stable
       - name: Prepare DB
         run: bin/rails db:test:prepare
-      - name: Tests
-        run: bin/rails test test:system
-      - name: StandardRB
-        run: bundle exec standardrb
-      - name: ERB lint
-        run: bundle exec erb_lint --lint-all
-      - name: Brakeman
-        run: bundle exec brakeman --no-pager -q -c config/brakeman.yml
+      - name: Tests (non-system)
+        env:
+          PARALLEL_WORKERS: "4"
+        run: bin/rails test
+
+  system_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: rails_dev
+          POSTGRES_PASSWORD: aqwe123
+          POSTGRES_DB: bibliotecai_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U rails_dev"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_USERNAME: rails_dev
+      DATABASE_PASSWORD: aqwe123
+      PARALLEL_WORKERS: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick google-chrome-stable
+      - name: Prepare DB
+        run: bin/rails db:test:prepare
+
+      - name: System tests (shard ${{ matrix.shard }}/2)
+        env:
+          SHARD: ${{ matrix.shard }}
+          SHARDS: "2"
+        run: |
+          SYSTEM_TEST_FILES="$(ruby -e 'files=Dir["test/system/**/*_test.rb"].sort; shard=Integer(ENV.fetch("SHARD")); shards=Integer(ENV.fetch("SHARDS")); per=(files.size.fdiv(shards)).ceil; slice=files.each_slice(per).to_a[shard-1] || []; puts slice.join(" ")')"
+          echo "Shard ${SHARD}/${SHARDS}: ${SYSTEM_TEST_FILES}"
+          bin/rails test ${SYSTEM_TEST_FILES}
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: screenshots
+          name: screenshots-shard-${{ matrix.shard }}
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore
+
+  standardrb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick
+      - name: StandardRB
+        run: bundle exec standardrb
+
+  erb_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick
+      - name: ERB lint
+        run: bundle exec erb_lint --lint-all
+
+  brakeman:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick
+      - name: Brakeman
+        run: bundle exec brakeman --no-pager -q -c config/brakeman.yml

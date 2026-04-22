@@ -4,7 +4,7 @@ class ShelfPhotoUploadTest < ApplicationSystemTestCase
   setup do
     @user = create(:user)
     @library = create(:library, owner: @user)
-    sign_in_as(@user)
+    fast_sign_in(@user)
   end
 
   test "user uploads a shelf photo and lands on the pending status page" do

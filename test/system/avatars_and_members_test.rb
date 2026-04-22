@@ -11,7 +11,7 @@ class AvatarsAndMembersTest < ApplicationSystemTestCase
   end
 
   test "sidebar members widget shows library members on library-scoped pages" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
 
     within ".members-widget" do
@@ -21,7 +21,7 @@ class AvatarsAndMembersTest < ApplicationSystemTestCase
   end
 
   test "sidebar members widget is hidden on pages without a library in scope" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit libraries_path
     assert_no_selector ".members-widget"
   end
@@ -30,7 +30,7 @@ class AvatarsAndMembersTest < ApplicationSystemTestCase
     book = create(:book, library: @library, added_by_user: @alice, title: "Quiet")
     create(:reading_status, user: @bob, book: book, state: :reading)
 
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_path(@library)
 
     within ".members-widget" do
@@ -43,7 +43,7 @@ class AvatarsAndMembersTest < ApplicationSystemTestCase
     create(:reading_status, user: @alice, book: book, state: :read, finished_at: 1.week.ago)
     create(:reading_status, user: @bob, book: book, state: :read, finished_at: 2.days.ago)
 
-    sign_in_as(@carol)
+    fast_sign_in(@carol)
     visit library_book_path(@library, book)
 
     within ".read-by" do
@@ -54,7 +54,7 @@ class AvatarsAndMembersTest < ApplicationSystemTestCase
 
   test "book detail does not render Leído por when no one has finished it" do
     book = create(:book, library: @library, added_by_user: @alice, title: "Unread")
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, book)
     assert_no_selector ".read-by"
   end

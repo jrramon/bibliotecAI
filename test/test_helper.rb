@@ -6,7 +6,7 @@ require "mocha/minitest"
 
 module ActiveSupport
   class TestCase
-    parallelize(workers: 1)
+    parallelize(workers: ENV.fetch("PARALLEL_WORKERS", "1").to_i)
 
     include FactoryBot::Syntax::Methods
   end

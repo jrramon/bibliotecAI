@@ -10,7 +10,7 @@ class PersonalNotesTest < ApplicationSystemTestCase
   end
 
   test "each user sees only their own note on the same shared book" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     visit library_book_path(@library, @book)
 
     click_on "＋ Añadir mi nota personal"
@@ -23,7 +23,7 @@ class PersonalNotesTest < ApplicationSystemTestCase
     # Bob opens the same book — he should NOT see Alice's note
     click_on "Cerrar sesión"
     assert_selector ".header-actions a", text: "Iniciar sesión"
-    sign_in_as(@bob)
+    fast_sign_in(@bob)
     visit library_book_path(@library, @book)
 
     assert_no_text "Nota secreta de Alice"
@@ -39,7 +39,7 @@ class PersonalNotesTest < ApplicationSystemTestCase
   end
 
   test "emptying the note removes it from view" do
-    sign_in_as(@alice)
+    fast_sign_in(@alice)
     @book.user_book_notes.create!(user: @alice, body: "Algo que ya no importa")
 
     visit library_book_path(@library, @book)
