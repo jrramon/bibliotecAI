@@ -1,9 +1,12 @@
 ---
 :skip_files:
   - app/services/claude_book_identifier.rb
+  - app/services/claude_cover_identifier.rb
 :additional_checks_path:
   - "./lib/brakeman_checks"
-# The Open3.capture3 call in ClaudeBookIdentifier passes an argv array to
-# the kernel directly (not through a shell), so the `CLAUDE_BIN` env var and
-# the generated image path cannot trigger command injection. Skipping the
-# file is safer than broadly ignoring CommandInjection warnings.
+# Both Claude*Identifier services call `Open3.capture3` passing an argv array
+# (binary + separate arg strings) directly to the kernel — NOT a single
+# string through a shell. Even if `CLAUDE_BIN` or the generated image path
+# contained shell metacharacters, exec() would look for a binary literally
+# named that and fail. Skipping these two files is safer than disabling the
+# CommandInjection check across the whole codebase.
