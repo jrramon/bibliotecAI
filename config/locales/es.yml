@@ -2,6 +2,7 @@ es:
   date:
     formats:
       default: "%d/%m/%Y"
+      short: "%-d %b"
       long: "%-d de %B de %Y"
     month_names: [~, enero, febrero, marzo, abril, mayo, junio, julio, agosto, septiembre, octubre, noviembre, diciembre]
   time:

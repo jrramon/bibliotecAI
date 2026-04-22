@@ -1,8 +1,25 @@
 #!/bin/bash -e
 
-if [ ! -f /usr/local/bundle/bundler-installed ] || [ ! -d /usr/local/bundle/ruby ]; then
-  bundle install
-  touch /usr/local/bundle/bundler-installed
+# Enable jemalloc for reduced memory usage and latency.
+if [ -z "${LD_PRELOAD+x}" ] && [ -f /usr/lib/*-linux-gnu/libjemalloc.so.2 ]; then
+  LD_PRELOAD=$(find /usr/lib -name libjemalloc.so.2 -print -quit)
+  export LD_PRELOAD
+fi
+
+# Development: ensure bundle is installed
+if [ "$RAILS_ENV" != "production" ]; then
+  if [ ! -f /usr/local/bundle/bundler-installed ] || [ ! -d /usr/local/bundle/ruby ]; then
+    bundle install
+    touch /usr/local/bundle/bundler-installed
+  fi
+fi
+
+# Production: prepare the database when starting the server
+if [ "$RAILS_ENV" = "production" ]; then
+  # Only run db:prepare when starting the rails server
+  if echo "$@" | grep -q "rails server"; then
+    ./bin/rails db:prepare
+  fi
 fi
 
 exec "${@}"

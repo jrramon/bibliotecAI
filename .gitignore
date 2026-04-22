@@ -21,6 +21,9 @@
 .env.development
 .env.test
 .env.production
+.claude-credentials.json
+nginx-biblio.conf
+biblio-docker.service
 /node_modules
 /coverage
 /public/packs

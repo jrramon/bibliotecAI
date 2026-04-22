@@ -1,0 +1,55 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: biblio:latest
+    container_name: biblio_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3012:80"
+    env_file:
+      - .env.production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["bundle", "exec", "thrust", "./bin/rails", "server"]
+    volumes:
+      - ./storage:/rails/storage
+      - rails-log:/rails/log
+    networks:
+      - biblio-prod
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/up || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  photo-worker:
+    image: biblio:latest
+    container_name: biblio_photo_worker
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - CLAUDE_BIN=/usr/local/bin/claude
+    command: ["bundle", "exec", "bin/rails", "runner", "bin/photo-worker.rb"]
+    volumes:
+      - ./storage:/rails/storage
+      - /home/linuxbrew/.linuxbrew/Caskroom/claude-code/2.1.104/claude:/usr/local/bin/claude:ro
+      - ./.claude-credentials.json:/home/rails/.claude/.credentials.json:ro
+    networks:
+      - biblio-prod
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  rails-log:
+    driver: local
+
+networks:
+  biblio-prod:
+    driver: bridge
