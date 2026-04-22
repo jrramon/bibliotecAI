@@ -1,0 +1,91 @@
+<section class="page profile-edit">
+  <header class="page-head">
+    <div class="title-group">
+      <p class="eyebrow">Tu cuenta</p>
+      <h1 class="page-title">Mi <span class="accent">perfil</span></h1>
+      <p class="sub">Cómo te ven los demás miembros de tus bibliotecas.</p>
+    </div>
+  </header>
+
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+              html: {method: :put, multipart: true, class: "profile-form"}) do |f| %>
+    <% if resource.errors.any? %>
+      <ul class="form-errors">
+        <% resource.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <section class="profile-section">
+      <h2 class="section-title">Avatar e identidad</h2>
+
+      <div class="profile-grid">
+        <aside class="profile-avatar-panel">
+          <%= avatar_for(resource, size: :lg, extra_classes: "profile-avatar-preview") %>
+          <%= f.label :avatar, "Cambiar avatar" %>
+          <%= f.file_field :avatar,
+                           accept: "image/jpeg,image/png,image/webp,image/heic" %>
+          <% if resource.avatar.attached? %>
+            <p class="profile-hint">Sube uno nuevo para reemplazar el actual.</p>
+          <% else %>
+            <p class="profile-hint">Si no subes ninguno, usamos tus iniciales con un color estable.</p>
+          <% end %>
+        </aside>
+
+        <div class="profile-fields">
+          <label class="field">
+            <span class="field-label">Nombre</span>
+            <%= f.text_field :name, autocomplete: "name", placeholder: "Ej. Alice Gómez", maxlength: 80 %>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Email</span>
+            <%= f.email_field :email, autocomplete: "email" %>
+            <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+              <small>Pendiente de confirmar: <%= resource.unconfirmed_email %></small>
+            <% end %>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-section">
+      <h2 class="section-title">Contraseña</h2>
+      <p class="profile-hint">Deja estos campos vacíos si no quieres cambiarla.</p>
+      <div class="profile-fields">
+        <label class="field">
+          <span class="field-label">Nueva contraseña</span>
+          <%= f.password_field :password, autocomplete: "new-password" %>
+          <% if @minimum_password_length %>
+            <small>Mínimo <%= @minimum_password_length %> caracteres.</small>
+          <% end %>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Confirmar contraseña</span>
+          <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Contraseña actual <em>(solo si cambias email o contraseña)</em></span>
+          <%= f.password_field :current_password, autocomplete: "current-password" %>
+        </label>
+      </div>
+    </section>
+
+    <div class="form-actions">
+      <%= link_to "Volver", root_path, class: "btn btn-ghost" %>
+      <%= f.submit "Guardar cambios", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+
+  <section class="profile-section profile-danger">
+    <h2 class="section-title">Eliminar cuenta</h2>
+    <p class="profile-hint">Esto borra tu cuenta y las bibliotecas que posees. Los libros y comentarios de otros miembros siguen existiendo.</p>
+    <%= button_to "Eliminar mi cuenta", registration_path(resource_name),
+                  method: :delete,
+                  class: "btn btn-ghost btn-danger",
+                  form: {data: {turbo_confirm: "¿Seguro? Esto no se puede deshacer."}} %>
+  </section>
+</section>

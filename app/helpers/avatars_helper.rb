@@ -1,13 +1,25 @@
 module AvatarsHelper
-  # Renders a single avatar: a circle with the user's initials on a color
-  # deterministically derived from their email (see `avatar_slot`). No remote
-  # image fetch — matches the kanji-stamp / spine-palette aesthetic.
+  # Renders a single avatar. Uses the user's uploaded image if present;
+  # otherwise falls back to initials on a deterministic colour derived
+  # from the email — the kanji-stamp aesthetic is preserved for users
+  # who never set a photo.
   #
   # size: :sm | :md | :lg
   def avatar_for(user, size: :md, extra_classes: nil)
     return "".html_safe unless user
-    classes = ["avatar", "avatar-#{size}", "avatar-slot-#{avatar_slot(user)}", extra_classes].compact.join(" ")
-    tag.span(avatar_initials(user), class: classes, title: user.email, aria: {label: user.email})
+
+    if user.respond_to?(:avatar) && user.avatar.attached?
+      image_classes = ["avatar", "avatar-#{size}", "avatar--image", extra_classes].compact.join(" ")
+      variant = (size == :lg) ? :thumb : :small
+      image_tag user.avatar.variant(variant), class: image_classes,
+                                              alt: user.display_name,
+                                              title: user.display_name
+    else
+      classes = ["avatar", "avatar-#{size}", "avatar-slot-#{avatar_slot(user)}", extra_classes].compact.join(" ")
+      tag.span(avatar_initials(user), class: classes,
+                                      title: user.display_name,
+                                      aria: {label: user.display_name})
+    end
   end
 
   # Renders up to `max` avatars overlapping, plus "+N" if there are more.
@@ -25,8 +37,16 @@ module AvatarsHelper
 
   private
 
-  # Two-character label. "jose.ramon@x" → "JR", "alice@x" → "AL".
+  # Two-character label. Prefers "name" when set (first letter of the
+  # first two words), else splits on email separators.
   def avatar_initials(user)
+    if user.name.to_s.strip.present?
+      words = user.name.strip.split(/\s+/)
+      first = words[0][0].to_s
+      second = words[1]&.slice(0).to_s
+      return (first + second).upcase.slice(0, 2)
+    end
+
     local = user.email.to_s.split("@").first.to_s
     parts = local.split(/[._+-]+/).reject(&:empty?)
     if parts.size >= 2

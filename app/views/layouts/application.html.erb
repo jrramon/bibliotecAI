@@ -60,7 +60,10 @@
         <% end %>
         <div class="header-actions">
           <% if user_signed_in? %>
-            <span class="user-email"><%= current_user.email %></span>
+            <%= link_to edit_user_registration_path, class: "header-profile-link", aria: {label: "Editar mi perfil"} do %>
+              <%= avatar_for(current_user, size: :sm) %>
+              <span class="user-email"><%= current_user.display_name %></span>
+            <% end %>
             <%= button_to "Cerrar sesión", destroy_user_session_path, method: :delete, class: "btn btn-ghost", data: { turbo_method: :delete } %>
           <% else %>
             <%= link_to "Iniciar sesión", new_user_session_path, class: "btn btn-ghost" %>

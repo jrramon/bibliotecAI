@@ -11,7 +11,7 @@ class AuthenticationTest < ApplicationSystemTestCase
     fill_in "user_password_confirmation", with: "supersecret123"
     click_on "Sign up"
 
-    assert_selector "header.header", text: "nueva@bibliotecai.test"
+    assert_selector "header.header", text: "nueva"
     assert_selector "h1", text: "Mis bibliotecas"
 
     click_on "Cerrar sesión"
@@ -28,6 +28,6 @@ class AuthenticationTest < ApplicationSystemTestCase
     fill_in "user_password", with: "supersecret123"
     click_on "Log in"
 
-    assert_selector "header.header", text: user.email
+    assert_selector "header.header", text: user.display_name
   end
 end

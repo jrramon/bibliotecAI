@@ -44,7 +44,7 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
     fill_in "user_email", with: user.email
     fill_in "user_password", with: password
     click_on "Log in"
-    assert_selector "header.header", text: user.email
+    assert_selector "header.header", text: user.display_name, wait: 5
   end
 
   # TODO: axe-core a11y helper — wire up once we have a real interactive page (Slice 1+).

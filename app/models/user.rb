@@ -2,6 +2,20 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
     :recoverable, :rememberable, :validatable
 
+  has_one_attached :avatar do |attachable|
+    attachable.variant :thumb, resize_to_fill: [80, 80], preprocessed: true
+    attachable.variant :small, resize_to_fill: [44, 44]
+  end
+
+  validates :name, length: {maximum: 80}, allow_blank: true
+  validate :avatar_is_supported, if: -> { avatar.attached? }
+
+  # Display name for greetings, avatar initials, search hits. Prefers the
+  # explicit `name` column, falls back to the local part of the email.
+  def display_name
+    name.presence || email.to_s.split("@").first.to_s
+  end
+
   has_many :memberships, dependent: :destroy
   has_many :libraries, through: :memberships
   has_many :owned_libraries, class_name: "Library", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner
@@ -23,5 +37,12 @@ class User < ApplicationRecord
       .distinct
       .order(:email)
       .limit(limit)
+  end
+
+  private
+
+  def avatar_is_supported
+    return if avatar.blob.content_type.in?(%w[image/jpeg image/png image/webp image/heic])
+    errors.add(:avatar, "debe ser JPEG, PNG, WebP o HEIC")
   end
 end

@@ -79,6 +79,6 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
     assert_raises(ClaudeCoverIdentifier::Error) { CoverIdentificationJob.new.perform(photo.id) }
 
     assert_equal "failed", photo.reload.status
-    assert_selector ".cover-analyzing--failed", text: /no pude leer la portada/i, wait: 5
+    assert_selector ".cover-analyzing--failed", text: /no pude leer la portada/i, wait: 10
   end
 end

@@ -18,7 +18,7 @@ class LibrariesTest < ApplicationSystemTestCase
     click_on "Crear biblioteca"
 
     assert_selector "h1", text: "Mi casa"
-    assert_text @user.email
+    assert_text @user.display_name
     assert_current_path(/\/libraries\/mi-casa/)
   end
 

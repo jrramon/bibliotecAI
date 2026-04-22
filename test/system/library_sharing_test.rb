@@ -40,7 +40,7 @@ class LibrarySharingTest < ApplicationSystemTestCase
     click_on "Sign up"
 
     # Devise restores the stored location after sign up → invitation auto-accepts.
-    assert_selector "header.header", text: "friend@bibliotecai.test"
+    assert_selector "header.header", text: "friend"
     assert_selector "h1", text: "Familia"
     assert_text "Te has unido a «Familia»"
 

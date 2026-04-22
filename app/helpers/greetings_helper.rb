@@ -7,7 +7,8 @@ module GreetingsHelper
   end
 
   def display_name_for(user)
-    user.email.to_s.split("@").first.presence || "amigo"
+    (user.respond_to?(:display_name) ? user.display_name.presence : nil) ||
+      user.email.to_s.split("@").first.presence || "amigo"
   end
 
   # Counts of new library activity (books added, comments posted, cover
