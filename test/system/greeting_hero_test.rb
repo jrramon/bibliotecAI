@@ -23,7 +23,7 @@ class GreetingHeroTest < ApplicationSystemTestCase
     visit libraries_path
 
     assert_selector ".pull-quote blockquote"
-    assert_selector ".quote-attribution", text: /TANIZAKI|SŌSEKI|KAWABATA|YOSANO|MURAKAMI/
+    assert_selector ".quote-attribution", text: /BASHŌ|ISSA|SŌSEKI|TANIZAKI|KAWABATA|MISHIMA|DAZAI|AKUTAGAWA|MURAKAMI|YOSHIMOTO|ABE|OGAWA|YOSANO|ENDŌ/
   end
 
   test "shows new-activity count when others have added books since last visit" do
