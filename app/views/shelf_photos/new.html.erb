@@ -1,27 +1,28 @@
 <section class="page shelf-photo-new">
   <header class="page-head">
     <div class="title-group">
-      <h1 class="page-title">Subir <span class="accent">foto de estantería</span></h1>
-      <p class="sub">Sube una foto de tus libros y Claude intentará identificarlos automáticamente.</p>
+      <h1 class="page-title">Subir <span class="accent">fotos de estantería</span></h1>
+      <p class="sub">Sube una o varias fotos de tus libros. Claude las irá identificando una a una en segundo plano.</p>
     </div>
   </header>
 
   <div class="card">
-    <%= simple_form_for [@library, @shelf_photo], html: {multipart: true} do |f| %>
-      <%= f.error_notification %>
-
+    <%= form_with url: library_shelf_photos_path(@library), method: :post,
+                  multipart: true, html: {class: "shelf-photo-upload"} do %>
       <div class="form-inputs">
-        <%= f.input :image,
-                    label: "Imagen de la estantería",
-                    as: :file,
-                    required: true,
-                    input_html: {accept: "image/jpeg,image/png,image/webp,image/heic"},
-                    hint: "JPEG, PNG, WebP o HEIC" %>
+        <label class="field">
+          <span class="field-label">Imágenes de la estantería</span>
+          <%= file_field_tag "shelf_photo[images][]",
+                             multiple: true,
+                             accept: "image/jpeg,image/png,image/webp,image/heic",
+                             required: true %>
+          <small>JPEG, PNG, WebP o HEIC. Puedes seleccionar varias a la vez.</small>
+        </label>
       </div>
 
       <div class="form-actions">
-        <%= f.button :submit, "Subir e identificar" %>
-        <%= link_to "Cancelar", library_path(@library) %>
+        <%= submit_tag "Subir e identificar", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", library_path(@library), class: "btn btn-ghost" %>
       </div>
     <% end %>
   </div>

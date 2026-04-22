@@ -23,7 +23,7 @@ class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
     assert_difference -> { @library.shelf_photos.count } do
       visit library_path(@library)
       click_on "＋ Subir foto de estantería"
-      attach_file "shelf_photo_image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
+      attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
       click_on "Subir e identificar"
       assert_selector ".status-badge"
     end
@@ -52,7 +52,7 @@ class ShelfPhotoAnnotationTest < ApplicationSystemTestCase
     assert_difference -> { @library.shelf_photos.count } do
       visit library_path(@library)
       click_on "＋ Subir foto de estantería"
-      attach_file "shelf_photo_image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
+      attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
       click_on "Subir e identificar"
       assert_selector ".status-badge"
     end

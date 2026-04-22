@@ -21,7 +21,7 @@ class BookIdentificationTest < ApplicationSystemTestCase
 
     visit library_path(@library)
     click_on "＋ Subir foto de estantería"
-    attach_file "shelf_photo_image", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
+    attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
     click_on "Subir e identificar"
 
     assert_selector ".eyebrow", text: /foto de estantería/i
