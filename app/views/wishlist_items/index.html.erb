@@ -5,8 +5,55 @@
       <h1 class="page-title">Lista de <span class="accent">deseos</span></h1>
       <p class="sub">Libros que quieres. No son libros de tus estanterías — son intención. Cuando añadas uno a una biblioteca, desaparecerá de aquí.</p>
     </div>
-    <div class="header-ctas" data-controller="modal">
+    <div class="header-ctas wishlist-ctas" data-controller="modal">
       <button type="button" class="btn btn-seal" data-action="modal#open">＋ Añadir deseo</button>
+
+      <details class="wishlist-share" data-controller="clipboard"
+               <%= "open" if current_user.wishlist_shared? && flash[:notice].present? %>>
+        <summary class="wishlist-share-summary">
+          <span class="share-icon" aria-hidden="true">🔗</span>
+          <span class="share-label">
+            <% if current_user.wishlist_shared? %>
+              Compartida
+            <% else %>
+              Compartir
+            <% end %>
+          </span>
+          <span class="share-caret" aria-hidden="true">▾</span>
+        </summary>
+
+        <div class="wishlist-share-body">
+          <% if current_user.wishlist_shared? %>
+            <% share_url = public_wishlist_url(token: current_user.wishlist_share_token) %>
+            <p class="sub">Cualquiera con este link verá tu lista, sin necesidad de cuenta.</p>
+            <div class="share-url-row">
+              <input type="text" readonly value="<%= share_url %>"
+                     data-clipboard-target="source"
+                     onclick="this.select()"
+                     class="share-url-input">
+              <button type="button" class="btn btn-ghost btn-small"
+                      data-action="clipboard#copy">Copiar</button>
+            </div>
+            <div class="share-actions">
+              <%= button_to "Generar link nuevo", wishlist_share_path,
+                            method: :patch,
+                            params: {commit_action: "rotate"},
+                            class: "btn btn-ghost btn-small",
+                            form: {data: {turbo_confirm: "Esto romperá el link anterior. ¿Continuar?"}} %>
+              <%= button_to "Dejar de compartir", wishlist_share_path,
+                            method: :patch,
+                            params: {commit_action: "disable"},
+                            class: "btn btn-ghost btn-small btn-danger" %>
+            </div>
+          <% else %>
+            <p class="sub">Genera una URL pública y privada a la vez: sólo quien tenga el link ve la lista, y se puede desactivar o regenerar cuando quieras.</p>
+            <%= button_to "Generar link público", wishlist_share_path,
+                          method: :patch,
+                          params: {commit_action: "enable"},
+                          class: "btn btn-ghost btn-small" %>
+          <% end %>
+        </div>
+      </details>
 
       <dialog class="modal-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
         <div class="modal-card">
@@ -46,53 +93,6 @@
       </dialog>
     </div>
   </header>
-
-  <details class="wishlist-share" data-controller="clipboard"
-           <%= "open" if current_user.wishlist_shared? && flash[:notice].present? %>>
-    <summary class="wishlist-share-summary">
-      <span class="share-icon" aria-hidden="true">🔗</span>
-      <span class="share-label">
-        <% if current_user.wishlist_shared? %>
-          Compartida · gestionar link
-        <% else %>
-          Compartir con un link
-        <% end %>
-      </span>
-      <span class="share-caret" aria-hidden="true">▾</span>
-    </summary>
-
-    <div class="wishlist-share-body">
-      <% if current_user.wishlist_shared? %>
-        <% share_url = public_wishlist_url(token: current_user.wishlist_share_token) %>
-        <p class="sub">Cualquiera con este link verá tu lista, sin necesidad de cuenta.</p>
-        <div class="share-url-row">
-          <input type="text" readonly value="<%= share_url %>"
-                 data-clipboard-target="source"
-                 onclick="this.select()"
-                 class="share-url-input">
-          <button type="button" class="btn btn-ghost btn-small"
-                  data-action="clipboard#copy">Copiar</button>
-        </div>
-        <div class="share-actions">
-          <%= button_to "Generar link nuevo", wishlist_share_path,
-                        method: :patch,
-                        params: {commit_action: "rotate"},
-                        class: "btn btn-ghost btn-small",
-                        form: {data: {turbo_confirm: "Esto romperá el link anterior. ¿Continuar?"}} %>
-          <%= button_to "Dejar de compartir", wishlist_share_path,
-                        method: :patch,
-                        params: {commit_action: "disable"},
-                        class: "btn btn-ghost btn-small btn-danger" %>
-        </div>
-      <% else %>
-        <p class="sub">Genera una URL pública y privada a la vez: sólo quien tenga el link ve la lista, y se puede desactivar o regenerar cuando quieras.</p>
-        <%= button_to "Generar link público", wishlist_share_path,
-                      method: :patch,
-                      params: {commit_action: "enable"},
-                      class: "btn btn-ghost btn-small" %>
-      <% end %>
-    </div>
-  </details>
 
   <section class="wishlist-google-search">
     <h2 class="section-title">Buscar en Google Books</h2>

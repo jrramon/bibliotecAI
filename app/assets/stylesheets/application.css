@@ -2097,18 +2097,21 @@ dialog.modal-dialog::backdrop {
 }
 .wish-item-actions form { margin: 0; }
 
-/* Share wishlist — collapsed <details> pill, opens to a small panel */
-.wishlist-share {
-  margin: 10px 0 18px;
-  max-width: 440px;
+/* Share wishlist — small pill inline next to the "＋ Añadir deseo" CTA; opens a popover */
+.wishlist-ctas {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
+.wishlist-share { position: relative; }
 .wishlist-share-summary {
   list-style: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 7px 12px;
   font-family: var(--sans);
   font-size: 12px;
   color: var(--ink-2);
@@ -2128,11 +2131,16 @@ dialog.modal-dialog::backdrop {
 }
 .wishlist-share[open] .share-caret { transform: rotate(180deg); }
 .wishlist-share-body {
-  margin-top: 10px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  width: min(360px, 80vw);
   padding: 12px 14px;
-  background: color-mix(in oklab, var(--moss), white 90%);
-  border: 1px dashed color-mix(in oklab, var(--moss), white 55%);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
   border-radius: 10px;
+  box-shadow: 0 16px 32px rgba(20, 15, 10, 0.22);
+  z-index: 40;
 }
 .wishlist-share-body .sub {
   font-size: 12px;
