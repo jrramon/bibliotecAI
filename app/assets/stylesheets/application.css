@@ -883,15 +883,39 @@ input, textarea, select { font: inherit; color: inherit; }
 .pending-invites ul { list-style: none; margin: 0; padding: 0; }
 .pending-invites li {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
   padding: 8px 0;
   border-bottom: 1px solid var(--rule-soft);
   font-size: 13px;
 }
 .pending-invites li:last-child { border-bottom: none; }
-.pending-invites .email { font-family: var(--serif); color: var(--ink); }
-.pending-invites .expires { font-family: var(--mono); font-size: 11px; color: var(--ink-4); letter-spacing: 0.04em; }
+.pending-invites li.is-expired .email { opacity: 0.65; }
+.pending-invites .email { font-family: var(--serif); color: var(--ink); flex: 1 1 auto; }
+.pending-invites .expires {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.pending-invites .chip-warn {
+  background: color-mix(in oklab, var(--vermillion), white 85%);
+  border: 1px solid color-mix(in oklab, var(--vermillion), white 60%);
+  color: var(--vermillion);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pending-invites .invite-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.pending-invites .invite-actions form { margin: 0; }
 
 /* ==========================================================================
    Library shortcuts (cards to books, shelves, etc.)

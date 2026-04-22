@@ -2,6 +2,7 @@ require "application_system_test_case"
 
 class LibrarySharingTest < ApplicationSystemTestCase
   include ActionMailer::TestHelper
+  include ActiveJob::TestHelper
 
   test "owner invites a new reader, invitee registers via link and joins" do
     owner = create(:user, email: "owner@bibliotecai.test", password: "supersecret123")
@@ -66,5 +67,54 @@ class LibrarySharingTest < ApplicationSystemTestCase
     assert_text "Te has unido a «Club de lectura»"
     visit libraries_path
     assert_selector ".library-card", text: "Club de lectura"
+  end
+
+  test "owner can resend a pending invitation and revive an expired one" do
+    owner = create(:user, email: "owner@bibliotecai.test")
+    library = create(:library, name: "Familia", owner: owner)
+    fresh = library.invitations.create!(invited_by: owner, email: "alice@bibliotecai.test")
+    expired = library.invitations.create!(invited_by: owner, email: "bob@bibliotecai.test")
+    expired.update_column(:expires_at, 1.day.ago)
+
+    fast_sign_in(owner)
+    visit settings_library_path(library)
+
+    within ".pending-invites" do
+      assert_text "alice@bibliotecai.test"
+      assert_text "bob@bibliotecai.test"
+      assert_selector "li.is-expired", text: "bob@bibliotecai.test"
+    end
+
+    # Resend the expired one — should now be in the future.
+    mails_before = ActionMailer::Base.deliveries.size
+    perform_enqueued_jobs do
+      within(".pending-invites li", text: "bob@bibliotecai.test") do
+        click_on "Reenviar"
+      end
+      assert_text(/reenviada a bob@bibliotecai\.test/i)
+    end
+    assert_equal mails_before + 1, ActionMailer::Base.deliveries.size,
+      "resend must send a new invitation email"
+
+    expired.reload
+    assert_not expired.expired?, "expired invitation should be revived with a future expires_at"
+  end
+
+  test "owner can cancel a pending invitation" do
+    owner = create(:user)
+    library = create(:library, name: "Familia", owner: owner)
+    library.invitations.create!(invited_by: owner, email: "doomed@bibliotecai.test")
+
+    fast_sign_in(owner)
+    visit settings_library_path(library)
+
+    accept_confirm do
+      within(".pending-invites li", text: "doomed@bibliotecai.test") do
+        click_on "Cancelar"
+      end
+    end
+
+    assert_text(/cancelada/i)
+    assert_equal 0, library.reload.invitations.count
   end
 end

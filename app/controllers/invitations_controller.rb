@@ -1,16 +1,37 @@
 class InvitationsController < ApplicationController
   before_action :authenticate_user!, except: %i[show]
-  before_action :set_library, only: %i[create]
-  before_action :require_owner!, only: %i[create]
+  before_action :set_library, only: %i[create resend destroy]
+  before_action :require_owner!, only: %i[create resend destroy]
+  before_action :set_invitation, only: %i[resend destroy]
 
   def create
     @invitation = @library.invitations.build(invitation_params.merge(invited_by: current_user))
     if @invitation.save
       InvitationsMailer.invite(@invitation).deliver_later
-      redirect_to @library, notice: "Invitación enviada a #{@invitation.email}."
+      redirect_to settings_library_path(@library), notice: "Invitación enviada a #{@invitation.email}."
     else
-      redirect_to @library, alert: @invitation.errors.full_messages.to_sentence
+      redirect_to settings_library_path(@library), alert: @invitation.errors.full_messages.to_sentence
     end
+  end
+
+  # Extends the expiry and re-sends the email. Only works on unaccepted
+  # invitations — accepted ones are done, the member is already in.
+  def resend
+    if @invitation.accepted?
+      redirect_to settings_library_path(@library), alert: "Esta invitación ya fue aceptada."
+      return
+    end
+
+    @invitation.resend!
+    InvitationsMailer.invite(@invitation).deliver_later
+    redirect_to settings_library_path(@library),
+      notice: "Invitación reenviada a #{@invitation.email} · expira #{l(@invitation.expires_at.to_date, format: :long)}."
+  end
+
+  def destroy
+    email = @invitation.email
+    @invitation.destroy
+    redirect_to settings_library_path(@library), notice: "Invitación a #{email} cancelada."
   end
 
   def show
@@ -40,6 +61,10 @@ class InvitationsController < ApplicationController
 
   def set_library
     @library = current_user.libraries.friendly.find(params[:library_id])
+  end
+
+  def set_invitation
+    @invitation = @library.invitations.find(params[:id])
   end
 
   def require_owner!

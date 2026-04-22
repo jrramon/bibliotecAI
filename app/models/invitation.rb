@@ -13,6 +13,7 @@ class Invitation < ApplicationRecord
   normalizes :email, with: ->(value) { value.to_s.strip.downcase }
 
   scope :pending, -> { where(accepted_at: nil).where("expires_at > ?", Time.current) }
+  scope :unaccepted, -> { where(accepted_at: nil).order(:created_at) }
 
   def expired?
     expires_at.present? && expires_at < Time.current
@@ -20,6 +21,14 @@ class Invitation < ApplicationRecord
 
   def accepted?
     accepted_at.present?
+  end
+
+  # Pushes expires_at out to a fresh TTL so the owner can give a
+  # distracted invitee another two weeks. Keeps the original token
+  # intact — any earlier email the recipient already received still
+  # works.
+  def resend!
+    update!(expires_at: DEFAULT_TTL.from_now)
   end
 
   def claimable_by?(user)

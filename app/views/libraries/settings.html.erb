@@ -38,15 +38,28 @@
         </div>
       <% end %>
 
-      <% pending = @library.invitations.pending %>
-      <% if pending.any? %>
+      <% unaccepted = @library.invitations.unaccepted %>
+      <% if unaccepted.any? %>
         <div class="pending-invites">
           <h3>Invitaciones pendientes</h3>
           <ul>
-            <% pending.each do |inv| %>
-              <li>
+            <% unaccepted.each do |inv| %>
+              <li class="<%= "is-expired" if inv.expired? %>">
                 <span class="email"><%= inv.email %></span>
-                <span class="expires">expira <%= l(inv.expires_at, format: :short) %></span>
+                <% if inv.expired? %>
+                  <span class="chip chip-warn">caducada el <%= l(inv.expires_at.to_date, format: :short) %></span>
+                <% else %>
+                  <span class="expires">expira <%= l(inv.expires_at.to_date, format: :short) %></span>
+                <% end %>
+                <div class="invite-actions">
+                  <%= button_to "Reenviar", resend_library_invitation_path(@library, inv),
+                                method: :post,
+                                class: "btn btn-ghost btn-small" %>
+                  <%= button_to "Cancelar", library_invitation_path(@library, inv),
+                                method: :delete,
+                                class: "btn btn-ghost btn-small btn-danger",
+                                form: {data: {turbo_confirm: "¿Cancelar la invitación a #{inv.email}?"}} %>
+                </div>
               </li>
             <% end %>
           </ul>

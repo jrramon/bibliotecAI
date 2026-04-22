@@ -13,7 +13,11 @@ Rails.application.routes.draw do
     member do
       get :settings
     end
-    resources :invitations, only: %i[create]
+    resources :invitations, only: %i[create destroy] do
+      member do
+        post :resend
+      end
+    end
     resources :books, except: %i[index] do
       member do
         post :fetch_cover
