@@ -18,7 +18,7 @@ class ProfileEditTest < ApplicationSystemTestCase
     fill_in "user[name]", with: "Alice Gómez"
     click_on "Guardar cambios"
 
-    assert_text(/updated successfully/i, wait: 5)
+    assert_text(/actualizado correctamente/i, wait: 5)
     visit libraries_path
     assert_selector ".greeting-title", text: /Alice Gómez/
   end
@@ -28,7 +28,7 @@ class ProfileEditTest < ApplicationSystemTestCase
     attach_file "user[avatar]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s
     click_on "Guardar cambios"
 
-    assert_text(/updated successfully/i, wait: 5)
+    assert_text(/actualizado correctamente/i, wait: 5)
     visit libraries_path
     assert_selector "img.avatar--image"
   end
@@ -47,7 +47,7 @@ class ProfileEditTest < ApplicationSystemTestCase
     fill_in "user[current_password]", with: "supersecret123"
     click_on "Guardar cambios"
 
-    assert_text(/updated successfully/i, wait: 5)
+    assert_text(/actualizado correctamente/i, wait: 5)
   end
 
   test "non-credential fields update without requiring the current password" do
