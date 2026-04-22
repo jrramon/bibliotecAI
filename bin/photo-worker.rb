@@ -101,12 +101,12 @@ puts "[worker] ready"
 
 ticks_since_log = 0
 loop do
-  # Postgres (or a connection pooler) can silently drop an idle AR
-  # connection after a few minutes. Without an active check the worker
-  # would keep "reading" an empty result set from a dead connection and
-  # never notice new pending records. `verify!` pings and reconnects if
-  # needed so we always query the live DB.
-  ActiveRecord::Base.connection.verify!
+  # Long-running Ruby processes can end up holding a stale / dropped AR
+  # connection — Postgres closes idle connections, poolers cycle them,
+  # and `verify!` alone has proven insufficient here. Return the current
+  # connection to the pool each tick so the next query checks out a
+  # fresh (and known-good) one.
+  ActiveRecord::Base.connection_handler.clear_active_connections!
 
   shelf_pending = ShelfPhoto.pending.order(:created_at).to_a
   cover_pending = CoverPhoto.pending.order(:created_at).to_a

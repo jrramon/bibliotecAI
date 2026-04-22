@@ -61,6 +61,12 @@ docker compose exec web bundle exec erb_lint --lint-all
 docker compose exec web bundle exec brakeman --no-pager -q
 ```
 
+## Troubleshooting fotos de portada
+
+Guia de flujo y depuracion del proceso de identificacion de portadas al crear libros:
+
+- [`docs/flujo-foto-portada-libro.md`](docs/flujo-foto-portada-libro.md)
+
 ## License
 
 AGPL-3.0. See `LICENSE`.
