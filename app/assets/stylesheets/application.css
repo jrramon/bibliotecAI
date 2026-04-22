@@ -1913,38 +1913,46 @@ dialog.modal-dialog::backdrop {
 }
 
 .wishlist-google-search {
-  margin: 14px 0 26px;
-  padding: 16px 18px;
+  margin: 8px 0 16px;
+  padding: 8px 14px 10px;
   background: var(--bg-sunken);
   border: 1px dashed var(--rule);
   border-radius: 10px;
 }
 .wishlist-google-search .section-title {
   font-family: var(--serif);
-  font-size: 16px;
-  margin: 0 0 2px;
+  font-size: 14px;
+  margin: 0;
+  line-height: 1.2;
 }
+.wishlist-google-search .sub {
+  margin: 2px 0 6px;
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1.3;
+}
+.wishlist-google-search .catalog-search-form { margin: 0; }
 .wish-candidates {
   list-style: none;
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .wish-candidate {
   display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 34px 1fr auto;
+  gap: 10px;
   align-items: center;
-  padding: 8px 10px;
+  padding: 6px 8px;
   background: var(--bg-raised);
   border: 1px solid var(--rule);
   border-radius: 8px;
 }
 .wish-candidate-cover {
-  width: 40px;
-  height: 58px;
+  width: 34px;
+  height: 48px;
   object-fit: cover;
   border-radius: 3px;
 }

@@ -33,6 +33,10 @@ class BooksController < ApplicationController
         genres: @cover_photo.genres
       )
     elsif (@wishlist_item = wishlist_item_from_params)
+      # The "Tengo este libro →" picker on /wishlist sends the user here
+      # with ?wishlist_item_id=… so we can pre-fill the form. After
+      # create, Book#after_create :prune_matching_wishlist_items will
+      # delete the wish automatically.
       @book.assign_attributes(
         title: @wishlist_item.title,
         author: @wishlist_item.author,
