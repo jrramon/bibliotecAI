@@ -1,0 +1,32 @@
+<%# Dashboard hero: personal greeting + "N new since last visit" + a
+    pull-quote for the day. Expects `viewer` (current_user) and
+    `previous_visit` (Time or nil — prior `last_seen_at`). %>
+<% new_count = new_since_last_visit(viewer, previous_visit) %>
+<% quote = QuoteOfTheDay.for(viewer) %>
+<section class="greeting-hero">
+  <div class="greeting-text">
+    <h1 class="greeting-title"><%= greeting_for(viewer) %></h1>
+    <% if new_count.positive? %>
+      <p class="greeting-delta">
+        <%= pluralize(new_count, "novedad", plural: "novedades") %> desde tu última visita.
+      </p>
+    <% else %>
+      <p class="greeting-delta greeting-delta--quiet">Tus estantes descansan en silencio.</p>
+    <% end %>
+  </div>
+
+  <% if quote %>
+    <figure class="pull-quote">
+      <blockquote>「 <%= quote.body %> 」</blockquote>
+      <figcaption class="quote-attribution">
+        <% if quote.book %>
+          <%= link_to [quote.library, quote.book] do %>
+            — <%= quote.attribution %>
+          <% end %>
+        <% else %>
+          — <%= quote.attribution %>
+        <% end %>
+      </figcaption>
+    </figure>
+  <% end %>
+</section>
