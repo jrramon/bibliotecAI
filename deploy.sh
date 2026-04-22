@@ -24,7 +24,7 @@ docker compose -f "$COMPOSE_FILE" build web
 # 3. Run migrations
 echo ""
 echo "[3/5] Running database migrations..."
-docker compose -f "$COMPOSE_FILE" run --rm web bin/rails db:migrate
+docker compose -f "$COMPOSE_FILE" run --rm --no-deps web bin/rails db:migrate
 
 # 4. Restart containers
 echo ""
@@ -37,7 +37,7 @@ echo ""
 echo "[5/5] Verifying deployment..."
 
 # Retry health check up to 30 seconds
-MAX_RETRIES=6
+MAX_RETRIES=12
 RETRY_INTERVAL=5
 for i in $(seq 1 $MAX_RETRIES); do
     if curl -sf http://localhost:3012/up > /dev/null 2>&1; then
