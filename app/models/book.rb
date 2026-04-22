@@ -15,6 +15,13 @@ class Book < ApplicationRecord
   has_many :user_book_notes, dependent: :destroy
   has_many :reading_statuses, dependent: :destroy
 
+  # When a Book lands in a library, any wishlist items from the user who
+  # added it that match by normalized title+author or ISBN become
+  # redundant — the book is no longer "wanted", it's catalogued. We prune
+  # centrally so every creation path (manual form, cover-photo identify,
+  # shelf-photo identify, Google Books apply-candidate) is covered.
+  after_create :prune_matching_wishlist_items
+
   def note_for(user)
     return nil unless user
     user_book_notes.find_or_initialize_by(user: user)
@@ -131,6 +138,18 @@ class Book < ApplicationRecord
   end
 
   private
+
+  def prune_matching_wishlist_items
+    return unless added_by_user_id
+    WishlistItem.match_for(
+      user_id: added_by_user_id,
+      title: title,
+      author: author,
+      isbn: isbn
+    ).destroy_all
+  rescue => e
+    Rails.logger.warn("[Book#prune_matching_wishlist_items] ##{id}: #{e.class}: #{e.message}")
+  end
 
   def cover_image_is_supported
     return unless cover_image.attached?

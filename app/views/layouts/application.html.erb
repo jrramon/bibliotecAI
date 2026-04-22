@@ -43,6 +43,10 @@
               <span>Mis bibliotecas</span>
               <span class="count"><%= current_user.libraries.count %></span>
             <% end %>
+            <%= link_to wishlist_path, class: "nav-item #{"active" if controller_name == "wishlist_items"}" do %>
+              <span>Lista de deseos</span>
+              <span class="count"><%= current_user.wishlist_items.count %></span>
+            <% end %>
           </nav>
           <% if @library&.persisted? %>
             <%= render "shared/members_widget", library: @library %>

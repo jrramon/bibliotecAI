@@ -1,0 +1,43 @@
+<%# One row in the wishlist. Not styled as a spine / grid cell on
+    purpose — this is an "intent ticket", not a library book. Actions:
+    convert to library book, delete. %>
+<li class="wish-item" id="<%= dom_id(item) %>">
+  <% if item.thumbnail_url.present? %>
+    <img src="<%= item.thumbnail_url %>" class="wish-item-cover" alt="<%= item.title %>">
+  <% else %>
+    <div class="wish-item-cover wish-item-cover--placeholder" aria-hidden="true">望</div>
+  <% end %>
+
+  <div class="wish-item-body">
+    <h3><%= item.title %></h3>
+    <% if item.author.present? %>
+      <p class="wish-item-author"><%= item.author %></p>
+    <% end %>
+    <% if item.note.present? %>
+      <p class="wish-note">「 <%= item.note %> 」</p>
+    <% end %>
+    <% if item.isbn.present? %>
+      <p class="wish-item-meta">ISBN <code><%= item.isbn %></code></p>
+    <% end %>
+  </div>
+
+  <div class="wish-item-actions" data-controller="wishlist-convert">
+    <button type="button" class="btn btn-ghost btn-small"
+            data-action="wishlist-convert#toggle">Tengo este libro →</button>
+
+    <div class="wishlist-convert-picker" data-wishlist-convert-target="picker" hidden>
+      <span class="picker-label">Elige biblioteca</span>
+      <% current_user.libraries.order(:name).each do |lib| %>
+        <%= link_to lib.name,
+                    new_library_book_path(lib, wishlist_item_id: item.id),
+                    class: "picker-item" %>
+      <% end %>
+    </div>
+
+    <%= button_to "✕", wishlist_item_path(item),
+                  method: :delete,
+                  class: "wish-item-delete",
+                  aria: {label: "Eliminar de la lista"},
+                  form: {data: {turbo_confirm: "¿Quitar «#{item.title}» de tu lista?"}} %>
+  </div>
+</li>

@@ -1,0 +1,102 @@
+<section class="page wishlist-page">
+  <header class="page-head">
+    <div class="title-group">
+      <p class="eyebrow">Personal · 望</p>
+      <h1 class="page-title">Lista de <span class="accent">deseos</span></h1>
+      <p class="sub">Libros que quieres. No son libros de tus estanterías — son intención. Cuando añadas uno a una biblioteca, desaparecerá de aquí.</p>
+    </div>
+    <div class="header-ctas" data-controller="modal">
+      <button type="button" class="btn btn-seal" data-action="modal#open">＋ Añadir deseo</button>
+
+      <dialog class="modal-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
+        <div class="modal-card">
+          <header>
+            <h3>Nuevo libro en tu lista</h3>
+            <button type="button" class="modal-close" data-action="modal#close" aria-label="Cerrar">✕</button>
+          </header>
+          <%= form_with model: (@item || WishlistItem.new), url: wishlist_items_path,
+                        html: {class: "modal-form", novalidate: true} do |f| %>
+            <% if @item&.errors&.any? %>
+              <ul class="form-errors">
+                <% @item.errors.full_messages.each { |m| %><li><%= m %></li><% } %>
+              </ul>
+            <% end %>
+            <label class="field">
+              <span class="field-label">Título <em>*</em></span>
+              <%= f.text_field :title, required: true, autofocus: true, autocomplete: "off" %>
+            </label>
+            <label class="field">
+              <span class="field-label">Autor</span>
+              <%= f.text_field :author, autocomplete: "off" %>
+            </label>
+            <label class="field">
+              <span class="field-label">ISBN <em>opcional</em></span>
+              <%= f.text_field :isbn, autocomplete: "off" %>
+            </label>
+            <label class="field">
+              <span class="field-label">Nota <em>opcional</em></span>
+              <%= f.text_field :note, placeholder: "regalo, prestar a…, leer en verano", maxlength: 240 %>
+            </label>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-action="modal#close">Cancelar</button>
+              <%= f.submit "Añadir a mi lista", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+        </div>
+      </dialog>
+    </div>
+  </header>
+
+  <section class="wishlist-google-search">
+    <h2 class="section-title">Buscar en Google Books</h2>
+    <p class="sub">¿No sabes cómo se escribe exactamente? Busca y añade con un click.</p>
+    <%= form_with url: wishlist_items_path, method: :get, class: "catalog-search-form", local: true do |f| %>
+      <%= f.text_field :q, value: @query, placeholder: "Título, autor…", autocomplete: "off" %>
+      <%= f.submit "Buscar", class: "btn btn-ghost" %>
+    <% end %>
+
+    <% if @candidates.any? %>
+      <ul class="wish-candidates">
+        <% @candidates.each do |c| %>
+          <li class="wish-candidate">
+            <% if c.thumbnail_url.present? %>
+              <%= image_tag c.thumbnail_url, class: "wish-candidate-cover", alt: c.title %>
+            <% end %>
+            <div class="wish-candidate-body">
+              <h4><%= c.title %></h4>
+              <p class="author"><%= c.author.presence || "autor desconocido" %></p>
+              <% if c.published_year %><p class="meta"><%= c.published_year %></p><% end %>
+            </div>
+            <%= form_with url: wishlist_items_path, method: :post, class: "wish-candidate-add" do %>
+              <%= hidden_field_tag "wishlist_item[title]", c.title %>
+              <%= hidden_field_tag "wishlist_item[author]", c.author %>
+              <%= hidden_field_tag "wishlist_item[isbn]", c.isbn %>
+              <%= hidden_field_tag "wishlist_item[google_books_id]", c.volume_id %>
+              <%= hidden_field_tag "wishlist_item[thumbnail_url]", c.thumbnail_url %>
+              <button type="submit" class="btn btn-ghost btn-small">＋ A mi lista</button>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% elsif @query.present? %>
+      <p class="empty-mini">Sin resultados para «<%= @query %>».</p>
+    <% end %>
+  </section>
+
+  <% if @items.any? %>
+    <section class="wishlist-items-section">
+      <h2 class="section-title">Tus deseos · <%= pluralize(@items.size, "libro") %></h2>
+      <ul class="wish-list">
+        <% @items.each do |item| %>
+          <%= render "wishlist_items/item", item: item %>
+        <% end %>
+      </ul>
+    </section>
+  <% else %>
+    <div class="empty-state hero-empty">
+      <span class="kanji" aria-hidden="true">望</span>
+      <h2>Tu lista está vacía</h2>
+      <p>Cuando te apetezca un libro, añádelo aquí. No mancha tu biblioteca.</p>
+    </div>
+  <% end %>
+</section>

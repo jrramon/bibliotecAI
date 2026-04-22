@@ -27,6 +27,8 @@ Rails.application.routes.draw do
   end
 
   get "/search", to: "search#show", as: :search
+  resources :wishlist_items, only: %i[index create update destroy]
+  get "/wishlist", to: "wishlist_items#index", as: :wishlist
 
   get "invitations/:token", to: "invitations#show", as: :invitation
 

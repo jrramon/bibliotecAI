@@ -32,6 +32,12 @@ class BooksController < ApplicationController
         cdu: @cover_photo.cdu,
         genres: @cover_photo.genres
       )
+    elsif (@wishlist_item = wishlist_item_from_params)
+      @book.assign_attributes(
+        title: @wishlist_item.title,
+        author: @wishlist_item.author,
+        isbn: @wishlist_item.isbn
+      )
     end
   end
 
@@ -180,6 +186,12 @@ class BooksController < ApplicationController
     id = params[:cover_photo_id].presence
     return nil unless id
     @library.cover_photos.find_by(id: id)
+  end
+
+  def wishlist_item_from_params
+    id = params[:wishlist_item_id].presence
+    return nil unless id
+    current_user.wishlist_items.find_by(id: id)
   end
 
   def set_book

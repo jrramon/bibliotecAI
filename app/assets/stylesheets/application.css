@@ -1904,6 +1904,199 @@ dialog.modal-dialog::backdrop {
   .profile-grid { grid-template-columns: 1fr; }
 }
 
+/* ==========================================================================
+   Wishlist — ticket-style list, deliberately NOT a bookshelf
+   ========================================================================== */
+
+.wishlist-page .eyebrow {
+  font-family: var(--sans);
+}
+
+.wishlist-google-search {
+  margin: 14px 0 26px;
+  padding: 16px 18px;
+  background: var(--bg-sunken);
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+}
+.wishlist-google-search .section-title {
+  font-family: var(--serif);
+  font-size: 16px;
+  margin: 0 0 2px;
+}
+.wish-candidates {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.wish-candidate {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+.wish-candidate-cover {
+  width: 40px;
+  height: 58px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.wish-candidate-body h4 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-1);
+}
+.wish-candidate-body .author,
+.wish-candidate-body .meta {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: var(--sans);
+}
+
+.wishlist-items-section .section-title {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 18px 0 10px;
+  font-weight: 500;
+}
+
+.wish-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wish-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+}
+.wish-item-cover {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+.wish-item-cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-sunken);
+  color: var(--ink-3);
+  font-family: var(--serif);
+  font-size: 22px;
+}
+.wish-item-body h3 {
+  margin: 0 0 2px;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink-1);
+}
+.wish-item-author {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.wish-note {
+  margin: 6px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.wish-item-meta {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+.wish-item-actions {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.wishlist-convert-picker {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(20, 15, 10, 0.2);
+  padding: 8px;
+  min-width: 200px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wishlist-convert-picker .picker-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding: 4px 8px;
+}
+.wishlist-convert-picker .picker-item {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--ink-1);
+  text-decoration: none;
+}
+.wishlist-convert-picker .picker-item:hover {
+  background: var(--bg-sunken);
+}
+
+.wish-item-delete {
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  cursor: pointer;
+  opacity: 0.35;
+  font-size: 13px;
+  color: var(--ink-3);
+  border-radius: 4px;
+  transition: opacity .15s ease, color .15s ease, background .15s ease;
+}
+.wish-item-delete:hover,
+.wish-item-delete:focus-visible {
+  opacity: 1;
+  color: var(--vermillion);
+  background: var(--bg-sunken);
+  outline: none;
+}
+.wish-item-actions form { margin: 0; }
+
 /* Expandable long-text (synopsis, etc.) — 2-line clamp with a [más] toggle */
 .description.expandable { display: block; }
 .expandable-body {
