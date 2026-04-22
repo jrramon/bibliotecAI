@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= content_for(:title) || "BibliotecAI · 函" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  </head>
+
+  <body>
+    <div class="public-shell">
+      <header class="public-header">
+        <%= link_to root_path, class: "public-brand" do %>
+          <span aria-hidden="true">函</span>
+          <span class="public-brand-name">BibliotecAI</span>
+        <% end %>
+      </header>
+
+      <main class="public-main">
+        <%= yield %>
+      </main>
+
+      <footer class="public-footer">
+        <p>
+          <%= link_to "BibliotecAI", root_path %> — una biblioteca compartida identificada con Claude.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

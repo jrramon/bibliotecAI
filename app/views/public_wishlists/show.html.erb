@@ -1,0 +1,44 @@
+<% content_for :title, "La lista de deseos de #{@owner.display_name}" %>
+
+<section class="page wishlist-page wishlist-public">
+  <header class="page-head">
+    <div class="title-group">
+      <p class="eyebrow">望 · Lista compartida</p>
+      <h1 class="page-title">Los libros que <span class="accent"><%= @owner.display_name %></span> desea</h1>
+      <p class="sub">Si conoces a <%= @owner.display_name %>, ya sabes qué leer con él o qué regalarle.</p>
+    </div>
+  </header>
+
+  <% if @items.any? %>
+    <ul class="wish-list wish-list--public">
+      <% @items.each do |item| %>
+        <li class="wish-item wish-item--public">
+          <% if item.thumbnail_url.present? %>
+            <img src="<%= item.thumbnail_url %>" class="wish-item-cover" alt="<%= item.title %>">
+          <% else %>
+            <div class="wish-item-cover wish-item-cover--placeholder" aria-hidden="true">望</div>
+          <% end %>
+
+          <div class="wish-item-body">
+            <h3><%= item.title %></h3>
+            <% if item.author.present? %>
+              <p class="wish-item-author"><%= item.author %></p>
+            <% end %>
+            <% if item.note.present? %>
+              <p class="wish-note">「 <%= item.note %> 」</p>
+            <% end %>
+            <% if item.isbn.present? %>
+              <p class="wish-item-meta">ISBN <code><%= item.isbn %></code></p>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="empty-state hero-empty">
+      <span class="kanji" aria-hidden="true">望</span>
+      <h2>La lista está vacía ahora mismo</h2>
+      <p>Vuelve dentro de unos días.</p>
+    </div>
+  <% end %>
+</section>

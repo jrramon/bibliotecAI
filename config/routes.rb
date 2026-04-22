@@ -29,6 +29,8 @@ Rails.application.routes.draw do
   get "/search", to: "search#show", as: :search
   resources :wishlist_items, only: %i[index create update destroy]
   get "/wishlist", to: "wishlist_items#index", as: :wishlist
+  patch "/wishlist/share", to: "wishlist_shares#update", as: :wishlist_share
+  get "/w/:token", to: "public_wishlists#show", as: :public_wishlist
 
   get "invitations/:token", to: "invitations#show", as: :invitation
 

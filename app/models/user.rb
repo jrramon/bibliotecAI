@@ -16,6 +16,20 @@ class User < ApplicationRecord
     name.presence || email.to_s.split("@").first.to_s
   end
 
+  def wishlist_shared?
+    wishlist_share_token.present?
+  end
+
+  # Generate a fresh unguessable token the first time the user opts in
+  # (or rotate it when they want the old URL to stop working).
+  def regenerate_wishlist_share_token!
+    update!(wishlist_share_token: SecureRandom.urlsafe_base64(24))
+  end
+
+  def disable_wishlist_sharing!
+    update!(wishlist_share_token: nil)
+  end
+
   has_many :memberships, dependent: :destroy
   has_many :libraries, through: :memberships
   has_many :owned_libraries, class_name: "Library", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner

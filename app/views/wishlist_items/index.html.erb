@@ -47,6 +47,53 @@
     </div>
   </header>
 
+  <details class="wishlist-share" data-controller="clipboard"
+           <%= "open" if current_user.wishlist_shared? && flash[:notice].present? %>>
+    <summary class="wishlist-share-summary">
+      <span class="share-icon" aria-hidden="true">🔗</span>
+      <span class="share-label">
+        <% if current_user.wishlist_shared? %>
+          Compartida · gestionar link
+        <% else %>
+          Compartir con un link
+        <% end %>
+      </span>
+      <span class="share-caret" aria-hidden="true">▾</span>
+    </summary>
+
+    <div class="wishlist-share-body">
+      <% if current_user.wishlist_shared? %>
+        <% share_url = public_wishlist_url(token: current_user.wishlist_share_token) %>
+        <p class="sub">Cualquiera con este link verá tu lista, sin necesidad de cuenta.</p>
+        <div class="share-url-row">
+          <input type="text" readonly value="<%= share_url %>"
+                 data-clipboard-target="source"
+                 onclick="this.select()"
+                 class="share-url-input">
+          <button type="button" class="btn btn-ghost btn-small"
+                  data-action="clipboard#copy">Copiar</button>
+        </div>
+        <div class="share-actions">
+          <%= button_to "Generar link nuevo", wishlist_share_path,
+                        method: :patch,
+                        params: {commit_action: "rotate"},
+                        class: "btn btn-ghost btn-small",
+                        form: {data: {turbo_confirm: "Esto romperá el link anterior. ¿Continuar?"}} %>
+          <%= button_to "Dejar de compartir", wishlist_share_path,
+                        method: :patch,
+                        params: {commit_action: "disable"},
+                        class: "btn btn-ghost btn-small btn-danger" %>
+        </div>
+      <% else %>
+        <p class="sub">Genera una URL pública y privada a la vez: sólo quien tenga el link ve la lista, y se puede desactivar o regenerar cuando quieras.</p>
+        <%= button_to "Generar link público", wishlist_share_path,
+                      method: :patch,
+                      params: {commit_action: "enable"},
+                      class: "btn btn-ghost btn-small" %>
+      <% end %>
+    </div>
+  </details>
+
   <section class="wishlist-google-search">
     <h2 class="section-title">Buscar en Google Books</h2>
     <p class="sub">¿No sabes cómo se escribe exactamente? Busca y añade con un click.</p>
