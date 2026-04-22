@@ -2,6 +2,11 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {registrations: "users/registrations"}
   get "up" => "rails/health#show", :as => :rails_health_check
 
+  # PWA manifest + service worker. Served at the root so the browser
+  # finds them at their conventional paths.
+  get "manifest.json", to: "pwa#manifest", as: :pwa_manifest
+  get "service-worker.js", to: "pwa#service_worker", as: :pwa_service_worker
+
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
   resources :libraries, only: %i[index show new create] do

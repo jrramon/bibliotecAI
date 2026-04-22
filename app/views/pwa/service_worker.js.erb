@@ -1,0 +1,32 @@
+// Minimal service worker — enough to make the app installable as a PWA
+// (Add to Home Screen on iOS/Android). No offline cache yet: every
+// request still goes to the network, which is fine while we focus on
+// "installable, opens full-screen, has its own icon".
+//
+// Future work:
+//   - cache static assets (CSS, importmap, icons) with a stale-while-
+//     revalidate strategy.
+//   - precache the dashboard shell so the home screen icon opens fast
+//     even on flaky connections.
+//   - wire Web Push notifications (the skeleton below is intentionally
+//     left for later).
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting()
+})
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
+// Passthrough fetch handler. Having this listener at all is what
+// triggers Chrome's "Install app" prompt on Android.
+self.addEventListener("fetch", (event) => {
+  // no-op — default network behaviour
+})
+
+// Web Push hook, commented-out for the day notifications arrive.
+// self.addEventListener("push", async (event) => {
+//   const { title, options } = await event.data.json()
+//   event.waitUntil(self.registration.showNotification(title, options))
+// })

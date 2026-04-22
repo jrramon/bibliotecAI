@@ -2,9 +2,12 @@
 <html lang="es">
   <head>
     <title><%= content_for(:title) || "BibliotecAI · 函" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BibliotecAI">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#8B2E2A">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -13,9 +16,17 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="manifest" href="<%= pwa_manifest_path %>">
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("<%= pwa_service_worker_path %>", { scope: "/" })
+        })
+      }
+    </script>
 
     <%# Pre-apply saved palette/layout from localStorage before any paint so
         the page doesn't flash the default theme on reload. %>
@@ -33,9 +44,13 @@
   </head>
 
   <body>
-    <div class="app <%= "app--guest" unless user_signed_in? %>">
+    <div class="app <%= "app--guest" unless user_signed_in? %>"
+         data-controller="<%= "mobile-nav" if user_signed_in? %>"
+         data-mobile-nav-open-class="nav-open"
+         data-action="<%= "click->mobile-nav#closeOnNavigation" if user_signed_in? %>">
       <% if user_signed_in? %>
-        <aside class="sidebar" aria-label="Navegación">
+        <div class="mobile-nav-backdrop" data-action="click->mobile-nav#close" aria-hidden="true"></div>
+        <aside class="sidebar" aria-label="Navegación" data-mobile-nav-target="sidebar">
           <%= render "shared/brand" %>
           <nav class="nav-section" aria-label="Principal">
             <span class="nav-label">Biblioteca</span>
@@ -56,6 +71,15 @@
       <% end %>
 
       <header class="header">
+        <% if user_signed_in? %>
+          <button type="button" class="mobile-nav-toggle"
+                  data-action="mobile-nav#toggle"
+                  aria-label="Abrir menú de navegación">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
+        <% end %>
         <% unless user_signed_in? %>
           <%= render "shared/brand" %>
         <% end %>

@@ -171,7 +171,59 @@ input, textarea, select { font: inherit; color: inherit; }
   height: 100vh;
   overflow-y: auto;
 }
-@media (max-width: 880px) { .sidebar { display: none; } }
+/* Mobile nav — sidebar slides in as a drawer from the left */
+.mobile-nav-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--bg-sunken);
+  padding: 0;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.mobile-nav-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--ink-1);
+  border-radius: 1px;
+}
+.mobile-nav-toggle:hover { background: var(--bg-raised); }
+
+.mobile-nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 95;
+}
+
+@media (max-width: 880px) {
+  .mobile-nav-toggle { display: inline-flex; }
+
+  /* Sidebar stays in DOM but is positioned off-screen by default */
+  .sidebar {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0;
+    width: min(320px, 86vw);
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 220ms var(--ease-out);
+    box-shadow: 20px 0 40px rgba(20, 15, 10, 0.35);
+  }
+
+  .app.nav-open .sidebar { transform: translateX(0); }
+  .app.nav-open .mobile-nav-backdrop { display: block; }
+}
 
 .brand {
   display: flex;
