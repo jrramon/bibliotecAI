@@ -1,3 +1,10 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#8B2E2A"/>
+  <text x="50%" y="50%"
+        dominant-baseline="central"
+        text-anchor="middle"
+        font-family="'Noto Serif CJK JP', 'WenQuanYi Zen Hei', 'Hiragino Mincho ProN', 'Yu Mincho', serif"
+        font-weight="600"
+        font-size="340"
+        fill="#F5F1E8">函</text>
 </svg>
