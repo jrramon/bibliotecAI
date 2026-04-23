@@ -1,6 +1,7 @@
 # Pull-quote shown on the dashboard hero. Deterministic per date (same
-# quote all day) picked from a curated pool of 20 Japanese-literature
-# lines — haiku, openings, aphorisms from Bashō to Murakami.
+# quote all day) picked from a curated pool of literary lines — mostly
+# Japanese (haiku, openings, aphorisms from Bashō to Murakami), with
+# the occasional guest from world literature.
 #
 # Some are verbatim, some are close translations/paraphrases of known
 # passages; all are clearly attributed by author (and work when helpful)
@@ -48,7 +49,9 @@ class QuoteOfTheDay
     {body: "En el pelo enmarañado se esconde la juventud.",
      attribution: "Akiko Yosano — Pelo enmarañado"},
     {body: "El silencio de Dios es también una forma de respuesta.",
-     attribution: "Shūsaku Endō — Silencio"}
+     attribution: "Shūsaku Endō — Silencio"},
+    {body: "Siempre llegamos donde nos esperan.",
+     attribution: "José Saramago"}
   ].freeze
 
   def self.for(_user = nil, today: Date.current)
