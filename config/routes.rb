@@ -9,6 +9,11 @@ Rails.application.routes.draw do
 
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
+  # Telegram bot webhook. The path includes a secret segment that must match
+  # ENV["TELEGRAM_WEBHOOK_SECRET"] — Telegram POSTs `update` payloads here.
+  # See docs/telegram-bot.md for the BotFather + setWebhook flow.
+  post "/telegram/webhook/:secret", to: "telegram/webhooks#create", as: :telegram_webhook
+
   resources :libraries, only: %i[index show new create] do
     member do
       get :settings

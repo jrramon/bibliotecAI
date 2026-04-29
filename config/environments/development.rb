@@ -43,6 +43,11 @@ Rails.application.configure do
 
   config.hosts << "web"
   config.hosts << /.*\.local/
+  # Allow common dev tunnels (ngrok, cloudflared) so Telegram webhooks land.
+  # Each tunnel session generates a fresh subdomain — wildcard the host suffix.
+  config.hosts << /.*\.ngrok-free\.dev/
+  config.hosts << /.*\.ngrok-free\.app/
+  config.hosts << /.*\.trycloudflare\.com/
 
   # Ruby-in-process queue for dev. BookIdentificationJob isn't enqueued
   # through ActiveJob — `bin/shelf-photo-poller` polls `ShelfPhoto.pending`
