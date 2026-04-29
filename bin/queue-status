@@ -30,6 +30,18 @@ psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
   ORDER BY id DESC
   LIMIT 10;"
 
+echo "=== Telegram messages (last 10) ==="
+psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
+  SELECT id,
+         CASE status WHEN 0 THEN 'pending' WHEN 1 THEN 'processing' WHEN 2 THEN 'completed' WHEN 3 THEN 'failed' END AS status,
+         user_id,
+         chat_id,
+         coalesce(substring(text,1,30),'') AS text,
+         to_char(created_at,'YYYY-MM-DD HH24:MI') AS created
+  FROM telegram_messages
+  ORDER BY id DESC
+  LIMIT 10;"
+
 echo "=== Host worker process ==="
 PID_FILE="tmp/photo-worker.pid"
 if [ -f "$PID_FILE" ]; then
