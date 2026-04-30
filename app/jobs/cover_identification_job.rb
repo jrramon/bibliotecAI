@@ -12,13 +12,27 @@ class CoverIdentificationJob < ApplicationJob
     payload = ClaudeCoverIdentifier.call(cover_photo)
     cover_photo.update!(status: :completed, claude_raw_response: payload)
     broadcast(cover_photo)
+    notify_telegram(cover_photo)
   rescue ClaudeCoverIdentifier::Error, Timeout::Error => e
     cover_photo&.update!(status: :failed, error_message: e.message)
     broadcast(cover_photo) if cover_photo
+    notify_telegram(cover_photo) if cover_photo
     raise
   end
 
   private
+
+  # Telegram-uploaded covers carry telegram_chat_id; for them, instead
+  # of leaving the user to inspect the form on the web, we either
+  # auto-create the Book (high confidence) or send a "couldn't identify"
+  # reply. Errors here never derail the job — the user can always go
+  # to the web view as a fallback.
+  def notify_telegram(cover_photo)
+    return unless cover_photo&.telegram_chat_id?
+    Telegram::NotifyIdentifiedCover.call(cover_photo)
+  rescue => e
+    Rails.logger.warn("[CoverIdentificationJob] telegram notify failed: #{e.class}: #{e.message}")
+  end
 
   # Replaces the "Analizando…" placeholder in the add-book modal with
   # either the pre-filled form (on completion) or an error state.

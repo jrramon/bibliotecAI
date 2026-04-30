@@ -4,7 +4,7 @@ module Telegram
   # the URL. CSRF is skipped because the caller has no Rails session, and
   # `authenticate_user!` is not in scope (no Devise auth on this controller).
   #
-  # Behaviour by slice (current = 4):
+  # Behaviour by slice (current = 8):
   # - dedupe via Rails.cache + DB unique on `update_id` (Slice 2).
   # - private chats only (Slice 2).
   # - persist a TelegramMessage row per accepted update (Slice 2).
@@ -15,11 +15,17 @@ module Telegram
   #   claude-worker drains it via TelegramMessageJob and replies (Slice 4).
   #   We send a "typing…" chat action up front so the user gets feedback
   #   while claude generates the answer.
+  # - photos from a linked chat get downloaded inline and persisted as
+  #   a CoverPhoto in the user's default library; CoverIdentificationJob
+  #   later auto-creates the Book and replies via Telegram (Slice 8).
   class WebhooksController < ApplicationController
     skip_before_action :verify_authenticity_token
     skip_before_action :touch_last_seen!, raise: false
 
     REPLY_LINK_FIRST = "👋 Para hablar conmigo, primero vincula tu cuenta de BibliotecAI desde tu perfil web."
+    REPLY_NO_LIBRARY = "Para añadir libros con foto, primero crea una biblioteca en BibliotecAI."
+    REPLY_PHOTO_RECEIVED = "📸 Foto recibida. La estoy analizando, te aviso cuando termine."
+    REPLY_PHOTO_FAILED = "No he podido procesar la foto. Vuelve a probar o súbela desde la web."
     DEDUPE_TTL = 10.minutes
     START_RE = /\A\/start(?:\s+(\S+))?\z/
 
@@ -53,9 +59,15 @@ module Telegram
         # but skip DB write so random Telegram users can't fill our table.
         Rails.logger.info(
           "[Telegram::WebhooksController] unlinked chat=#{chat_id} ignored: " \
+          "kind=#{message[:photo].present? ? "photo" : "text"} " \
           "text=#{text.inspect.truncate(120)}"
         )
         Telegram::Client.send_message(chat_id: chat_id, text: REPLY_LINK_FIRST)
+        return head :ok
+      end
+
+      if message[:photo].present?
+        handle_photo(user: user, chat_id: chat_id, message: message)
         return head :ok
       end
 
@@ -101,6 +113,47 @@ module Telegram
       rescue Telegram::Client::Error => e
         # Cosmetic: don't 500 the webhook just because typing didn't ship.
         Rails.logger.warn("[Telegram::WebhooksController] typing failed: #{e.message}")
+      end
+    end
+
+    # Telegram photo messages carry an array of progressively higher
+    # resolutions in `message[:photo]`. The last one is the original.
+    # We download it inline (the bytes fit in 1-2s for a typical phone
+    # photo) so the CoverPhoto can be persisted with an attachment ready
+    # for the host worker to pick up.
+    def handle_photo(user:, chat_id:, message:)
+      library = user.default_library
+      unless library
+        Telegram::Client.send_message(chat_id: chat_id, text: REPLY_NO_LIBRARY)
+        return
+      end
+
+      sizes = Array(message[:photo])
+      best = sizes.max_by { |s| s[:file_size].to_i }
+      file_id = best&.dig(:file_id)
+      return unless file_id
+
+      file_info = Telegram::Client.get_file(file_id: file_id)
+      bytes = Telegram::Client.download_file(file_path: file_info["file_path"])
+
+      cover_photo = library.cover_photos.build(
+        uploaded_by_user: user,
+        telegram_chat_id: chat_id
+      )
+      cover_photo.image.attach(
+        io: StringIO.new(bytes),
+        filename: "telegram_#{file_id}.jpg",
+        content_type: "image/jpeg"
+      )
+      cover_photo.save!
+
+      Telegram::Client.send_message(chat_id: chat_id, text: REPLY_PHOTO_RECEIVED)
+    rescue Telegram::Client::Error, ActiveRecord::RecordInvalid => e
+      Rails.logger.warn("[Telegram::WebhooksController] photo intake failed: #{e.class}: #{e.message}")
+      begin
+        Telegram::Client.send_message(chat_id: chat_id, text: REPLY_PHOTO_FAILED)
+      rescue Telegram::Client::Error
+        # Already in trouble — give up silently.
       end
     end
 

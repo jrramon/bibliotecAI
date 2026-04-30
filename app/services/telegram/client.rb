@@ -8,7 +8,8 @@ require "json"
 #
 # Slice 1 added `send_message`; slice 4 adds `send_chat_action` so the
 # webhook can show "typing…" while the claude-worker generates a reply.
-# Future slices add `get_file`, `download_file`, and chunking helpers.
+# Slice 8 adds `get_file` + `download_file` so a Telegram photo can be
+# pulled into the CoverPhoto pipeline.
 module Telegram
   class Client
     Error = Class.new(StandardError)
@@ -40,6 +41,43 @@ module Telegram
 
     def send_chat_action(chat_id:, action: "typing", timeout: DEFAULT_TIMEOUT)
       request("sendChatAction", {chat_id: chat_id, action: action}, timeout: timeout)
+    end
+
+    # Two-step download. Telegram returns a `file_path` from getFile that
+    # you have to fetch from a SEPARATE URL prefix that includes the bot
+    # token. The path expires after about an hour — fetch immediately.
+    def self.get_file(file_id:, timeout: DEFAULT_TIMEOUT)
+      new.get_file(file_id: file_id, timeout: timeout)
+    end
+
+    def get_file(file_id:, timeout: DEFAULT_TIMEOUT)
+      request("getFile", {file_id: file_id}, timeout: timeout)
+    end
+
+    # Pulls the bytes from https://api.telegram.org/file/bot<token>/<path>.
+    # Returns the raw body. Telegram caps photo uploads at 20MB so we
+    # accept whatever they send without a streaming download.
+    def self.download_file(file_path:, timeout: 20)
+      new.download_file(file_path: file_path, timeout: timeout)
+    end
+
+    def download_file(file_path:, timeout: 20)
+      raise Error, "TELEGRAM_BOT_TOKEN missing" if Telegram::Config::BOT_TOKEN.blank?
+
+      uri = URI("https://#{API_HOST}/file/bot#{Telegram::Config::BOT_TOKEN}/#{file_path}")
+      response = Net::HTTP.start(uri.host, uri.port,
+        use_ssl: true,
+        open_timeout: timeout,
+        read_timeout: timeout) do |http|
+        http.request(Net::HTTP::Get.new(uri.request_uri))
+      end
+
+      unless response.is_a?(Net::HTTPSuccess)
+        raise Error, "telegram download failed: status=#{response.code}"
+      end
+      response.body
+    rescue Net::OpenTimeout, Net::ReadTimeout, SocketError => e
+      raise Error, "telegram download network: #{e.class}: #{e.message}"
     end
 
     private

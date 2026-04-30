@@ -44,6 +44,14 @@ class User < ApplicationRecord
     update!(telegram_chat_id: nil, telegram_username: nil)
   end
 
+  # Where Telegram-uploaded covers land by default. Oldest library first
+  # so the answer doesn't shift if the user creates a new one. nil if the
+  # user has no libraries yet (the webhook checks before creating a
+  # CoverPhoto, which can't have a null library_id).
+  def default_library
+    libraries.order(:created_at).first
+  end
+
   has_many :memberships, dependent: :destroy
   has_many :libraries, through: :memberships
   has_many :owned_libraries, class_name: "Library", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner

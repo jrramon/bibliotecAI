@@ -173,6 +173,86 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     Rails.logger.stop_broadcasting_to(Logger.new(log_io)) if log_io
   end
 
+  test "linked chat photo → CoverPhoto created in user's default library, reply confirms" do
+    user = create(:user)
+    library = create(:library, owner: user, name: "Casa")
+    user.link_telegram!(chat_id: 555_555)
+
+    Telegram::Client.expects(:get_file).with(file_id: "FID_BIG").returns({"file_path" => "photos/file_42.jpg"})
+    Telegram::Client.expects(:download_file).with(file_path: "photos/file_42.jpg")
+      .returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+    Telegram::Client.expects(:send_message).with do |kwargs|
+      kwargs[:chat_id] == 555_555 && kwargs[:text].match?(/recibida/i)
+    end
+
+    assert_difference -> { CoverPhoto.count }, 1 do
+      post "/telegram/webhook/test-secret-abc",
+        params: telegram_photo_update(update_id: 200, chat_id: 555_555),
+        as: :json
+    end
+
+    assert_response :ok
+    cover = CoverPhoto.last
+    assert_equal library.id, cover.library_id
+    assert_equal user.id, cover.uploaded_by_user_id
+    assert_equal 555_555, cover.telegram_chat_id
+    assert_predicate cover, :pending?
+    assert cover.image.attached?
+  end
+
+  test "linked chat photo, but user has no library → reply with explanation, no CoverPhoto" do
+    user = create(:user)
+    user.link_telegram!(chat_id: 666_666)
+
+    Telegram::Client.expects(:get_file).never
+    Telegram::Client.expects(:send_message).with do |kwargs|
+      kwargs[:text].match?(/biblioteca/i)
+    end
+
+    assert_no_difference -> { CoverPhoto.count } do
+      post "/telegram/webhook/test-secret-abc",
+        params: telegram_photo_update(update_id: 201, chat_id: 666_666),
+        as: :json
+    end
+
+    assert_response :ok
+  end
+
+  test "linked chat photo, picks the largest resolution from the photo array" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 777_777)
+
+    Telegram::Client.expects(:get_file).with(file_id: "FID_BIG").returns({"file_path" => "p/big.jpg"})
+    Telegram::Client.stubs(:download_file).returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+    Telegram::Client.stubs(:send_message)
+
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_photo_update(update_id: 202, chat_id: 777_777),
+      as: :json
+
+    assert_response :ok
+  end
+
+  test "linked chat photo, telegram download fails → reply photo failed, no CoverPhoto" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 888_888)
+
+    Telegram::Client.stubs(:get_file).raises(Telegram::Client::Error, "telegram getFile network: TimeoutError")
+    Telegram::Client.expects(:send_message).with do |kwargs|
+      kwargs[:text].match?(/no he podido procesar/i)
+    end
+
+    assert_no_difference -> { CoverPhoto.count } do
+      post "/telegram/webhook/test-secret-abc",
+        params: telegram_photo_update(update_id: 203, chat_id: 888_888),
+        as: :json
+    end
+
+    assert_response :ok
+  end
+
   test "missing update_id → 200, no row, no send" do
     Telegram::Client.expects(:send_message).never
     assert_no_difference -> { TelegramMessage.count } do
@@ -194,6 +274,23 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
         chat: {id: chat_id, type: "private"},
         date: Time.current.to_i,
         text: text
+      }
+    }
+  end
+
+  def telegram_photo_update(update_id:, chat_id:)
+    {
+      update_id: update_id,
+      message: {
+        message_id: 1,
+        from: {id: chat_id, is_bot: false, first_name: "Joserra"},
+        chat: {id: chat_id, type: "private"},
+        date: Time.current.to_i,
+        photo: [
+          {file_id: "FID_TINY", file_size: 1_000, width: 80, height: 120},
+          {file_id: "FID_MED", file_size: 50_000, width: 320, height: 480},
+          {file_id: "FID_BIG", file_size: 250_000, width: 800, height: 1200}
+        ]
       }
     }
   end
