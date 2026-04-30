@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Thin wrapper around bin/photo-worker.rb. Kept under the old name so
+# Thin wrapper around bin/claude-worker.rb. Kept under the old name so
 # existing muscle memory still works. The actual logic lives in the Ruby
 # file — edit it there, not here. Re-run this wrapper to pick up changes.
 #
@@ -20,5 +20,5 @@ export DATABASE_PASSWORD="${DATABASE_PASSWORD:-aqwe123}"
 export CLAUDE_BIN="${CLAUDE_BIN:-$(command -v claude)}"
 export RAILS_ENV="${RAILS_ENV:-development}"
 
-echo "[wrapper] starting photo-worker  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN"
-exec bundle exec bin/rails runner bin/photo-worker.rb
+echo "[wrapper] starting claude-worker  DB=$DATABASE_HOST:$DATABASE_PORT  CLAUDE_BIN=$CLAUDE_BIN"
+exec bundle exec bin/rails runner bin/claude-worker.rb

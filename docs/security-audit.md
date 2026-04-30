@@ -153,7 +153,7 @@ specific rescues (`ClaudeBookIdentifier::Error`, `Timeout::Error`,
 - `exists?` used in template conditionals where applicable; none of
   the hot-path conditionals use `any?` on unloaded scopes.
 - `find_each` not used because no batch jobs operate over large tables
-  (photo-worker processes one record at a time).
+  (claude-worker processes one record at a time).
 - All FKs indexed (Rails 8 default).
 
 ---

@@ -27,7 +27,7 @@ INTERVAL = Integer(ENV.fetch("INTERVAL", "5"))
 HEARTBEAT_EVERY = Integer(ENV.fetch("HEARTBEAT_EVERY", "24"))
 STALE_AFTER = Integer(ENV.fetch("STALE_AFTER", "120"))
 
-PID_FILE = Rails.root.join("tmp/photo-worker.pid")
+PID_FILE = Rails.root.join("tmp/claude-worker.pid")
 
 # Simple exclusive lock so two workers don't fight over the same pending
 # records. If an older PID file exists but the process is gone (terminal

@@ -31,7 +31,7 @@ Claude account works without extra API keys.
 ## Prerequisites
 
 - Docker + Docker Compose.
-- Ruby 3.3.6 + Bundler on the host (only needed to run the photo-worker).
+- Ruby 3.3.6 + Bundler on the host (only needed to run the claude-worker).
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code) on the
   host, authenticated with your Anthropic account.
 - Optional: a personal [Google Books API
@@ -52,7 +52,7 @@ docker compose exec web bin/rails db:prepare db:seed
 Visit <http://localhost:3000>. Dev mail dashboard at
 <http://localhost:3000/letter_opener>.
 
-### Running the photo-worker on the host
+### Running the claude-worker on the host
 
 Shelf- and cover-photo identification happens in a host process because the
 Claude CLI is not available inside the Rails container. In another

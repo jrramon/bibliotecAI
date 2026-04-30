@@ -43,7 +43,7 @@ psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
   LIMIT 10;"
 
 echo "=== Host worker process ==="
-PID_FILE="tmp/photo-worker.pid"
+PID_FILE="tmp/claude-worker.pid"
 if [ -f "$PID_FILE" ]; then
   WORKER_PID=$(cat "$PID_FILE")
   if kill -0 "$WORKER_PID" 2>/dev/null; then

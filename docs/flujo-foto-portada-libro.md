@@ -29,7 +29,7 @@ UI (partial cover_photos/_analyzing)
   │
   │ 5) Se suscribe a turbo_stream_from [cover_photo, :status]
   ▼
-Host poller (bin/shelf-photo-poller -> bin/photo-worker.rb)
+Host poller (bin/shelf-photo-poller -> bin/claude-worker.rb)
   │
   │ 6) Polling: detecta CoverPhoto.pending
   │ 7) Ejecuta CoverIdentificationJob.perform(id)
@@ -94,7 +94,7 @@ Libro creado en biblioteca
 - Asegura que este arrancado: `bin/shelf-photo-poller`.
 - Revisa que `claude` este disponible en host o `CLAUDE_BIN` configurado.
 - Confirma credenciales DB del host (`DATABASE_HOST`, `DATABASE_PORT`, etc.).
-- Si el worker no procesa, revisar lock/PID (`tmp/photo-worker.pid`) y logs de heartbeat/ticks.
+- Si el worker no procesa, revisar lock/PID (`tmp/claude-worker.pid`) y logs de heartbeat/ticks.
 
 ### 5) Job y estados de procesamiento
 

@@ -25,9 +25,9 @@ services:
       retries: 3
       start_period: 40s
 
-  photo-worker:
+  claude-worker:
     image: biblio:latest
-    container_name: biblio_photo_worker
+    container_name: biblio_claude_worker
     restart: unless-stopped
     env_file:
       - .env.production
@@ -35,7 +35,7 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - CLAUDE_BIN=/usr/local/bin/claude
-    command: ["bundle", "exec", "bin/rails", "runner", "bin/photo-worker.rb"]
+    command: ["bundle", "exec", "bin/rails", "runner", "bin/claude-worker.rb"]
     volumes:
       - ./storage:/rails/storage
       - /home/linuxbrew/.linuxbrew/Caskroom/claude-code/2.1.104/claude:/usr/local/bin/claude:ro
