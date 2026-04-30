@@ -50,6 +50,24 @@ class Telegram::ClientTest < ActiveSupport::TestCase
     assert_match(/TOKEN missing/, err.message)
   end
 
+  test "send_chat_action returns true on 2xx" do
+    response = ok_response(%({"ok": true, "result": true}))
+    Net::HTTP.stubs(:start).returns(response)
+
+    result = Telegram::Client.send_chat_action(chat_id: 123, action: "typing")
+    assert_equal true, result
+  end
+
+  test "send_chat_action raises Error on non-2xx" do
+    response = error_response(code: "400", body: %({"ok": false, "description": "bad"}))
+    Net::HTTP.stubs(:start).returns(response)
+
+    err = assert_raises(Telegram::Client::Error) do
+      Telegram::Client.send_chat_action(chat_id: 1)
+    end
+    assert_match(/sendChatAction/, err.message)
+  end
+
   private
 
   def ok_response(body)

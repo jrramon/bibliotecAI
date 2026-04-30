@@ -13,6 +13,20 @@ if ! command -v claude >/dev/null 2>&1 && [ -z "${CLAUDE_BIN:-}" ]; then
   exit 1
 fi
 
+# Load env files so secrets like TELEGRAM_BOT_TOKEN reach the host worker.
+# Docker compose loads them for the web container automatically; this
+# wrapper runs outside Docker, so we have to do it ourselves. We try both
+# .env.development and .env (in that order — the second wins on overlap)
+# to match whichever convention the project happens to use.
+for ENV_FILE in .env.development .env; do
+  if [ -f "$ENV_FILE" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    set +a
+  fi
+done
+
 export DATABASE_HOST="${DATABASE_HOST:-localhost}"
 export DATABASE_PORT="${DATABASE_PORT:-5433}"
 export DATABASE_USERNAME="${DATABASE_USERNAME:-rails_dev}"

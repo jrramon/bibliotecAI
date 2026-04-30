@@ -6,8 +6,9 @@ require "json"
 # implement with Net::HTTP, matches the "minimal deps" feel of the rest of
 # the codebase, and keeps the auditable footprint tiny.
 #
-# This first cut exposes only `send_message` (Slice 1). Future slices add
-# `send_chat_action`, `get_file`, `download_file`, `chunk` for long replies.
+# Slice 1 added `send_message`; slice 4 adds `send_chat_action` so the
+# webhook can show "typing…" while the claude-worker generates a reply.
+# Future slices add `get_file`, `download_file`, and chunking helpers.
 module Telegram
   class Client
     Error = Class.new(StandardError)
@@ -28,6 +29,17 @@ module Telegram
 
     def send_message(chat_id:, text:, timeout: DEFAULT_TIMEOUT)
       request("sendMessage", {chat_id: chat_id, text: text}, timeout: timeout)
+    end
+
+    # Telegram shows the chat-action indicator (typing…) for ~5s. The
+    # webhook fires this before persisting the message so the user gets
+    # immediate feedback while the host worker spins up claude.
+    def self.send_chat_action(chat_id:, action: "typing", timeout: DEFAULT_TIMEOUT)
+      new.send_chat_action(chat_id: chat_id, action: action, timeout: timeout)
+    end
+
+    def send_chat_action(chat_id:, action: "typing", timeout: DEFAULT_TIMEOUT)
+      request("sendChatAction", {chat_id: chat_id, action: action}, timeout: timeout)
     end
 
     private

@@ -12,14 +12,12 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     Telegram::Config.const_set(:WEBHOOK_SECRET, @prev_secret)
   end
 
-  test "valid secret + linked chat with a private text message creates a row, replies, returns 200" do
+  test "linked chat text → :pending row + typing chat action, no inline send_message" do
     user = create(:user)
     user.link_telegram!(chat_id: 12345)
 
-    Telegram::Client.expects(:send_message).with(
-      chat_id: 12345,
-      text: "Hola desde Biblio"
-    ).once
+    Telegram::Client.expects(:send_chat_action).with(chat_id: 12345, action: "typing").once
+    Telegram::Client.expects(:send_message).never
 
     assert_difference -> { TelegramMessage.count }, 1 do
       post "/telegram/webhook/test-secret-abc",
@@ -32,8 +30,8 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal user.id, msg.user_id
     assert_equal 12345, msg.chat_id
     assert_equal "anything", msg.text
-    assert_predicate msg, :completed?
-    assert_equal "Hola desde Biblio", msg.bot_reply
+    assert_predicate msg, :pending?
+    assert_nil msg.bot_reply
   end
 
   test "invalid secret → 404, no row, no send" do
@@ -78,9 +76,10 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
-  test "duplicate update_id from linked chat → only one row, only one send" do
+  test "duplicate update_id from linked chat → only one row, only one chat action" do
     create(:user).link_telegram!(chat_id: 1)
-    Telegram::Client.expects(:send_message).once
+    Telegram::Client.expects(:send_chat_action).once
+    Telegram::Client.expects(:send_message).never
     payload = telegram_text_update(update_id: 6, chat_id: 1, text: "dup")
 
     assert_difference -> { TelegramMessage.count }, 1 do
@@ -91,9 +90,9 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, TelegramMessage.where(update_id: 6).count
   end
 
-  test "Telegram::Client error from linked chat is swallowed → 200, but row is still persisted" do
+  test "Telegram::Client error on chat action is swallowed → 200, row still persisted" do
     create(:user).link_telegram!(chat_id: 1)
-    Telegram::Client.stubs(:send_message).raises(Telegram::Client::Error, "boom")
+    Telegram::Client.stubs(:send_chat_action).raises(Telegram::Client::Error, "boom")
 
     assert_difference -> { TelegramMessage.count }, 1 do
       post "/telegram/webhook/test-secret-abc",
@@ -101,6 +100,7 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
         as: :json
     end
     assert_response :ok
+    assert_predicate TelegramMessage.last, :pending?
   end
 
   test "/start <valid_token> binds the user and replies with the linker outcome" do
@@ -142,7 +142,8 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     user = create(:user)
     user.link_telegram!(chat_id: 777, username: "joserra")
 
-    Telegram::Client.expects(:send_message).once
+    Telegram::Client.expects(:send_chat_action).once
+    Telegram::Client.expects(:send_message).never
 
     post "/telegram/webhook/test-secret-abc",
       params: telegram_text_update(update_id: 102, chat_id: 777, text: "hola"),
@@ -150,6 +151,7 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
 
     msg = TelegramMessage.find_by(update_id: 102)
     assert_equal user.id, msg.user_id
+    assert_predicate msg, :pending?
   end
 
   test "regular message from unlinked chat is ignored: NO row, polite reply, log line" do
