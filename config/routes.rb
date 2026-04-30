@@ -19,6 +19,11 @@ Rails.application.routes.draw do
   post "/telegram/link", to: "telegram_links#create", as: :telegram_link
   delete "/telegram/link", to: "telegram_links#destroy"
 
+  # MCP HTTP endpoint. The host `claude` CLI calls this on behalf of the
+  # user during a Telegram message turn. Authenticated by a short-lived
+  # bearer token minted by TelegramMessageJob — no Devise.
+  post "/mcp", to: "mcp#handle", as: :mcp
+
   resources :libraries, only: %i[index show new create] do
     member do
       get :settings

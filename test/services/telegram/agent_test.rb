@@ -22,26 +22,78 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     assert_nil result.error
   end
 
-  test "passes the right argv to claude" do
-    Open3.expects(:capture3).with(
-      "claude", "-p", instance_of(String),
-      "--output-format", "json",
-      "--model", "claude-haiku-4-5"
-    ).returns([envelope("ok"), "", success_status])
+  test "passes the right argv to claude including MCP flags" do
+    captured_args = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_args = args
+      true
+    end.returns([envelope("ok"), "", success_status])
 
     Telegram::Agent.new(@message, claude_bin: "claude").call
+
+    # First arg is the env hash
+    assert_kind_of Hash, captured_args[0]
+    assert_equal "30000", captured_args[0]["MCP_TIMEOUT"]
+    # Then bin + flags
+    assert_equal "claude", captured_args[1]
+    assert_equal "-p", captured_args[2]
+    rest = captured_args[4..]
+    assert_includes rest, "--output-format"
+    assert_includes rest, "--model"
+    assert_includes rest, "claude-haiku-4-5"
+    assert_includes rest, "--mcp-config"
+    assert_includes rest, "--strict-mcp-config"
+    assert_includes rest, "--allowedTools"
+    assert_includes rest, "mcp__bibliotecai__*"
+    assert_includes rest, "--max-turns"
   end
 
   test "wraps the user message in <user_message> tags" do
     captured_prompt = nil
     Open3.stubs(:capture3).with do |*args|
-      captured_prompt = args[2] # the prompt is the third positional arg after the binary and "-p"
+      captured_prompt = args[3] # env, bin, "-p", PROMPT, ...
       true
     end.returns([envelope("ok"), "", success_status])
 
     Telegram::Agent.call(@message)
 
     assert_match(/<user_message>\s*¿qué eres\?\s*<\/user_message>/, captured_prompt)
+  end
+
+  test "writes a per-message MCP config file with the bearer token and tears it down" do
+    captured_config_path = nil
+    Open3.stubs(:capture3).with do |*args|
+      idx = args.index("--mcp-config")
+      captured_config_path = args[idx + 1]
+      assert File.exist?(captured_config_path), "config file should exist while claude runs"
+      cfg = JSON.parse(File.read(captured_config_path))
+      bibliotecai = cfg.dig("mcpServers", "bibliotecai")
+      assert_equal "http", bibliotecai["type"]
+      assert_match(%r{/mcp\z}, bibliotecai["url"])
+      assert_match(/\ABearer .+/, bibliotecai.dig("headers", "Authorization"))
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    refute File.exist?(captured_config_path), "config file should be cleaned up after the call"
+  end
+
+  test "config file's bearer is a valid mcp_session token for the user" do
+    captured_token = nil
+    Open3.stubs(:capture3).with do |*args|
+      idx = args.index("--mcp-config")
+      cfg = JSON.parse(File.read(args[idx + 1]))
+      header = cfg.dig("mcpServers", "bibliotecai", "headers", "Authorization")
+      captured_token = header.sub(/\ABearer /, "")
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    payload = Rails.application.message_verifier(:mcp_session).verify(captured_token)
+    assert_equal @user.id, payload["user_id"] || payload[:user_id]
+    assert_equal @message.id, payload["message_id"] || payload[:message_id]
   end
 
   test "returns failure when claude exits non-zero" do
