@@ -8,7 +8,9 @@ module Mcp
       [
         Mcp::Tools::ListMyLibraries,
         Mcp::Tools::SearchBooks,
-        Mcp::Tools::ListMyWishlist
+        Mcp::Tools::ListMyWishlist,
+        Mcp::Tools::AddToWishlist,
+        Mcp::Tools::RemoveFromWishlist
       ].freeze
     end
 
