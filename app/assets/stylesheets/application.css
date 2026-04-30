@@ -1985,6 +1985,19 @@ dialog.modal-dialog::backdrop {
   margin: 0 0 14px;
   color: var(--ink-1);
 }
+.telegram-start-command {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  word-break: break-all;
+  user-select: all;
+}
 .profile-grid {
   display: grid;
   grid-template-columns: 220px 1fr;

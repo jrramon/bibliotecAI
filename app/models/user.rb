@@ -30,6 +30,20 @@ class User < ApplicationRecord
     update!(wishlist_share_token: nil)
   end
 
+  def telegram_linked?
+    telegram_chat_id.present?
+  end
+
+  # Binds this user to a Telegram chat. Caller (Telegram::Linker) is
+  # responsible for verifying the user's intent before calling.
+  def link_telegram!(chat_id:, username: nil)
+    update!(telegram_chat_id: chat_id, telegram_username: username)
+  end
+
+  def unlink_telegram!
+    update!(telegram_chat_id: nil, telegram_username: nil)
+  end
+
   has_many :memberships, dependent: :destroy
   has_many :libraries, through: :memberships
   has_many :owned_libraries, class_name: "Library", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner

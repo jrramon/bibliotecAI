@@ -4,20 +4,23 @@ module Telegram
   # the URL. CSRF is skipped because the caller has no Rails session, and
   # `authenticate_user!` is not in scope (no Devise auth on this controller).
   #
-  # Slice 2 behaviour:
-  # - dedupe: Rails.cache holds `update_id` 10 min so a Telegram retry
-  #   within that window is a no-op. The DB unique index on
-  #   `telegram_messages.update_id` is the backstop if the cache misses.
-  # - filter: only private chats get processed. Groups + callback_query +
-  #   edited_message + anything-else are silently ignored.
-  # - persist: every accepted update creates a TelegramMessage row.
-  # - reply: still hardcoded «Hola desde Biblio» (Claude lands in Slice 4).
+  # Behaviour by slice (current = 3):
+  # - dedupe via Rails.cache + DB unique on `update_id` (Slice 2).
+  # - private chats only (Slice 2).
+  # - persist a TelegramMessage row per accepted update (Slice 2).
+  # - `/start <token>` runs Telegram::Linker before anything else and
+  #   replies with the linker's outcome (Slice 3, this slice).
+  # - linked chats stamp `TelegramMessage.user_id` (Slice 3).
+  # - any other text from a linked or unlinked chat still gets the
+  #   hardcoded «Hola desde Biblio». Claude lands in Slice 4.
   class WebhooksController < ApplicationController
     skip_before_action :verify_authenticity_token
     skip_before_action :touch_last_seen!, raise: false
 
     REPLY_HELLO = "Hola desde Biblio"
+    REPLY_LINK_FIRST = "👋 Para hablar conmigo, primero vincula tu cuenta de BibliotecAI desde tu perfil web."
     DEDUPE_TTL = 10.minutes
+    START_RE = /\A\/start(?:\s+(\S+))?\z/
 
     def create
       return head :not_found unless valid_secret?
@@ -33,14 +36,29 @@ module Telegram
       chat_id = chat[:id]
       text = message[:text].to_s
 
-      TelegramMessage.create!(
-        chat_id: chat_id,
-        update_id: update_id,
-        text: text,
-        status: :completed,
-        bot_reply: REPLY_HELLO
-      )
-      Telegram::Client.send_message(chat_id: chat_id, text: REPLY_HELLO)
+      if (match = START_RE.match(text))
+        # /start <token>: always processed, even from unlinked chats —
+        # this is how a chat *becomes* linked.
+        username = message.dig(:from, :username)
+        reply = Telegram::Linker.call(token: match[1].to_s, chat_id: chat_id, username: username).message
+        user = User.find_by(telegram_chat_id: chat_id) # may now be set
+        persist_and_reply(user: user, chat_id: chat_id, update_id: update_id, text: text, reply: reply)
+        return head :ok
+      end
+
+      user = User.find_by(telegram_chat_id: chat_id)
+      unless user
+        # Unlinked chat sending a non-/start message. Log for forensics
+        # but skip DB write so random Telegram users can't fill our table.
+        Rails.logger.info(
+          "[Telegram::WebhooksController] unlinked chat=#{chat_id} ignored: " \
+          "text=#{text.inspect.truncate(120)}"
+        )
+        Telegram::Client.send_message(chat_id: chat_id, text: REPLY_LINK_FIRST)
+        return head :ok
+      end
+
+      persist_and_reply(user: user, chat_id: chat_id, update_id: update_id, text: text, reply: REPLY_HELLO)
       head :ok
     rescue ActiveRecord::RecordNotUnique
       # Cache miss + DB unique caught the dupe. Telegram is satisfied with 200.
@@ -53,6 +71,18 @@ module Telegram
 
     private
 
+    def persist_and_reply(user:, chat_id:, update_id:, text:, reply:)
+      TelegramMessage.create!(
+        user: user,
+        chat_id: chat_id,
+        update_id: update_id,
+        text: text,
+        status: :completed,
+        bot_reply: reply
+      )
+      Telegram::Client.send_message(chat_id: chat_id, text: reply)
+    end
+
     def valid_secret?
       provided = params[:secret].to_s
       expected = Telegram::Config::WEBHOOK_SECRET
@@ -60,9 +90,6 @@ module Telegram
       ActiveSupport::SecurityUtils.secure_compare(provided, expected)
     end
 
-    # Returns true the first time we see this update_id, false on retries.
-    # `unless_exist: true` makes the write atomic: it only succeeds if the
-    # key wasn't already there.
     def first_time?(update_id)
       Rails.cache.write("tg:update:#{update_id}", true,
         unless_exist: true,

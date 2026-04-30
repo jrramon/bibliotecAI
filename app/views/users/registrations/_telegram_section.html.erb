@@ -1,0 +1,46 @@
+<%# Telegram-link panel del perfil. Vive dentro de un dom_id'd <section>
+    con `turbo_stream_from [user, :telegram_status]` en el layout padre,
+    así Telegram::Linker puede broadcast-replace este fragmento cuando
+    el bind se completa, sin que el usuario tenga que recargar.
+
+    Orden de las ramas: `linked?` primero (la rama del broadcast no
+    tiene flash, así que no puede depender de él). Solo cuando el user
+    no está linked + venimos de un POST a /telegram/link el flash trae
+    los enlaces para mostrar.
+%>
+<section class="profile-section" id="<%= dom_id(user, :telegram_status) %>">
+  <h2 class="section-title">Telegram</h2>
+  <% if user.telegram_linked? %>
+    <p class="profile-hint">
+      Vinculado
+      <% if user.telegram_username.present? %>
+        a <strong>@<%= user.telegram_username %></strong>.
+      <% else %>
+        a tu cuenta de Telegram.
+      <% end %>
+      Cualquier mensaje que mandes al bot llegará como tuyo.
+    </p>
+    <%= button_to "Desvincular Telegram", telegram_link_path,
+                  method: :delete,
+                  class: "btn btn-ghost",
+                  form: {data: {turbo_confirm: "¿Desvincular tu cuenta de Telegram? Tendrás que generar un enlace nuevo para volver a vincular."}} %>
+  <% elsif flash[:telegram_deep_link].present? %>
+    <p class="profile-hint">Pulsa el botón para abrir Telegram y completar la vinculación. El enlace caduca en 24h.</p>
+    <%= link_to "Abrir Telegram y vincular", flash[:telegram_deep_link],
+                class: "btn btn-primary",
+                target: "_blank",
+                rel: "noopener" %>
+
+    <% if flash[:telegram_start_command].present? %>
+      <p class="profile-hint" style="margin-top: 14px;">
+        ¿No te ha respondido el bot tras pulsar Start? Eso pasa si ya iniciaste el bot antes — Telegram solo aplica el deep-link la primera vez. Como alternativa, abre el chat con <strong>@<%= Telegram::Config::BOT_USERNAME %></strong> y pega este comando como mensaje:
+      </p>
+      <pre class="telegram-start-command"><%= flash[:telegram_start_command] %></pre>
+    <% end %>
+  <% else %>
+    <p class="profile-hint">Habla con tu biblioteca desde Telegram. Se vincula con un enlace de un solo uso, válido 24h.</p>
+    <%= button_to "Generar enlace de Telegram", telegram_link_path,
+                  method: :post,
+                  class: "btn btn-primary" %>
+  <% end %>
+</section>

@@ -14,6 +14,11 @@ Rails.application.routes.draw do
   # See docs/telegram-bot.md for the BotFather + setWebhook flow.
   post "/telegram/webhook/:secret", to: "telegram/webhooks#create", as: :telegram_webhook
 
+  # Web-side linking from /users/edit. POST mints a signed deep-link
+  # token; DELETE unlinks the current user.
+  post "/telegram/link", to: "telegram_links#create", as: :telegram_link
+  delete "/telegram/link", to: "telegram_links#destroy"
+
   resources :libraries, only: %i[index show new create] do
     member do
       get :settings

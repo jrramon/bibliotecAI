@@ -80,6 +80,9 @@
     </div>
   <% end %>
 
+  <%= turbo_stream_from current_user, :telegram_status %>
+  <%= render "telegram_section", user: current_user %>
+
   <section class="profile-section profile-danger">
     <h2 class="section-title">Eliminar cuenta</h2>
     <p class="profile-hint">Esto borra tu cuenta y las bibliotecas que posees. Los libros y comentarios de otros miembros siguen existiendo.</p>
