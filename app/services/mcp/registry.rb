@@ -6,7 +6,9 @@ module Mcp
   module Registry
     def self.all
       [
-        Mcp::Tools::ListMyLibraries
+        Mcp::Tools::ListMyLibraries,
+        Mcp::Tools::SearchBooks,
+        Mcp::Tools::ListMyWishlist
       ].freeze
     end
 
