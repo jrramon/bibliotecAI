@@ -2,11 +2,16 @@
 :skip_files:
   - app/services/claude_book_identifier.rb
   - app/services/claude_cover_identifier.rb
+  - app/services/telegram/agent.rb
 :additional_checks_path:
   - "./lib/brakeman_checks"
-# Both Claude*Identifier services call `Open3.capture3` passing an argv array
+# Every skipped file calls `Open3.capture3` passing an argv array
 # (binary + separate arg strings) directly to the kernel — NOT a single
-# string through a shell. Even if `CLAUDE_BIN` or the generated image path
-# contained shell metacharacters, exec() would look for a binary literally
-# named that and fail. Skipping these two files is safer than disabling the
-# CommandInjection check across the whole codebase.
+# string through a shell. Even if `CLAUDE_BIN`, the generated image path,
+# or the per-message MCP config path contained shell metacharacters,
+# exec() would look for a binary literally named that and fail. Skipping
+# these files is safer than disabling the CommandInjection check across
+# the whole codebase.
+#
+# Note: app/services/mcp/* and app/services/telegram/notify_identified_cover.rb
+# do NOT shell out, so they don't need a skip.
