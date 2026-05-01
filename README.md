@@ -12,10 +12,15 @@ A small, Japanese-aesthetic library app for groups of readers. You can:
   public share link.
 - Comment inside a book thread, search across your tenants with ⌘K, and
   switch between spine / grid / list layouts of the bookshelf.
+- **Talk to your library from Telegram**: ask «¿qué tengo de Murakami?»,
+  apunta libros en tu wishlist, gestiónala, y manda fotos de portadas
+  para que aterricen como libros (o como deseos, si pones «wishlist» en
+  el caption). Claude responde llamando a un servidor MCP local con
+  herramientas acotadas a tu propio scope.
 
-The spine-identification and cover-identification paths call the **Claude
-Code CLI** (`claude -p`) on the host, so a subscription-authenticated
-Claude account works without extra API keys.
+The spine-identification, cover-identification and Telegram-conversation
+paths call the **Claude Code CLI** (`claude -p`) on the host, so a
+subscription-authenticated Claude account works without extra API keys.
 
 ## Stack
 
@@ -72,7 +77,49 @@ Environment variables (all optional):
   `rails_dev` / `aqwe123`).
 
 Check the queue state any time with `bin/queue-status` — it lists pending
-shelf/cover photos and whether the worker is alive.
+shelf/cover photos, recent Telegram messages, and whether the worker is
+alive.
+
+### Telegram bot (optional)
+
+The Telegram side is opt-in. Once enabled, every linked user can chat
+with their own libraries from a private chat: list/add/remove wishlist
+items, search the catalogue, and add books by photographing covers.
+
+1. Talk to [`@BotFather`](https://t.me/BotFather) to create a bot. Note
+   the token (`8691…:AAF…`) and the username (`MyBibliotecaiBot`).
+2. Generate a webhook secret:
+   `ruby -rsecurerandom -e 'puts SecureRandom.hex(32)'`
+3. Add three vars to `.env`:
+
+   ```
+   TELEGRAM_BOT_TOKEN=8691…
+   TELEGRAM_BOT_USERNAME=MyBibliotecaiBot
+   TELEGRAM_WEBHOOK_SECRET=<hex you just generated>
+   ```
+
+4. Restart the web container so the env reloads:
+   `docker compose restart web`.
+5. Expose your dev box over HTTPS — for example with
+   `ngrok http 3000` — and register the webhook with Telegram:
+
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<tunnel>/telegram/webhook/<SECRET>"
+   ```
+
+6. Restart the host worker (`bin/shelf-photo-poller`) so it sees the new
+   env. The wrapper sources `.env` automatically.
+7. From your profile in BibliotecAI (`/users/edit`) click "Conectar
+   Telegram" → open the deep-link → start a chat with the bot. The
+   profile page refreshes live (Turbo Stream) once the bind succeeds.
+
+Then try: «¿qué bibliotecas tengo?», «apunta *Kokoro* en mi wishlist»,
+«¿qué hay en mi wishlist?», «borra el último». Send a photo of a book
+cover (no caption) to add it to your default library; add a caption
+like «wishlist» or «para luego» to apunt it instead.
+
+Full setup recipe and architecture in
+[`docs/telegram-bot.md`](docs/telegram-bot.md).
 
 ### Storage
 
@@ -102,6 +149,8 @@ docker compose exec web bundle exec brakeman --no-pager -q
 - [`docs/flujo-foto-portada-libro.md`](docs/flujo-foto-portada-libro.md) —
   end-to-end flow of the cover-photo → Claude → add-book pipeline, with a
   per-phase debugging checklist.
+- [`docs/telegram-bot.md`](docs/telegram-bot.md) — Telegram bot setup
+  (BotFather, webhook, ngrok) and the MCP architecture behind it.
 - [`CHANGELOG.md`](CHANGELOG.md) — what shipped, by slice.
 
 ## Contributing
