@@ -1,1 +1,15 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# Públicas (landing, sign-up, sign-in) se indexan por defecto. Las
+# rutas auth'd devuelven 302 a /users/sign_in y los crawlers las
+# desindexan solas, así que no hace falta enumerarlas aquí — listar
+# rutas internas en robots.txt sirve más como mapa para curiosos
+# que como protección. La autenticación es lo que protege; esto solo
+# son hints para los buscadores.
+#
+# Único disallow honesto: /w/<token> son enlaces de wishlist privados
+# del usuario; aunque el dueño los comparta, no queremos que acaben
+# indexados sin querer.
+
+User-agent: *
+Disallow: /w/
+
+Sitemap: https://biblio.imagineourfutures.org/sitemap.xml

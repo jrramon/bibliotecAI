@@ -1,48 +1,14 @@
-<%# Public registration is closed. This page replaces Devise's default
-    sign-up form with two paths forward: log in (for people who already
-    have an account, e.g. invited members), or join the waitlist. %>
-<section class="page waitlist-page">
-  <div class="waitlist-card">
-    <p class="eyebrow">Invitación necesaria</p>
-    <h1 class="waitlist-title">Estamos abriendo poco a poco.</h1>
-    <p class="waitlist-lede">
-      BibliotecAI es por invitación de momento. Si ya tienes una cuenta
-      o te han invitado a una biblioteca, entra por aquí; si no, déjanos
-      tu email y te avisamos en cuanto haya hueco.
-    </p>
+<%# Public registration is closed. Random visitors see the waitlist
+    form; invitees (detected via a pending Invitation matching the
+    prefilled email) see the real Devise registration form so they can
+    actually complete their account. %>
+<% content_for :title, @invitee ? "Crear cuenta" : "Lista de espera" %>
+<% content_for :description, @invitee ?
+     "Crea tu cuenta de BibliotecAI para unirte a la biblioteca a la que te han invitado." :
+     "BibliotecAI está abriendo poco a poco, por invitación. Apúntate a la lista de espera y te avisamos en cuanto haya hueco." %>
 
-    <div class="waitlist-actions">
-      <%= link_to "Entrar con mi cuenta", new_user_session_path, class: "btn btn-ghost" %>
-    </div>
-
-    <hr class="waitlist-rule">
-
-    <h2 class="waitlist-subtitle">Lista de espera</h2>
-    <%= form_with url: waitlist_requests_path, scope: :waitlist_request,
-                  data: {turbo: false}, class: "waitlist-form" do |f| %>
-      <label class="field">
-        <span class="field-label">Email</span>
-        <%= f.email_field :email, required: true, autocomplete: "email",
-                          placeholder: "tu@correo.com",
-                          value: params[:email].presence %>
-      </label>
-
-      <label class="field">
-        <span class="field-label">¿Por qué te interesa? <em>(opcional)</em></span>
-        <%= f.text_area :note, rows: 3, maxlength: 500,
-                        placeholder: "Cuéntanos en una línea cómo lo usarías." %>
-      </label>
-
-      <div class="waitlist-submit">
-        <%= f.submit "Apuntarme a la lista", class: "btn btn-primary" %>
-      </div>
-    <% end %>
-
-    <p class="waitlist-foot">
-      BibliotecAI es código abierto.
-      <%= link_to "Échale un vistazo en GitHub", "https://github.com/jrramon/bibliotecAI",
-                  target: "_blank", rel: "noopener" %>, móntatela en tu propio servidor
-      o contribuye a hacerla mejor.
-    </p>
-  </div>
-</section>
+<% if @invitee %>
+  <%= render "invitee_form", resource: resource, resource_name: resource_name %>
+<% else %>
+  <%= render "waitlist" %>
+<% end %>

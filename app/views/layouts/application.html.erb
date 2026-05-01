@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <title><%= content_for(:title) || "BibliotecAI · 函" %></title>
+    <title><%= page_title %></title>
+    <meta name="description" content="<%= meta_description %>">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="BibliotecAI">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#8B2E2A">
+    <link rel="canonical" href="<%= canonical_url %>">
+
+    <%# Open Graph (Facebook, LinkedIn, WhatsApp, Telegram link previews). %>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="<%= SeoHelper::SITE_NAME %>">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:title" content="<%= page_title %>">
+    <meta property="og:description" content="<%= meta_description %>">
+    <meta property="og:url" content="<%= canonical_url %>">
+    <meta property="og:image" content="<%= og_image_url %>">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <%# Twitter Card (also used by some clients that don't read OG). %>
+    <meta name="twitter:card" content="<%= SeoHelper::TWITTER_CARD %>">
+    <meta name="twitter:title" content="<%= page_title %>">
+    <meta name="twitter:description" content="<%= meta_description %>">
+    <meta name="twitter:image" content="<%= og_image_url %>">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -112,6 +132,12 @@
 
     <% if user_signed_in? %>
       <%= render "shared/tweaks_panel" %>
+    <% end %>
+
+    <%# Structured data on the landing only — Google uses it to render
+        rich result cards for software/open-source projects. %>
+    <% if controller_name == "home" && action_name == "index" %>
+      <script type="application/ld+json"><%= site_json_ld %></script>
     <% end %>
   </body>
 </html>

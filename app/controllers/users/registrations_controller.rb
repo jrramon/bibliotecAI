@@ -2,13 +2,17 @@ module Users
   class RegistrationsController < Devise::RegistrationsController
     REGISTRATION_CLOSED_ALERT = "Las cuentas son por invitación. Si quieres probar BibliotecAI, déjanos tu email aquí abajo y te avisamos."
 
-    # Public sign-up is closed: /users/sign_up shows a waitlist form
-    # instead of the Devise registration form. We still build the Devise
-    # `resource` so the existing layout / partials don't break, and we
-    # carry the prefilled email through (used by the invitation flow).
+    # Public sign-up is closed by default. Two paths land on this page:
+    # 1. Random visitor → render the waitlist form.
+    # 2. Invitee following an Invitation link → render the actual
+    #    Devise registration form so they can complete their account.
+    # We detect the second case by matching the prefilled `email` param
+    # (set by InvitationsController#show) against pending invitations.
     def new
       build_resource
-      resource.email = params[:email] if params[:email].present?
+      email = params[:email].to_s.strip.downcase
+      @invitee = email.present? && Invitation.pending.where(email: email).exists?
+      resource.email = email if @invitee
       respond_with resource
     end
 
