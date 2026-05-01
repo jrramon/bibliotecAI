@@ -538,6 +538,491 @@ input, textarea, select { font: inherit; color: inherit; }
 .hero .cta { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* ==========================================================================
+   Public landing (home#index, only visible to guests)
+   ==========================================================================
+   The whole landing speaks to readers, not engineers. Big serif type,
+   washi/sumi/vermilion palette, kanji watermarks, very restrained
+   motion. Every animated piece honors prefers-reduced-motion at the
+   bottom of this block. Selectors are namespaced .landing-* so they
+   never bleed into authenticated views. */
+
+.landing {
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+  padding: 0 0 80px;
+}
+
+/* Reveal-on-scroll: elements with data-controller="reveal" fade up
+   the first time they enter the viewport. Stagger via the inline
+   --reveal-delay var written by the Stimulus controller. */
+[data-controller~="reveal"] {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 720ms cubic-bezier(.2, .65, .25, 1) var(--reveal-delay, 0ms),
+              transform 720ms cubic-bezier(.2, .65, .25, 1) var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+[data-controller~="reveal"][data-revealed="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ----- Hero ----- */
+.landing-hero {
+  position: relative;
+  padding: 90px 38px 72px;
+  margin-top: -22px;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at 78% 30%, rgba(139, 46, 42, 0.08), transparent 55%),
+    radial-gradient(ellipse at 12% 80%, rgba(139, 46, 42, 0.04), transparent 60%),
+    var(--bg-raised);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.landing-hero-kanji {
+  position: absolute;
+  right: -40px;
+  bottom: -90px;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(280px, 38vw, 460px);
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--vermilion);
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+  animation: landing-kanji-breathe 14s ease-in-out infinite;
+}
+
+@keyframes landing-kanji-breathe {
+  0%, 100% { opacity: 0.05; transform: translateY(0); }
+  50% { opacity: 0.085; transform: translateY(-6px); }
+}
+
+.landing-eyebrow {
+  position: relative;
+  z-index: 1;
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 18px;
+}
+.landing-eyebrow::before {
+  content: "";
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+  vertical-align: middle;
+  margin-right: 12px;
+  opacity: 0.7;
+}
+
+.landing-hero h1 {
+  position: relative;
+  z-index: 1;
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(36px, 5.4vw, 68px);
+  line-height: 1.05;
+  letter-spacing: -0.022em;
+  color: var(--ink-1);
+  max-width: 18ch;
+  margin: 0 0 22px;
+}
+.landing-hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.landing-lede {
+  position: relative;
+  z-index: 1;
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 56ch;
+  margin: 0 0 34px;
+}
+
+.landing-cta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.btn-lg {
+  font-size: 15px;
+  padding: 12px 26px;
+  letter-spacing: 0.02em;
+}
+
+/* ----- Three pillars ----- */
+.landing-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+@media (max-width: 860px) {
+  .landing-pillars { grid-template-columns: 1fr; }
+}
+
+.landing-pillar {
+  position: relative;
+  padding: 34px 28px 30px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  transition: transform 360ms var(--ease-out, cubic-bezier(.2,.65,.25,1)),
+              box-shadow 360ms var(--ease-out, cubic-bezier(.2,.65,.25,1));
+  overflow: hidden;
+}
+.landing-pillar:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(40, 30, 20, 0.08);
+}
+.landing-pillar-glyph {
+  position: absolute;
+  right: -16px;
+  bottom: -36px;
+  font-family: var(--serif);
+  font-size: 180px;
+  line-height: 1;
+  color: var(--vermilion);
+  opacity: 0.07;
+  pointer-events: none;
+  letter-spacing: -0.04em;
+  transition: opacity 420ms ease;
+}
+.landing-pillar:hover .landing-pillar-glyph { opacity: 0.12; }
+
+.landing-pillar h2 {
+  position: relative;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 0 12px;
+  color: var(--ink-1);
+}
+.landing-pillar p {
+  position: relative;
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ----- Telegram showcase ----- */
+.landing-telegram {
+  display: grid;
+  grid-template-columns: 1fr 0.85fr;
+  gap: 56px;
+  align-items: center;
+  padding: 8px 12px;
+}
+@media (max-width: 860px) {
+  .landing-telegram { grid-template-columns: 1fr; gap: 40px; }
+}
+
+.landing-telegram-copy h2 {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(28px, 3.6vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.018em;
+  color: var(--ink-1);
+  margin: 0 0 18px;
+}
+
+.landing-telegram-copy > p {
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 22px;
+  max-width: 52ch;
+}
+
+.landing-feature-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.landing-feature-list li {
+  position: relative;
+  padding: 10px 14px 10px 32px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule-soft);
+  border-radius: 8px;
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ink-1);
+}
+.landing-feature-list li::before {
+  content: "·";
+  position: absolute;
+  left: 16px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+  top: 50%;
+  transform: translateY(-58%);
+}
+.landing-feature-list li em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* The faux chat. Bubbles fade in one after another while the section
+   itself is being revealed; the per-bubble delay creates a typing
+   rhythm without ever moving the reader's eye away from the copy. */
+.landing-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(40, 30, 20, 0.08);
+}
+
+.landing-chat-bubble {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: landing-bubble-in 540ms cubic-bezier(.2,.65,.25,1) forwards;
+}
+.landing-chat-bubble em { font-style: italic; color: inherit; opacity: 0.95; }
+.landing-chat-bubble strong { font-weight: 600; }
+.landing-chat-bubble:nth-child(1) { animation-delay: 240ms; }
+.landing-chat-bubble:nth-child(2) { animation-delay: 720ms; }
+.landing-chat-bubble:nth-child(3) { animation-delay: 1280ms; }
+.landing-chat-bubble:nth-child(4) { animation-delay: 1820ms; }
+
+.landing-chat-bubble--mine {
+  align-self: flex-end;
+  background: var(--vermilion);
+  color: var(--washi);
+  border-bottom-right-radius: 4px;
+}
+.landing-chat-bubble--theirs {
+  align-self: flex-start;
+  background: var(--bg-sunken);
+  color: var(--ink-1);
+  border: 1px solid var(--rule-soft);
+  border-bottom-left-radius: 4px;
+}
+
+@keyframes landing-bubble-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ----- Quote ----- */
+.landing-quote {
+  text-align: center;
+  padding: 28px 0;
+}
+.landing-quote blockquote {
+  margin: 0 auto;
+  max-width: 36ch;
+}
+.landing-quote p {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.4;
+  color: var(--ink-1);
+  margin: 0 0 12px;
+}
+.landing-quote cite {
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-style: normal;
+}
+
+/* ----- Final CTA ----- */
+.landing-final {
+  text-align: center;
+  padding: 50px 32px 60px;
+  border-top: 1px solid var(--rule);
+}
+.landing-final h2 {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  color: var(--ink-1);
+  margin: 0 0 12px;
+}
+.landing-final > p {
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+.landing-final .landing-cta { justify-content: center; }
+
+/* Reduced motion: skip every animation/transition introduced above and
+   show elements at their resting state. We also stop the breathing
+   kanji because it never settles otherwise. */
+@media (prefers-reduced-motion: reduce) {
+  [data-controller~="reveal"],
+  [data-controller~="reveal"][data-revealed="true"],
+  .landing-pillar,
+  .landing-pillar-glyph,
+  .landing-chat-bubble {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .landing-hero-kanji { animation: none; opacity: 0.06; }
+}
+
+/* ----- Waitlist (public sign-up replacement) ----- */
+.waitlist-page {
+  display: flex;
+  justify-content: center;
+  padding: 60px 18px;
+}
+.waitlist-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 40px 36px 36px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+}
+.waitlist-card .eyebrow {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+.waitlist-title {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.018em;
+  color: var(--ink-1);
+  margin: 0 0 14px;
+}
+.waitlist-lede {
+  color: var(--ink-2);
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+.waitlist-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.waitlist-rule {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 26px 0 22px;
+}
+.waitlist-subtitle {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+  color: var(--ink-1);
+}
+.waitlist-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.waitlist-form .field-label {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.waitlist-form .field-label em {
+  font-style: normal;
+  opacity: 0.7;
+  margin-left: 4px;
+  letter-spacing: 0.1em;
+}
+.waitlist-form input[type="email"],
+.waitlist-form textarea {
+  width: 100%;
+  background: var(--bg-sunken);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-1);
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.waitlist-form textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+.waitlist-form input[type="email"]:focus,
+.waitlist-form textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 46, 42, 0.08);
+}
+.waitlist-submit { margin-top: 6px; }
+.waitlist-foot {
+  margin: 28px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule-soft);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+.waitlist-foot a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--accent), transparent 60%);
+  transition: border-color 160ms ease;
+}
+.waitlist-foot a:hover {
+  border-bottom-color: var(--accent);
+}
+
+/* ==========================================================================
    Cards & lists
    ========================================================================== */
 

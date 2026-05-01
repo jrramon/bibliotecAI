@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_01_134713) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_01_161923) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -358,6 +358,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_01_134713) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["telegram_chat_id"], name: "index_users_on_telegram_chat_id", unique: true
     t.index ["wishlist_share_token"], name: "index_users_on_wishlist_share_token", unique: true
+  end
+
+  create_table "waitlist_requests", force: :cascade do |t|
+    t.string "email", null: false
+    t.text "note"
+    t.datetime "invited_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_waitlist_requests_on_created_at"
+    t.index ["email"], name: "index_waitlist_requests_on_email", unique: true
   end
 
   create_table "wishlist_items", force: :cascade do |t|

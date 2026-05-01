@@ -1,11 +1,112 @@
-<section class="hero" aria-labelledby="hero-title">
-  <div>
-    <h1 id="hero-title">Una biblioteca compartida, <em>identificada por Claude</em>.</h1>
-    <p>Sube una foto de tu estantería y deja que la IA saque los títulos, autores y una imagen anotada con los lomos que no se leen. Comparte la biblioteca con otros lectores y comentad juntos.</p>
-    <p class="cta">
-      <%= link_to "Empezar", new_user_registration_path, class: "btn btn-primary" %>
+<%# Public landing page. Speaks to readers, not to engineers — leans on
+    paper / sumi / vermilion typography and a few delicate fades. Auth'd
+    users get redirected to /libraries by `authenticated_root` in routes,
+    so this template only ever renders for guests. %>
+<div class="landing">
+
+  <section class="landing-hero" aria-labelledby="landing-hero-title">
+    <span class="landing-hero-kanji" aria-hidden="true">函</span>
+    <p class="landing-eyebrow"
+       data-controller="reveal">Una biblioteca con alma</p>
+    <h1 id="landing-hero-title"
+        data-controller="reveal" data-reveal-delay-value="120">
+      Tu biblioteca de casa,<br>
+      <em>conversando contigo</em>.
+    </h1>
+    <p class="landing-lede"
+       data-controller="reveal" data-reveal-delay-value="240">
+      BibliotecAI es donde tus libros viven, se comparten con las personas
+      que te importan, y responden cuando les preguntas. Hecha con calma
+      para quienes guardan los libros como guardan los recuerdos.
+    </p>
+    <p class="landing-cta"
+       data-controller="reveal" data-reveal-delay-value="360">
+      <%= link_to "Apuntarme a la lista", new_user_registration_path, class: "btn btn-primary btn-lg" %>
       <%= link_to "Ya tengo cuenta", new_user_session_path, class: "btn btn-ghost" %>
     </p>
-  </div>
-  <span class="kanji-wash" aria-hidden="true">函</span>
-</section>
+  </section>
+
+  <section class="landing-pillars" aria-label="Qué puedes hacer">
+    <article class="landing-pillar" data-controller="reveal">
+      <span class="landing-pillar-glyph" aria-hidden="true">蔵</span>
+      <h2>Una biblioteca compartida</h2>
+      <p>
+        Crea bibliotecas para tu casa, tu club de lectura o tu pareja.
+        Cada miembro lee y comenta. Tus libros, vuestras conversaciones.
+      </p>
+    </article>
+
+    <article class="landing-pillar" data-controller="reveal" data-reveal-delay-value="120">
+      <span class="landing-pillar-glyph" aria-hidden="true">写</span>
+      <h2>Una foto basta</h2>
+      <p>
+        Fotografía la estantería entera, o solo una portada. Claude
+        identifica los lomos uno a uno y rellena los datos del libro
+        sin que tengas que escribir nada.
+      </p>
+    </article>
+
+    <article class="landing-pillar" data-controller="reveal" data-reveal-delay-value="240">
+      <span class="landing-pillar-glyph" aria-hidden="true">望</span>
+      <h2>Lo que quieres leer</h2>
+      <p>
+        Apunta tus deseos en una wishlist privada. Cuando un libro
+        aterriza en tu biblioteca, desaparece solo de la lista. Sin
+        ruido, sin recordatorios.
+      </p>
+    </article>
+  </section>
+
+  <section class="landing-telegram" aria-labelledby="landing-telegram-title"
+           data-controller="reveal">
+    <div class="landing-telegram-copy">
+      <p class="landing-eyebrow">Nuevo · desde Telegram</p>
+      <h2 id="landing-telegram-title">Habla con tus libros<br>desde el bolsillo.</h2>
+      <p>
+        Vincula tu cuenta y escríbele al bot como a un bibliotecario
+        atento: pregúntale qué tienes de un autor, apunta lecturas,
+        haz una foto de una portada en una librería. Él se encarga.
+      </p>
+      <ul class="landing-feature-list">
+        <li>«¿Qué tengo de Murakami?»</li>
+        <li>«Apunta <em>Kokoro</em> en mi wishlist.»</li>
+        <li>📸 Una foto de la portada — y aparece en tu biblioteca.</li>
+        <li>📸 + caption «wishlist» — y queda apuntada para luego.</li>
+      </ul>
+    </div>
+
+    <div class="landing-chat" aria-hidden="true">
+      <div class="landing-chat-bubble landing-chat-bubble--mine">
+        ¿Qué tengo de Murakami?
+      </div>
+      <div class="landing-chat-bubble landing-chat-bubble--theirs">
+        En tu biblioteca <strong>Casa</strong> tengo dos:<br>
+        <em>Tokio Blues</em> y <em>Kafka en la orilla</em>. ¿Quieres que apunte alguno más?
+      </div>
+      <div class="landing-chat-bubble landing-chat-bubble--mine">
+        Apunta <em>Sputnik, mi amor</em>.
+      </div>
+      <div class="landing-chat-bubble landing-chat-bubble--theirs">
+        ✓ He apuntado <em>Sputnik, mi amor</em> en tu wishlist.
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-quote" data-controller="reveal">
+    <blockquote>
+      <p>
+        «Una casa sin libros es como una habitación sin ventanas.»
+      </p>
+      <cite>— Heinrich Mann</cite>
+    </blockquote>
+  </section>
+
+  <section class="landing-final" data-controller="reveal">
+    <h2>De momento es por invitación.</h2>
+    <p>Apúntate a la lista y te avisamos en cuanto haya hueco para tu biblioteca.</p>
+    <p class="landing-cta">
+      <%= link_to "Apuntarme a la lista", new_user_registration_path, class: "btn btn-primary btn-lg" %>
+    </p>
+  </section>
+
+</div>

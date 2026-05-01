@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: {registrations: "users/registrations"}
+
+  # Public sign-up is closed; the Devise registration form has been
+  # replaced by a waitlist form that posts here.
+  resources :waitlist_requests, only: %i[create]
   get "up" => "rails/health#show", :as => :rails_health_check
 
   # PWA manifest + service worker. Served at the root so the browser
