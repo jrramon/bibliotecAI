@@ -1485,17 +1485,25 @@ input, textarea, select { font: inherit; color: inherit; }
   flex-direction: column;
   gap: 10px;
 }
-/* The link is the sizing authority: both image and placeholder fill it
-   100%, so a row of mixed cards always lines up at the same baseline. */
+/* The link is the sizing authority: it owns the 2:3 box and clips
+   anything inside. Image and placeholder are absolute-positioned to
+   fill it edge-to-edge — no way for an oversized image to push the
+   card past its row neighbours. */
 .book-card-link {
+  position: relative;
   display: block;
+  width: 100%;
   aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 2px;
   transition: transform 200ms var(--ease-out);
 }
 .book-card-link:hover { transform: translateY(-3px); }
 
 .book-cover-image {
   display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1506,9 +1514,8 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 
 .book-cover {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 0;
   border-radius: 2px;
   padding: 14px 12px;
   display: flex;
