@@ -91,21 +91,70 @@ empezarías a recibir los mensajes reales de los usuarios.
 | `TELEGRAM_BOT_USERNAME` | `BibliotecAIDevBot` | `BibliotecAIBot` |
 | `TELEGRAM_WEBHOOK_SECRET` | hex generado para dev | hex distinto para prod |
 
-Pasos en producción:
+### Primer despliegue del bot
 
-1. Crear un bot prod en BotFather (otro `username`).
-2. Generar otro `WEBHOOK_SECRET` con `ruby -rsecurerandom -e 'puts SecureRandom.hex(32)'`.
-3. Configurar las tres variables en tu hosting (Fly secrets, Heroku
-   config vars, Kamal env, etc.). **Nunca commitearlas.**
-4. Registrar el webhook apuntando al dominio público:
+1. Crear un bot prod en BotFather (otro `username`, p. ej. `BibliotecAIBot`).
+2. Generar el secret: `ruby -rsecurerandom -e 'puts SecureRandom.hex(32)'`.
+3. Añadir las tres variables al `.env.production` (o secrets del hosting).
+   Si usas `docker-compose.production.yml`, ya están propagadas a los dos
+   contenedores (`web` y `claude-worker`) vía `env_file`.
+4. Aplicar migraciones del bot:
    ```bash
-   curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+   docker compose -f docker-compose.production.yml exec web bin/rails db:migrate
+   ```
+   Las tablas/columnas que añade el bot:
+   - `users.telegram_chat_id` + `users.telegram_username`
+   - `telegram_messages` (cola de mensajes entrantes)
+   - `cover_photos.telegram_chat_id` + `cover_photos.intent` (foto → biblioteca / wishlist)
+   - `waitlist_requests` (signup público cerrado, lista de espera)
+5. Reiniciar los dos contenedores para que recojan las env vars nuevas:
+   ```bash
+   docker compose -f docker-compose.production.yml up -d --force-recreate web claude-worker
+   ```
+6. Registrar el webhook:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<PROD_TOKEN>/setWebhook" \
      -d "url=https://<tu-dominio>/telegram/webhook/<PROD_SECRET>"
    ```
-5. Probar mandando un mensaje al bot prod.
+7. Verificar:
+   ```bash
+   curl "https://api.telegram.org/bot<PROD_TOKEN>/getWebhookInfo"
+   ```
+   Debe mostrar tu URL y `pending_update_count: 0`.
+8. Probar: en Telegram, busca el bot prod por su username, manda
+   cualquier mensaje. La primera vez te pedirá vincular tu cuenta — ve
+   a `/users/edit` en producción y pulsa «Conectar Telegram».
 
-El webhook de prod solo se registra una vez. Persiste mientras esté
-disponible la URL.
+### Actualizaciones posteriores
+
+Cada deploy que toque el bot:
+
+```bash
+docker compose -f docker-compose.production.yml pull
+docker compose -f docker-compose.production.yml exec web bin/rails db:migrate
+docker compose -f docker-compose.production.yml up -d --force-recreate web claude-worker
+```
+
+El webhook NO se vuelve a registrar — Telegram lo conserva mientras la
+URL siga viva. Solo necesitas re-registrarlo si:
+- Cambias `TELEGRAM_WEBHOOK_SECRET` (rotación de secret).
+- Cambias el dominio público.
+- `getWebhookInfo` muestra `last_error_message` persistente.
+
+### Verificación post-deploy
+
+```bash
+# El claude-worker debería estar arriba y procesando
+docker compose -f docker-compose.production.yml exec claude-worker \
+  cat tmp/claude-worker.pid
+
+# Mensajes recientes
+docker compose -f docker-compose.production.yml exec web bin/queue-status
+
+# Sanity check de que el agent está leyendo el binario claude del host
+docker compose -f docker-compose.production.yml exec claude-worker \
+  ls -l /usr/local/bin/claude
+```
 
 ## Troubleshooting
 
