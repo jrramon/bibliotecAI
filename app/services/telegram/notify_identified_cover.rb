@@ -19,7 +19,8 @@ module Telegram
 
       case @cover_photo.status
       when "completed"
-        confident? ? auto_create_and_reply : reply_low_confidence
+        return reply_low_confidence unless confident?
+        @cover_photo.intent_wishlist? ? auto_add_to_wishlist : auto_add_to_library
       when "failed"
         reply_failed
       end
@@ -31,16 +32,40 @@ module Telegram
       @cover_photo.title.present? && @cover_photo.confidence.to_f >= CONFIDENCE_FLOOR
     end
 
-    def auto_create_and_reply
+    def auto_add_to_library
       book = build_book
       book.save!
       copy_cover_image(book)
 
-      title_str = book.title
-      lib_str = @cover_photo.library.name
       Telegram::Client.send_message(
         chat_id: @chat_id,
-        text: "✓ He añadido «#{title_str}» a tu biblioteca «#{lib_str}»."
+        text: "✓ He añadido «#{book.title}» a tu biblioteca «#{@cover_photo.library.name}»."
+      )
+    end
+
+    def auto_add_to_wishlist
+      title = @cover_photo.title
+      author = @cover_photo.author.presence
+
+      existing = WishlistItem.match_for(title: title, author: author, user_id: @cover_photo.uploaded_by_user_id, isbn: @cover_photo.isbn).first
+      if existing
+        Telegram::Client.send_message(
+          chat_id: @chat_id,
+          text: "«#{title}» ya estaba apuntado en tu wishlist."
+        )
+        return
+      end
+
+      WishlistItem.create!(
+        user_id: @cover_photo.uploaded_by_user_id,
+        title: title,
+        author: author,
+        isbn: @cover_photo.isbn
+      )
+
+      Telegram::Client.send_message(
+        chat_id: @chat_id,
+        text: "✓ He apuntado «#{title}» en tu wishlist."
       )
     end
 

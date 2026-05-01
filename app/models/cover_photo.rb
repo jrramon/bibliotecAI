@@ -7,6 +7,10 @@ class CoverPhoto < ApplicationRecord
   end
 
   enum :status, {pending: 0, processing: 1, completed: 2, failed: 3}, default: :pending
+  # Where the identified Book should be persisted: :library is the
+  # existing web-upload behaviour; :wishlist is set by the Telegram
+  # webhook when the photo caption hints "para luego".
+  enum :intent, {library: 0, wishlist: 1}, prefix: :intent, default: :library
 
   validate :image_present
   validate :image_is_supported, if: -> { image.attached? }

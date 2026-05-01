@@ -16,19 +16,49 @@ module Telegram
 
     API_HOST = "api.telegram.org"
     DEFAULT_TIMEOUT = 8
+    # Telegram's sendMessage caps at 4096 chars. We use a safety margin
+    # so escaped chars or unexpected concatenations don't push us over.
+    MAX_CHUNK_LENGTH = 4_000
 
-    # Sends a plain-text message back to the user. Returns the parsed
-    # response on 2xx, raises Telegram::Client::Error otherwise.
-    #
-    # parse_mode is left at Telegram's default (none = plain text). We
-    # explicitly avoid HTML/MarkdownV2 here so user-supplied content from
-    # the DB never accidentally injects formatting or 400s the API on a
-    # stray `<` or `_`.
-    def self.send_message(chat_id:, text:, timeout: DEFAULT_TIMEOUT)
-      new.send_message(chat_id: chat_id, text: text, timeout: timeout)
+    # Splits `text` into chunks Telegram will accept. Tries to break on
+    # the last newline before MAX_CHUNK_LENGTH so paragraphs survive;
+    # falls back to a hard cut for single lines longer than the cap.
+    def self.chunk(text, max: MAX_CHUNK_LENGTH)
+      text = text.to_s
+      return [text] if text.length <= max
+
+      parts = []
+      remaining = text.dup
+      until remaining.empty?
+        if remaining.length <= max
+          parts << remaining
+          break
+        end
+        cut = remaining.rindex("\n", max) || max
+        parts << remaining[0...cut].rstrip
+        remaining = remaining[cut..].lstrip
+      end
+      parts.reject(&:empty?)
     end
 
-    def send_message(chat_id:, text:, timeout: DEFAULT_TIMEOUT)
+    # Sends a message back to the user. Returns the parsed response on
+    # 2xx, raises Telegram::Client::Error otherwise.
+    #
+    # parse_mode defaults to nil (plain text). When a caller passes
+    # "Markdown" or "MarkdownV2" or "HTML", we send with that mode and
+    # automatically retry plain-text if Telegram rejects the formatting
+    # — better to deliver an unformatted reply than nothing.
+    def self.send_message(chat_id:, text:, parse_mode: nil, timeout: DEFAULT_TIMEOUT)
+      new.send_message(chat_id: chat_id, text: text, parse_mode: parse_mode, timeout: timeout)
+    end
+
+    def send_message(chat_id:, text:, parse_mode: nil, timeout: DEFAULT_TIMEOUT)
+      payload = {chat_id: chat_id, text: text}
+      payload[:parse_mode] = parse_mode if parse_mode
+      request("sendMessage", payload, timeout: timeout)
+    rescue Error => e
+      raise unless parse_mode && parse_failure?(e)
+      Rails.logger.warn("[Telegram::Client] #{parse_mode} parse failed, falling back to plain: #{e.message.truncate(160)}")
       request("sendMessage", {chat_id: chat_id, text: text}, timeout: timeout)
     end
 
@@ -110,6 +140,17 @@ module Telegram
       JSON.parse(response.body.to_s)
     rescue JSON::ParserError
       {"ok" => false, "raw" => response.body.to_s}
+    end
+
+    # Heuristic: Telegram returns 400 with descriptions like "can't parse
+    # entities" or "Can't find end of the entity" when a parse_mode'd
+    # message is malformed. We look for those signatures so we only fall
+    # back when it really was a formatting issue, not a network/auth
+    # error or anything else.
+    def parse_failure?(error)
+      msg = error.message.to_s
+      msg.include?("status=400") &&
+        msg.match?(/can't parse entities|Can't find end of the entity|unsupported start tag|unsupported parse_mode/i)
     end
   end
 end

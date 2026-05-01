@@ -60,6 +60,82 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     assert_match(/<user_message>\s*¿qué eres\?\s*<\/user_message>/, captured_prompt)
   end
 
+  test "prepends the last 5 completed turns as <recent_conversation>" do
+    travel_to(10.minutes.ago) do
+      TelegramMessage.create!(user: @user, chat_id: 1_000, update_id: 1, text: "lista mi wishlist", bot_reply: "Tienes 2: A, B", status: :completed)
+      TelegramMessage.create!(user: @user, chat_id: 1_000, update_id: 2, text: "borra A", bot_reply: "Borrado A", status: :completed)
+    end
+
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    assert_match(/<recent_conversation>\nUsuario:/, captured_prompt)
+    assert_match(/Usuario: lista mi wishlist/, captured_prompt)
+    assert_match(/Bot: Tienes 2: A, B/, captured_prompt)
+    assert_match(/Usuario: borra A/, captured_prompt)
+    # Oldest first
+    assert captured_prompt.index("lista mi wishlist") < captured_prompt.index("borra A")
+  end
+
+  test "history is capped at 5 turns and excludes the current message" do
+    travel_to(1.hour.ago) do
+      8.times do |i|
+        TelegramMessage.create!(user: @user, chat_id: 1_000, update_id: 100 + i, text: "msg #{i}", bot_reply: "reply #{i}", status: :completed)
+      end
+    end
+
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    # Most recent 5: msg 3..7 included; msg 0..2 excluded; current msg excluded.
+    assert_match(/Usuario: msg 7/, captured_prompt)
+    assert_match(/Usuario: msg 3/, captured_prompt)
+    refute_match(/Usuario: msg 2/, captured_prompt)
+    refute_match(/Usuario: ¿qué eres\?/, captured_prompt)
+  end
+
+  test "history excludes :pending, :processing and :failed messages" do
+    travel_to(10.minutes.ago) do
+      TelegramMessage.create!(user: @user, chat_id: 1_000, update_id: 200, text: "ok msg", bot_reply: "ok", status: :completed)
+      TelegramMessage.create!(user: @user, chat_id: 1_000, update_id: 201, text: "broke msg", bot_reply: "err", status: :failed)
+    end
+
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    assert_match(/Usuario: ok msg/, captured_prompt)
+    refute_match(/Usuario: broke msg/, captured_prompt)
+  end
+
+  test "no history block is emitted when the user has no prior turns" do
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    # The system prompt mentions <recent_conversation> in its rules. We
+    # care that no actual history block was rendered with content.
+    refute_match(/<recent_conversation>\nUsuario:/, captured_prompt)
+  end
+
   test "writes a per-message MCP config file with the bearer token and tears it down" do
     captured_config_path = nil
     Open3.stubs(:capture3).with do |*args|

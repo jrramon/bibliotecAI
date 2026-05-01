@@ -20,7 +20,10 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
-  config.cache_store = :null_store
+  # MemoryStore (rather than NullStore) so cache-driven behaviour like
+  # the Telegram webhook dedupe + throttle is honestly tested. Each test
+  # clears the cache via test_helper.rb to keep isolation.
+  config.cache_store = :memory_store
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable

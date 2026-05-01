@@ -12,19 +12,37 @@ class TelegramMessageJobTest < ActiveJob::TestCase
     )
   end
 
-  test "happy path: agent ok → send_message → completed" do
+  test "long agent reply is split into multiple send_message calls in order" do
+    long_text = "para uno\n" + ("a" * 4_500) + "\n\npara dos"
     Telegram::Agent.expects(:call).with(@message)
-      .returns(Telegram::Agent::Result.new(ok: true, text: "¡Hola, soy yo!", error: nil))
+      .returns(Telegram::Agent::Result.new(ok: true, text: long_text, error: nil))
+
+    sent = []
+    Telegram::Client.stubs(:send_message).with do |kwargs|
+      sent << kwargs[:text]
+      true
+    end.returns({"message_id" => 1})
+
+    TelegramMessageJob.perform_now(@message.id)
+
+    assert sent.size >= 2, "expected multi-chunk send, got #{sent.size}"
+    sent.each { |t| assert t.length <= Telegram::Client::MAX_CHUNK_LENGTH }
+    assert_equal long_text, @message.reload.bot_reply
+  end
+
+  test "happy path: agent ok → send_message with Markdown → completed" do
+    Telegram::Agent.expects(:call).with(@message)
+      .returns(Telegram::Agent::Result.new(ok: true, text: "¡Hola, soy *yo*!", error: nil))
 
     Telegram::Client.expects(:send_message)
-      .with(chat_id: @message.chat_id, text: "¡Hola, soy yo!")
+      .with(chat_id: @message.chat_id, text: "¡Hola, soy *yo*!", parse_mode: "Markdown")
       .returns({"message_id" => 1})
 
     TelegramMessageJob.perform_now(@message.id)
 
     @message.reload
     assert @message.completed?
-    assert_equal "¡Hola, soy yo!", @message.bot_reply
+    assert_equal "¡Hola, soy *yo*!", @message.bot_reply
     assert_nil @message.error_message
   end
 

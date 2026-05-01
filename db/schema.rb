@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_30_231417) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_01_134713) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -103,6 +103,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_231417) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "telegram_chat_id"
+    t.integer "intent", default: 0, null: false
     t.index ["library_id", "created_at"], name: "index_cover_photos_on_library_id_and_created_at"
     t.index ["library_id"], name: "index_cover_photos_on_library_id"
     t.index ["uploaded_by_user_id"], name: "index_cover_photos_on_uploaded_by_user_id"

@@ -31,7 +31,9 @@ class TelegramMessageJob < ApplicationJob
     result = Telegram::Agent.call(message)
 
     if result.ok
-      Telegram::Client.send_message(chat_id: message.chat_id, text: result.text)
+      Telegram::Client.chunk(result.text).each do |part|
+        Telegram::Client.send_message(chat_id: message.chat_id, text: part, parse_mode: "Markdown")
+      end
       message.update!(status: :completed, bot_reply: result.text)
     else
       handle_failure(message, result.error)

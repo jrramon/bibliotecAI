@@ -68,6 +68,76 @@ class Telegram::ClientTest < ActiveSupport::TestCase
     assert_match(/sendChatAction/, err.message)
   end
 
+  test "chunk returns the text untouched when shorter than the cap" do
+    assert_equal ["short"], Telegram::Client.chunk("short")
+  end
+
+  test "chunk splits on newline boundaries when possible" do
+    text = "para uno\n" + ("a" * 1900) + "\n\npara dos\n" + ("b" * 1900)
+    chunks = Telegram::Client.chunk(text, max: 2_000)
+
+    assert chunks.size >= 2
+    chunks.each { |c| assert c.length <= 2_000, "chunk too long: #{c.length}" }
+    joined = chunks.join
+    assert_includes joined, "para uno"
+    assert_includes joined, "para dos"
+    # Splits should land on newlines, not mid-paragraph: no chunk ends
+    # mid-letter when a line break was available before the cap.
+    assert chunks.first.end_with?("a") || chunks.first.end_with?("dos"),
+      "expected split on a sentence boundary, got: #{chunks.first[-20..]}"
+  end
+
+  test "chunk hard-splits a single line longer than the cap" do
+    text = "x" * 5_000
+    chunks = Telegram::Client.chunk(text, max: 2_000)
+
+    assert_equal 3, chunks.size
+    chunks.each { |c| assert c.length <= 2_000 }
+    assert_equal 5_000, chunks.join.length
+  end
+
+  test "send_message includes parse_mode in the payload when given" do
+    captured_body = nil
+    ok_resp = ok_response(%({"ok": true, "result": {"message_id": 1}}))
+    fake_http = Object.new
+    fake_http.define_singleton_method(:request) do |req|
+      captured_body = req.body
+      ok_resp
+    end
+    Net::HTTP.stubs(:start).yields(fake_http).returns(ok_resp)
+
+    Telegram::Client.send_message(chat_id: 1, text: "*hola*", parse_mode: "Markdown")
+
+    payload = JSON.parse(captured_body)
+    assert_equal "Markdown", payload["parse_mode"]
+    assert_equal "*hola*", payload["text"]
+  end
+
+  test "send_message falls back to plain text when Telegram rejects parse_mode" do
+    bad = error_response(code: "400",
+      body: %({"ok": false, "description": "Bad Request: can't parse entities: Character '*' is reserved"}))
+    good = ok_response(%({"ok": true, "result": {"message_id": 7}}))
+
+    Net::HTTP.stubs(:start).returns(bad).then.returns(good)
+
+    result = Telegram::Client.send_message(chat_id: 1, text: "*broken_", parse_mode: "Markdown")
+    assert_equal 7, result["message_id"]
+  end
+
+  test "send_message does not fall back on non-parse errors" do
+    Net::HTTP.stubs(:start).returns(error_response(code: "500", body: %({"ok": false, "description": "internal"})))
+
+    assert_raises(Telegram::Client::Error) do
+      Telegram::Client.send_message(chat_id: 1, text: "*x*", parse_mode: "Markdown")
+    end
+  end
+
+  test "chunk drops empty pieces left after stripping" do
+    text = "a\n\n\n" + ("b" * 4_500)
+    chunks = Telegram::Client.chunk(text, max: 4_000)
+    assert chunks.none?(&:empty?)
+  end
+
   private
 
   def ok_response(body)

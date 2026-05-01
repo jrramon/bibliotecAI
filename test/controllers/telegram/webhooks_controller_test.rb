@@ -218,6 +218,53 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "linked chat photo with wishlist caption → CoverPhoto.intent = :wishlist" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 999_001)
+    Telegram::Client.stubs(:get_file).returns({"file_path" => "p.jpg"})
+    Telegram::Client.stubs(:download_file).returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+    Telegram::Client.expects(:send_message).with do |kwargs|
+      kwargs[:text].match?(/wishlist/i)
+    end
+
+    payload = telegram_photo_update(update_id: 220, chat_id: 999_001)
+    payload[:message][:caption] = "para luego"
+    post "/telegram/webhook/test-secret-abc", params: payload, as: :json
+
+    assert_predicate CoverPhoto.last, :intent_wishlist?
+  end
+
+  test "linked chat photo with no caption → CoverPhoto.intent = :library (default)" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 999_002)
+    Telegram::Client.stubs(:get_file).returns({"file_path" => "p.jpg"})
+    Telegram::Client.stubs(:download_file).returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+    Telegram::Client.stubs(:send_message)
+
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_photo_update(update_id: 221, chat_id: 999_002),
+      as: :json
+
+    assert_predicate CoverPhoto.last, :intent_library?
+  end
+
+  test "linked chat photo with neutral caption → CoverPhoto.intent = :library" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 999_003)
+    Telegram::Client.stubs(:get_file).returns({"file_path" => "p.jpg"})
+    Telegram::Client.stubs(:download_file).returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+    Telegram::Client.stubs(:send_message)
+
+    payload = telegram_photo_update(update_id: 222, chat_id: 999_003)
+    payload[:message][:caption] = "qué bueno este libro"
+    post "/telegram/webhook/test-secret-abc", params: payload, as: :json
+
+    assert_predicate CoverPhoto.last, :intent_library?
+  end
+
   test "linked chat photo, picks the largest resolution from the photo array" do
     user = create(:user)
     create(:library, owner: user)
@@ -251,6 +298,52 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :ok
+  end
+
+  test "throttled linked user gets a polite reply, no DB row, no Claude work" do
+    user = create(:user)
+    user.link_telegram!(chat_id: 333_333)
+    Telegram::WebhooksController::THROTTLE_LIMIT.times do |i|
+      Rails.cache.write(
+        "tg:throttle:#{user.id}:#{Time.current.utc.strftime('%Y%m%d%H')}",
+        Telegram::WebhooksController::THROTTLE_LIMIT,
+        expires_in: 90.minutes
+      )
+    end
+
+    Telegram::Client.expects(:send_message).with do |kwargs|
+      kwargs[:chat_id] == 333_333 && kwargs[:text].match?(/límite/i)
+    end.once
+    Telegram::Client.expects(:send_chat_action).never
+
+    assert_no_difference -> { TelegramMessage.count } do
+      post "/telegram/webhook/test-secret-abc",
+        params: telegram_text_update(update_id: 300, chat_id: 333_333, text: "hola"),
+        as: :json
+    end
+
+    assert_response :ok
+  end
+
+  test "throttle counts text and photo messages, not /start" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 444_444)
+    Telegram::Client.stubs(:send_chat_action)
+    Telegram::Client.stubs(:send_message)
+    Telegram::Client.stubs(:get_file).returns({"file_path" => "p.jpg"})
+    Telegram::Client.stubs(:download_file).returns(File.read(Rails.root.join("test/fixtures/files/shelf.jpg"), mode: "rb"))
+
+    # 3 messages: text, photo, text
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_text_update(update_id: 401, chat_id: 444_444, text: "uno"), as: :json
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_photo_update(update_id: 402, chat_id: 444_444), as: :json
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_text_update(update_id: 403, chat_id: 444_444, text: "dos"), as: :json
+
+    bucket_key = "tg:throttle:#{user.id}:#{Time.current.utc.strftime('%Y%m%d%H')}"
+    assert_equal 3, Rails.cache.read(bucket_key)
   end
 
   test "missing update_id → 200, no row, no send" do

@@ -24,10 +24,17 @@ module Telegram
 
     REPLY_LINK_FIRST = "👋 Para hablar conmigo, primero vincula tu cuenta de BibliotecAI desde tu perfil web."
     REPLY_NO_LIBRARY = "Para añadir libros con foto, primero crea una biblioteca en BibliotecAI."
-    REPLY_PHOTO_RECEIVED = "📸 Foto recibida. La estoy analizando, te aviso cuando termine."
+    REPLY_PHOTO_RECEIVED_LIBRARY = "📸 Foto recibida. La estoy analizando para añadir el libro a tu biblioteca."
+    REPLY_PHOTO_RECEIVED_WISHLIST = "📸 Foto recibida. La estoy analizando para apuntar el libro en tu wishlist."
     REPLY_PHOTO_FAILED = "No he podido procesar la foto. Vuelve a probar o súbela desde la web."
+    REPLY_THROTTLED = "⚠️ Has alcanzado el límite de mensajes por hora. Vuelve a probar dentro de un rato."
     DEDUPE_TTL = 10.minutes
+    THROTTLE_LIMIT = 60
+    THROTTLE_WINDOW = 90.minutes # bucket TTL — actual reset is hourly via the key
     START_RE = /\A\/start(?:\s+(\S+))?\z/
+    # Captions that route the photo to the wishlist instead of the
+    # library. Anything else (or empty caption) → library.
+    WISHLIST_CAPTION_RE = /\b(wishlist|wish|deseo|deseos|para\s+luego|para\s+m[aá]s\s+tarde|apunta|ap[uú]ntalo)\b/i
 
     def create
       return head :not_found unless valid_secret?
@@ -63,6 +70,12 @@ module Telegram
           "text=#{text.inspect.truncate(120)}"
         )
         Telegram::Client.send_message(chat_id: chat_id, text: REPLY_LINK_FIRST)
+        return head :ok
+      end
+
+      if throttle_exceeded?(user.id)
+        Rails.logger.info("[Telegram::WebhooksController] throttled user=#{user.id} chat=#{chat_id}")
+        Telegram::Client.send_message(chat_id: chat_id, text: REPLY_THROTTLED)
         return head :ok
       end
 
@@ -121,6 +134,10 @@ module Telegram
     # We download it inline (the bytes fit in 1-2s for a typical phone
     # photo) so the CoverPhoto can be persisted with an attachment ready
     # for the host worker to pick up.
+    #
+    # The optional `caption` decides where the identified Book lands:
+    # captions matching WISHLIST_CAPTION_RE route to the wishlist; any
+    # other caption (or no caption) routes to the user's default library.
     def handle_photo(user:, chat_id:, message:)
       library = user.default_library
       unless library
@@ -136,9 +153,12 @@ module Telegram
       file_info = Telegram::Client.get_file(file_id: file_id)
       bytes = Telegram::Client.download_file(file_path: file_info["file_path"])
 
+      intent = wishlist_caption?(message[:caption]) ? :wishlist : :library
+
       cover_photo = library.cover_photos.build(
         uploaded_by_user: user,
-        telegram_chat_id: chat_id
+        telegram_chat_id: chat_id,
+        intent: intent
       )
       cover_photo.image.attach(
         io: StringIO.new(bytes),
@@ -147,7 +167,8 @@ module Telegram
       )
       cover_photo.save!
 
-      Telegram::Client.send_message(chat_id: chat_id, text: REPLY_PHOTO_RECEIVED)
+      reply = (intent == :wishlist) ? REPLY_PHOTO_RECEIVED_WISHLIST : REPLY_PHOTO_RECEIVED_LIBRARY
+      Telegram::Client.send_message(chat_id: chat_id, text: reply)
     rescue Telegram::Client::Error, ActiveRecord::RecordInvalid => e
       Rails.logger.warn("[Telegram::WebhooksController] photo intake failed: #{e.class}: #{e.message}")
       begin
@@ -155,6 +176,10 @@ module Telegram
       rescue Telegram::Client::Error
         # Already in trouble — give up silently.
       end
+    end
+
+    def wishlist_caption?(caption)
+      caption.to_s.match?(WISHLIST_CAPTION_RE)
     end
 
     def valid_secret?
@@ -168,6 +193,19 @@ module Telegram
       Rails.cache.write("tg:update:#{update_id}", true,
         unless_exist: true,
         expires_in: DEDUPE_TTL)
+    end
+
+    # Hourly bucket per user. Keyed by the current UTC hour so the count
+    # auto-resets at the top of each hour without a sweep job. We don't
+    # persist the count per-message in the DB on purpose: this is purely
+    # a cost guardrail for the Claude calls behind it; a deny-listed
+    # request leaves no trace beyond a log line.
+    def throttle_exceeded?(user_id)
+      key = "tg:throttle:#{user_id}:#{Time.current.utc.strftime('%Y%m%d%H')}"
+      count = Rails.cache.read(key).to_i
+      return true if count >= THROTTLE_LIMIT
+      Rails.cache.write(key, count + 1, expires_in: THROTTLE_WINDOW)
+      false
     end
   end
 end
