@@ -2226,6 +2226,7 @@ dialog.modal-dialog::backdrop {
   flex-direction: column;
   gap: 2px;
 }
+.wishlist-convert-picker[hidden] { display: none; }
 .wishlist-convert-picker .picker-label {
   font-family: var(--sans);
   font-size: 10px;
