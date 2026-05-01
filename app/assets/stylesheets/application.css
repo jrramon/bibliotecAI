@@ -1000,12 +1000,19 @@ input, textarea, select { font: inherit; color: inherit; }
   flex-direction: column;
   gap: 10px;
 }
-.book-card-link { display: block; transition: transform 200ms var(--ease-out); }
+/* The link is the sizing authority: both image and placeholder fill it
+   100%, so a row of mixed cards always lines up at the same baseline. */
+.book-card-link {
+  display: block;
+  aspect-ratio: 2 / 3;
+  transition: transform 200ms var(--ease-out);
+}
 .book-card-link:hover { transform: translateY(-3px); }
 
 .book-cover-image {
+  display: block;
   width: 100%;
-  aspect-ratio: 2 / 3;
+  height: 100%;
   object-fit: cover;
   border-radius: 2px;
   box-shadow:
@@ -1015,7 +1022,8 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .book-cover {
   position: relative;
-  aspect-ratio: 2 / 3;
+  width: 100%;
+  height: 100%;
   border-radius: 2px;
   padding: 14px 12px;
   display: flex;
