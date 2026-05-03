@@ -60,9 +60,17 @@ Rails.application.configure do
   # Public hostnames this deployment serves. Comma-separated so forks
   # can list multiple (apex + www, several subdomains). The first one
   # is treated as the canonical and used for mailer links + SMTP HELO.
-  app_hosts = ENV.fetch("APP_HOSTS").split(",").map(&:strip).reject(&:empty?)
-  raise "APP_HOSTS env var must list at least one hostname" if app_hosts.empty?
-  primary_host = app_hosts.first
+  #
+  # During `assets:precompile` (Docker build) Rails sets
+  # SECRET_KEY_BASE_DUMMY=1; in that context env vars from the runtime
+  # `.env.production` are not yet loaded. We tolerate APP_HOSTS being
+  # absent ONLY in that build context, and require it at real boot.
+  app_hosts = ENV.fetch("APP_HOSTS", "").split(",").map(&:strip).reject(&:empty?)
+  building_assets = ENV["SECRET_KEY_BASE_DUMMY"].present?
+  if app_hosts.empty? && !building_assets
+    raise "APP_HOSTS env var must list at least one hostname (e.g. APP_HOSTS=biblio.example.org)"
+  end
+  primary_host = app_hosts.first || "localhost"
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = {host: primary_host}
@@ -95,6 +103,6 @@ Rails.application.configure do
   # network — only resolvable inside that network, so nothing external
   # can spoof Host: web. The orchestrator hits /up with
   # `Host: <container-ip>` for health checks, so that path is excluded.
-  config.hosts = app_hosts + ["web"]
+  config.hosts = app_hosts + ["web"] unless building_assets
   config.host_authorization = {exclude: ->(request) { request.path == "/up" }}
 end
