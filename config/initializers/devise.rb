@@ -182,8 +182,12 @@ Devise.setup do |config|
   # config.rememberable_options = {}
 
   # ==> Configuration for :validatable
-  # Range for password length.
-  config.password_length = 6..128
+  # Range for password length. Bumped from the Devise default of 6 — at
+  # 8 chars an online brute force against the Rack::Attack throttle
+  # (5/min per email) would take ~years for a non-dictionary password.
+  # Existing users keep their current password until they choose to
+  # change it; this only affects new sign-ups and password changes.
+  config.password_length = 8..128
 
   # Email regex used to validate email formats. It simply asserts that
   # one (and only one) @ exists in the given string. This is mainly
