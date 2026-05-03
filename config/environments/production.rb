@@ -82,8 +82,14 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [:id]
 
   # DNS rebinding protection: reject requests whose `Host:` header isn't
-  # one we expect. The orchestrator hits /up with `Host: <container-ip>`
-  # for health checks, so that path is excluded from the check.
-  config.hosts = ["biblio.imagineourfutures.org"]
+  # one we expect. Two entries:
+  # - the public domain (browsers, Telegram webhook).
+  # - "web", the Docker service name used by the claude-worker container
+  #   to reach the MCP endpoint over the internal biblio-prod network.
+  #   Only resolvable from within that bridge network — nothing external
+  #   can craft a Host: web request and land here.
+  # The orchestrator hits /up with `Host: <container-ip>` for health
+  # checks, so that path is excluded.
+  config.hosts = ["biblio.imagineourfutures.org", "web"]
   config.host_authorization = {exclude: ->(request) { request.path == "/up" }}
 end
