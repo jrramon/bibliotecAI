@@ -22,6 +22,7 @@ gem "devise", "~> 4.9"
 gem "friendly_id", "~> 5.5"
 gem "simple_form"
 gem "lograge"
+gem "rack-attack"
 
 group :development, :test do
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
