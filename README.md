@@ -121,6 +121,26 @@ like «wishlist» or «para luego» to apunt it instead.
 Full setup recipe and architecture in
 [`docs/telegram-bot.md`](docs/telegram-bot.md).
 
+### Self-hosting (forks)
+
+The codebase is hostname-neutral. To deploy your own instance:
+
+1. **`APP_HOSTS`** in `.env.production` — comma-separated list of the
+   public hostname(s) you serve. The first one is treated as canonical
+   (used for mailer links and SMTP HELO). Required; production won't
+   boot without it.
+2. **`MCP_ENDPOINT_URL`** — where the host `claude` CLI reaches the MCP
+   HTTP endpoint. Defaults to `http://web/mcp` (Docker service name on
+   the internal `biblio-prod` network); change if your topology differs.
+3. **`/robots.txt` and `/sitemap.xml`** are served dynamically and pick
+   up the hostname from each request, so no edits needed.
+4. **`public/social.png` and `public/social.svg`** carry the
+   `biblio.imagineourfutures.org` brand baked into the image. Replace
+   them with your own 1200×630 PNG (and matching SVG source) so social
+   previews on LinkedIn / WhatsApp / Telegram show your brand.
+5. **`SeoHelper::SITE_NAME`** in `app/helpers/seo_helper.rb` if you
+   rename the project.
+
 ### Storage
 
 ActiveStorage uploads live in a named Docker volume (`app_storage`) so they

@@ -6,6 +6,12 @@ Rails.application.routes.draw do
   resources :waitlist_requests, only: %i[create]
   get "up" => "rails/health#show", :as => :rails_health_check
 
+  # Dynamic robots.txt + sitemap.xml so each deployment emits its own
+  # hostname (read from request.base_url). Replaces the static files
+  # under public/ that were tied to one domain.
+  get "robots.txt" => "seo#robots", as: :robots
+  get "sitemap.xml" => "seo#sitemap", as: :sitemap
+
   # PWA manifest + service worker. Served at the root so the browser
   # finds them at their conventional paths.
   get "manifest.json", to: "pwa#manifest", as: :pwa_manifest

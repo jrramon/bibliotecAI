@@ -57,14 +57,21 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  # Public hostnames this deployment serves. Comma-separated so forks
+  # can list multiple (apex + www, several subdomains). The first one
+  # is treated as the canonical and used for mailer links + SMTP HELO.
+  app_hosts = ENV.fetch("APP_HOSTS").split(",").map(&:strip).reject(&:empty?)
+  raise "APP_HOSTS env var must list at least one hostname" if app_hosts.empty?
+  primary_host = app_hosts.first
+
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = {host: "biblio.imagineourfutures.org"}
+  config.action_mailer.default_url_options = {host: primary_host}
 
   # Brevo SMTP
   ActionMailer::Base.smtp_settings = {
     user_name: ENV["BREVO_USERNAME"],
     password: ENV["BREVO_PASSWORD"],
-    domain: "biblio.imagineourfutures.org",
+    domain: primary_host,
     address: "smtp-relay.brevo.com",
     port: 587,
     authentication: :plain,
@@ -82,14 +89,12 @@ Rails.application.configure do
   config.active_record.attributes_for_inspect = [:id]
 
   # DNS rebinding protection: reject requests whose `Host:` header isn't
-  # one we expect. Two entries:
-  # - the public domain (browsers, Telegram webhook).
-  # - "web", the Docker service name used by the claude-worker container
-  #   to reach the MCP endpoint over the internal biblio-prod network.
-  #   Only resolvable from within that bridge network — nothing external
-  #   can craft a Host: web request and land here.
-  # The orchestrator hits /up with `Host: <container-ip>` for health
-  # checks, so that path is excluded.
-  config.hosts = ["biblio.imagineourfutures.org", "web"]
+  # one we expect. Public hostnames come from APP_HOSTS (set above);
+  # "web" is the Docker service name used by the claude-worker
+  # container to reach the MCP endpoint over the internal bridge
+  # network — only resolvable inside that network, so nothing external
+  # can spoof Host: web. The orchestrator hits /up with
+  # `Host: <container-ip>` for health checks, so that path is excluded.
+  config.hosts = app_hosts + ["web"]
   config.host_authorization = {exclude: ->(request) { request.path == "/up" }}
 end
