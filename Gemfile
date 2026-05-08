@@ -19,7 +19,7 @@ gem "thruster", require: false
 
 gem "image_processing", "~> 1.2"
 gem "devise", "~> 4.9"
-gem "friendly_id", "~> 5.5"
+gem "friendly_id", "~> 5.7"
 gem "simple_form"
 gem "lograge"
 gem "rack-attack"
