@@ -13,8 +13,10 @@ class McpController < ApplicationController
   skip_before_action :touch_last_seen!, raise: false
 
   def handle
-    user = authenticate!
-    return unless user
+    auth = authenticate!
+    return unless auth
+
+    user, message_id = auth
 
     begin
       payload = JSON.parse(request.body.read)
@@ -22,7 +24,7 @@ class McpController < ApplicationController
       return render json: parse_error_envelope, status: :ok
     end
 
-    response = Mcp::Server.call(user: user, payload: payload)
+    response = Mcp::Server.call(user: user, payload: payload, message_id: message_id)
 
     # JSON-RPC notifications produce no response body. The MCP spec says
     # the server should return 202 Accepted in that case.
@@ -41,11 +43,14 @@ class McpController < ApplicationController
     return reject_unauthorized if token.blank?
 
     payload = Rails.application.message_verifier(:mcp_session).verify(token)
-    user_id = payload.is_a?(Hash) ? (payload["user_id"] || payload[:user_id]) : nil
+    return reject_unauthorized unless payload.is_a?(Hash)
+
+    user_id = payload["user_id"] || payload[:user_id]
+    message_id = payload["message_id"] || payload[:message_id]
     user = User.find_by(id: user_id)
     return reject_unauthorized unless user
 
-    user
+    [user, message_id]
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     reject_unauthorized
   end

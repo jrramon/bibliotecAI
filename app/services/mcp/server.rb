@@ -25,12 +25,13 @@ module Mcp
       internal_error: -32603
     }.freeze
 
-    def self.call(user:, payload:)
-      new(user).handle(payload)
+    def self.call(user:, payload:, message_id: nil)
+      new(user, message_id: message_id).handle(payload)
     end
 
-    def initialize(user)
+    def initialize(user, message_id: nil)
       @user = user
+      @context = {message_id: message_id}.compact
     end
 
     # Returns the JSON-RPC response as a Hash. Returns nil for
@@ -72,7 +73,7 @@ module Mcp
 
       return error(id, :invalid_params, "unknown tool: #{tool_name}") unless tool
 
-      result = tool.call(user: @user, arguments: arguments)
+      result = tool.call(user: @user, arguments: arguments, context: @context)
       success(id, {
         content: [{type: "text", text: JSON.generate(result)}],
         isError: false

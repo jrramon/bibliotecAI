@@ -10,7 +10,9 @@ module Mcp
         Mcp::Tools::SearchBooks,
         Mcp::Tools::ListMyWishlist,
         Mcp::Tools::AddToWishlist,
-        Mcp::Tools::RemoveFromWishlist
+        Mcp::Tools::RemoveFromWishlist,
+        Mcp::Tools::ProcessBookCoverPhoto,
+        Mcp::Tools::ProcessShelfPhoto
       ].freeze
     end
 

@@ -170,6 +170,40 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     refute_match(/Usuario: broke msg/, captured_prompt)
   end
 
+  test "an attached photo on the message inserts the <attached_photo/> marker inside <user_message>" do
+    @message.photo.attach(
+      io: File.open(Rails.root.join("test/fixtures/files/shelf.jpg"), "rb"),
+      filename: "p.jpg",
+      content_type: "image/jpeg"
+    )
+
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    user_section = captured_prompt[/<user_message>\n(.*?)\n<\/user_message>/m, 1]
+    assert user_section, "outer user_message block not found"
+    assert_includes user_section, "<attached_photo/>"
+    assert_includes user_section, "¿qué eres?"
+  end
+
+  test "without an attached photo there is no <attached_photo/> marker" do
+    captured_prompt = nil
+    Open3.stubs(:capture3).with do |*args|
+      captured_prompt = args[3]
+      true
+    end.returns([envelope("ok"), "", success_status])
+
+    Telegram::Agent.call(@message)
+
+    user_section = captured_prompt[/<user_message>\n(.*?)\n<\/user_message>/m, 1]
+    refute_includes user_section, "<attached_photo/>"
+  end
+
   test "no history block is emitted when the user has no prior turns" do
     captured_prompt = nil
     Open3.stubs(:capture3).with do |*args|

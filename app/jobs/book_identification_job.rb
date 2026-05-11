@@ -25,13 +25,26 @@ class BookIdentificationJob < ApplicationJob
       claude_raw_response: result.raw
     )
     broadcast(shelf_photo)
+    notify_telegram(shelf_photo)
   rescue ClaudeBookIdentifier::Error, Timeout::Error => e
     shelf_photo&.update!(status: :failed, error_message: e.message)
     broadcast(shelf_photo) if shelf_photo
+    notify_telegram(shelf_photo) if shelf_photo
     raise
   end
 
   private
+
+  # Telegram-uploaded shelves carry telegram_chat_id; for them, send a
+  # summary back to the chat (book list + link to the annotated image).
+  # Errors here never derail the job — the user can always go to the
+  # web view as a fallback.
+  def notify_telegram(shelf_photo)
+    return unless shelf_photo&.telegram_chat_id?
+    Telegram::NotifyIdentifiedShelf.call(shelf_photo)
+  rescue => e
+    Rails.logger.warn("[BookIdentificationJob] telegram notify failed: #{e.class}: #{e.message}")
+  end
 
   def create_books(shelf_photo, entries)
     existing = shelf_photo.library.books.index_by { |b| Book.normalize(b.title) }

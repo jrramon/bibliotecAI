@@ -74,6 +74,25 @@ class McpControllerTest < ActionDispatch::IntegrationTest
     assert_response :accepted
   end
 
+  test "message_id from token is forwarded to the tool as context" do
+    captured = nil
+    Mcp::Tools::ListMyLibraries.stubs(:call).with do |kwargs|
+      captured = kwargs[:context]
+      true
+    end.returns([])
+
+    token_with_msg = Rails.application.message_verifier(:mcp_session)
+      .generate({user_id: @user.id, message_id: 4242}, expires_in: 10.minutes)
+
+    post_mcp(token: token_with_msg, payload: {
+      jsonrpc: "2.0", id: 1, method: "tools/call",
+      params: {name: "list_my_libraries", arguments: {}}
+    })
+
+    assert_response :ok
+    assert_equal 4242, captured[:message_id]
+  end
+
   private
 
   def post_mcp(token:, payload:)
