@@ -8,7 +8,6 @@ Ideas pendientes, sin priorizar. Mover a slice/issue cuando se tomen.
 - **Página inicial de biblioteca con muchos libros**:
   - No hay opción de **ordenar** (por título, autor, fecha de añadido, CDU…).
   - En **modo estantería**, los libros salen seguidos y se desbordan fuera de los límites de la página — necesita scroll horizontal interno o wrapping.
-- **Citas**: antes salían, ahora no aparecen. Verificar por qué desapareció el bloque y restaurarlo.
 - **Borrar notas propias**: el usuario debe poder borrar sus propios `UserBookNote`. Hoy no hay UI/endpoint.
 
 ## Compartir
