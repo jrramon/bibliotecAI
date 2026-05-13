@@ -72,22 +72,36 @@ class Book < ApplicationRecord
   scope :with_cdu, ->(code) { where("cdu LIKE ?", "#{code}%") }
   scope :with_genre, ->(g) { where("? = ANY(genres)", g) }
 
+  SORT_KEYS = %w[recent title author].freeze
+
+  scope :ordered_by, ->(key) {
+    case key.to_s
+    when "title"  then order(Arel.sql("LOWER(title) ASC"))
+    when "author" then order(Arel.sql("LOWER(NULLIF(author, '')) ASC NULLS LAST"))
+    else recent
+    end
+  }
+
   # Searches a library's books by title, synopsis, and — scoped to the
   # viewer — their own personal notes. Empty query returns everything.
+  # Uses an EXISTS subquery (not a LEFT JOIN + DISTINCT) so that any
+  # ORDER BY expression composes cleanly downstream.
   def self.search_in_library(library, query:, viewer:)
     scope = library.books
     return scope if query.blank?
 
     term = "%#{sanitize_sql_like(query.downcase)}%"
-    scope
-      .left_joins(:user_book_notes)
-      .where(
-        "LOWER(books.title) LIKE :t " \
-        "OR LOWER(COALESCE(books.synopsis, '')) LIKE :t " \
-        "OR (user_book_notes.user_id = :uid AND LOWER(COALESCE(user_book_notes.body, '')) LIKE :t)",
-        t: term, uid: viewer&.id
-      )
-      .distinct
+    scope.where(
+      "LOWER(books.title) LIKE :t " \
+      "OR LOWER(COALESCE(books.synopsis, '')) LIKE :t " \
+      "OR EXISTS (" \
+      "SELECT 1 FROM user_book_notes " \
+      "WHERE user_book_notes.book_id = books.id " \
+      "AND user_book_notes.user_id = :uid " \
+      "AND LOWER(COALESCE(user_book_notes.body, '')) LIKE :t" \
+      ")",
+      t: term, uid: viewer&.id
+    )
   end
 
   # Books whose title/author/synopsis match `query`, across every library

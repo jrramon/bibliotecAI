@@ -36,6 +36,17 @@
                          placeholder: "Buscar por título, sinopsis o tus notas",
                          autocomplete: "off",
                          aria: {label: "Buscar libros"} %>
+      <% if @genre.present? %><%= f.hidden_field :genre, value: @genre %><% end %>
+      <label class="book-sort">
+        <span class="book-sort-label">Ordenar</span>
+        <%= f.select :sort,
+                     options_for_select(
+                       [["Añadido", "recent"], ["Título A–Z", "title"], ["Autor A–Z", "author"]],
+                       @sort
+                     ),
+                     {},
+                     data: {controller: "auto-submit", action: "change->auto-submit#submit"} %>
+      </label>
       <% if @query.present? %>
         <span class="book-search-count">
           <%= pluralize(@books.size, "resultado", plural: "resultados") %> para «<%= @query %>»

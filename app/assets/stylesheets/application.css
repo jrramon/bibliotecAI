@@ -1252,6 +1252,42 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .book-search-clear:hover { text-decoration: underline; }
 
+/* Sort dropdown inside the search form */
+.book-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.book-sort-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-family: var(--mono);
+}
+.book-sort select {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 8px 28px 8px 14px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23999' stroke-width='1.5'><path d='M1 1l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px;
+  transition: border-color 140ms, box-shadow 140ms;
+}
+.book-sort select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(139, 46, 42, 0.08);
+}
+
 /* Library toolbar: search + layout switcher in one row */
 .library-toolbar {
   display: flex;

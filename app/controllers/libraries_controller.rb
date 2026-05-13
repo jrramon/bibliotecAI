@@ -9,9 +9,10 @@ class LibrariesController < ApplicationController
   def show
     @query = params[:q].to_s.strip
     @genre = params[:genre].to_s.strip.presence
+    @sort = Book::SORT_KEYS.include?(params[:sort].to_s) ? params[:sort].to_s : "recent"
     @books = Book.search_in_library(@library, query: @query, viewer: current_user)
     @books = @books.with_genre(@genre) if @genre
-    @books = @books.recent
+    @books = @books.ordered_by(@sort)
     @reading_books = current_user.reading_statuses.active.for_library(@library).includes(:book).map(&:book) if @query.blank? && @genre.nil?
   end
 

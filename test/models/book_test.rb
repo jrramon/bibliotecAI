@@ -35,4 +35,39 @@ class BookTest < ActiveSupport::TestCase
     assert_equal "82-31", book.reload.cdu
     assert_equal ["Novela"], book.genres
   end
+
+  test ".ordered_by('title') sorts case-insensitively by title" do
+    lib = create(:library)
+    create(:book, library: lib, added_by_user: lib.owner, title: "beta")
+    create(:book, library: lib, added_by_user: lib.owner, title: "Alfa")
+    create(:book, library: lib, added_by_user: lib.owner, title: "gamma")
+    assert_equal %w[Alfa beta gamma], lib.books.ordered_by("title").pluck(:title)
+  end
+
+  test ".ordered_by('author') sorts case-insensitively, nulls/blanks last" do
+    lib = create(:library)
+    create(:book, library: lib, added_by_user: lib.owner, title: "B1", author: "borges, j.l.")
+    create(:book, library: lib, added_by_user: lib.owner, title: "B2", author: "Atwood, M.")
+    create(:book, library: lib, added_by_user: lib.owner, title: "B3", author: "")
+    create(:book, library: lib, added_by_user: lib.owner, title: "B4", author: nil)
+    titles = lib.books.ordered_by("author").pluck(:title)
+    assert_equal "B2", titles[0], "Atwood should be first"
+    assert_equal "B1", titles[1], "Borges should be second"
+    assert_equal %w[B3 B4].sort, titles.last(2).sort, "Blank/null authors should land at the end"
+  end
+
+  test ".ordered_by('recent') falls back to created_at desc" do
+    lib = create(:library)
+    older = create(:book, library: lib, added_by_user: lib.owner, title: "Older", created_at: 2.days.ago)
+    newer = create(:book, library: lib, added_by_user: lib.owner, title: "Newer", created_at: 1.hour.ago)
+    assert_equal [newer.id, older.id], lib.books.ordered_by("recent").pluck(:id)
+  end
+
+  test ".ordered_by(unknown) defaults to recent" do
+    lib = create(:library)
+    older = create(:book, library: lib, added_by_user: lib.owner, title: "Older", created_at: 2.days.ago)
+    newer = create(:book, library: lib, added_by_user: lib.owner, title: "Newer", created_at: 1.hour.ago)
+    assert_equal [newer.id, older.id], lib.books.ordered_by("not-a-real-key").pluck(:id)
+    assert_equal [newer.id, older.id], lib.books.ordered_by(nil).pluck(:id)
+  end
 end
