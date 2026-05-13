@@ -1252,6 +1252,60 @@ input, textarea, select { font: inherit; color: inherit; }
 }
 .book-search-clear:hover { text-decoration: underline; }
 
+/* Library toolbar: search + layout switcher in one row */
+.library-toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.library-toolbar .book-search {
+  flex: 1 1 320px;
+  margin-bottom: 0;
+}
+
+/* Inline layout switcher (spine / grid / list) */
+.layout-switcher {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.layout-switcher .layout-icon {
+  background: transparent;
+  border: 0;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--ink-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  position: relative;
+  transition: color 140ms ease;
+}
+.layout-switcher .layout-icon:hover {
+  color: var(--ink-2);
+}
+.layout-switcher .layout-icon.on {
+  color: var(--ink);
+}
+.layout-switcher .layout-icon.on::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+.layout-switcher .layout-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ==========================================================================
    Forms (simple_form)
    ========================================================================== */

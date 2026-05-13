@@ -29,19 +29,23 @@
     </div>
   </dl>
 
-  <%= form_with url: library_path(@library), method: :get, local: true, class: "book-search" do |f| %>
-    <%= f.search_field :q,
-                       value: @query,
-                       placeholder: "Buscar por título, sinopsis o tus notas",
-                       autocomplete: "off",
-                       aria: {label: "Buscar libros"} %>
-    <% if @query.present? %>
-      <span class="book-search-count">
-        <%= pluralize(@books.size, "resultado", plural: "resultados") %> para «<%= @query %>»
-      </span>
-      <%= link_to "Limpiar", library_path(@library), class: "book-search-clear" %>
+  <div class="library-toolbar">
+    <%= form_with url: library_path(@library), method: :get, local: true, class: "book-search" do |f| %>
+      <%= f.search_field :q,
+                         value: @query,
+                         placeholder: "Buscar por título, sinopsis o tus notas",
+                         autocomplete: "off",
+                         aria: {label: "Buscar libros"} %>
+      <% if @query.present? %>
+        <span class="book-search-count">
+          <%= pluralize(@books.size, "resultado", plural: "resultados") %> para «<%= @query %>»
+        </span>
+        <%= link_to "Limpiar", library_path(@library), class: "book-search-clear" %>
+      <% end %>
     <% end %>
-  <% end %>
+
+    <%= render "layout_switcher" %>
+  </div>
 
   <% if @reading_books&.any? %>
     <section class="reading-now">
