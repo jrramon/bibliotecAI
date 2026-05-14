@@ -57,7 +57,7 @@ class BookIdentificationJobTest < ActiveJob::TestCase
   private
 
   def stub_result
-    Struct.new(:books, :unidentified, :image_width, :image_height, :raw)
-      .new([], [], 1000, 1000, {"books" => [], "unidentified" => []})
+    Struct.new(:books, :unidentified, :image_width, :image_height, :raw, :usage)
+      .new([], [], 1000, 1000, {"books" => [], "unidentified" => []}, nil)
   end
 end

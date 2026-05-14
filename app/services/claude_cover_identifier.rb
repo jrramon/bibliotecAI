@@ -9,6 +9,7 @@ require "timeout"
 # (image written to tmp/cover_photos/, `--add-dir`, chdir Rails.root) —
 # only the prompt and return shape differ.
 class ClaudeCoverIdentifier
+  Result = Struct.new(:data, :usage, keyword_init: true)
   Error = Class.new(StandardError)
   CLAUDE_TIMEOUT = 120
 
@@ -79,17 +80,26 @@ class ClaudeCoverIdentifier
 
     raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
 
-    parse(stdout)
+    data, usage = parse(stdout)
+    Result.new(data: data, usage: usage)
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
   end
 
   private
 
+  # Returns [parsed_inner_json, envelope_metadata_or_nil] so callers can
+  # persist usage/cost from the `claude -p --output-format json` envelope.
   def parse(stdout)
     envelope = JSON.parse(stdout)
-    inner = (envelope.is_a?(Hash) && envelope["result"].is_a?(String)) ? envelope["result"] : stdout
-    JSON.parse(strip_fences(inner))
+    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
+      inner = envelope["result"]
+      usage = envelope.except("result")
+    else
+      inner = stdout
+      usage = nil
+    end
+    [JSON.parse(strip_fences(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.to_s.truncate(800)}"
   end

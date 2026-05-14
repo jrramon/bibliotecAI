@@ -9,8 +9,12 @@ class CoverIdentificationJob < ApplicationJob
     cover_photo.update!(status: :processing, error_message: nil)
     broadcast(cover_photo)
 
-    payload = ClaudeCoverIdentifier.call(cover_photo)
-    cover_photo.update!(status: :completed, claude_raw_response: payload)
+    result = ClaudeCoverIdentifier.call(cover_photo)
+    cover_photo.update!(
+      status: :completed,
+      claude_raw_response: result.data,
+      claude_usage: result.usage
+    )
     broadcast(cover_photo)
     notify_telegram(cover_photo)
   rescue ClaudeCoverIdentifier::Error, Timeout::Error => e

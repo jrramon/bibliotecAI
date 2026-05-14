@@ -9,12 +9,17 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
 
   test "uploading a cover photo pre-fills the add-book form" do
     ClaudeCoverIdentifier.stubs(:call).returns(
-      "title" => "Sanshiro",
-      "author" => "Natsume Soseki",
-      "publisher" => "Gredos",
-      "published_year" => 1908,
-      "language" => "es",
-      "confidence" => 0.92
+      ClaudeCoverIdentifier::Result.new(
+        data: {
+          "title" => "Sanshiro",
+          "author" => "Natsume Soseki",
+          "publisher" => "Gredos",
+          "published_year" => 1908,
+          "language" => "es",
+          "confidence" => 0.92
+        },
+        usage: nil
+      )
     )
 
     visit library_path(@library)
@@ -43,8 +48,10 @@ class CoverPhotoIdentificationTest < ApplicationSystemTestCase
 
   test "submitting the pre-filled form attaches the uploaded photo as the book cover" do
     ClaudeCoverIdentifier.stubs(:call).returns(
-      "title" => "Sanshiro",
-      "author" => "Natsume Soseki"
+      ClaudeCoverIdentifier::Result.new(
+        data: {"title" => "Sanshiro", "author" => "Natsume Soseki"},
+        usage: nil
+      )
     )
 
     visit library_path(@library)

@@ -4,7 +4,7 @@ require "tempfile"
 require "timeout"
 
 class ClaudeBookIdentifier
-  Result = Struct.new(:books, :unidentified, :raw, :image_width, :image_height, keyword_init: true)
+  Result = Struct.new(:books, :unidentified, :raw, :image_width, :image_height, :usage, keyword_init: true)
   Error = Class.new(StandardError)
 
   CLAUDE_TIMEOUT = 180 # seconds
@@ -77,13 +77,14 @@ class ClaudeBookIdentifier
 
     raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
 
-    payload = parse(stdout)
+    payload, usage = parse(stdout)
     Result.new(
       books: Array(payload["books"]),
       unidentified: Array(payload["unidentified"]),
       raw: payload,
       image_width: payload["image_width"]&.to_i,
-      image_height: payload["image_height"]&.to_i
+      image_height: payload["image_height"]&.to_i,
+      usage: usage
     )
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
@@ -92,11 +93,19 @@ class ClaudeBookIdentifier
   private
 
   # Claude's `-p --output-format json` wraps the assistant output as a string in
-  # `{"result": "<assistant text>"}`; we still need to parse the inner JSON.
+  # `{"result": "<assistant text>", "usage": {...}, "total_cost_usd": …, …}`;
+  # we need the inner JSON for the assistant output and the rest of the
+  # envelope for usage telemetry.
   def parse(stdout)
     envelope = JSON.parse(stdout)
-    inner = (envelope.is_a?(Hash) && envelope["result"].is_a?(String)) ? envelope["result"] : stdout
-    JSON.parse(strip_fences(inner))
+    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
+      inner = envelope["result"]
+      usage = envelope.except("result")
+    else
+      inner = stdout
+      usage = nil
+    end
+    [JSON.parse(strip_fences(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.truncate(800)}"
   end

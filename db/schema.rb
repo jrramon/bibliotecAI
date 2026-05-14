@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_11_152756) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_14_204349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_11_152756) do
     t.datetime "updated_at", null: false
     t.bigint "telegram_chat_id"
     t.integer "intent", default: 0, null: false
+    t.jsonb "claude_usage"
     t.index ["library_id", "created_at"], name: "index_cover_photos_on_library_id_and_created_at"
     t.index ["library_id"], name: "index_cover_photos_on_library_id"
     t.index ["uploaded_by_user_id"], name: "index_cover_photos_on_uploaded_by_user_id"
@@ -180,6 +181,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_11_152756) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "telegram_chat_id"
+    t.jsonb "claude_usage"
     t.index ["library_id", "created_at"], name: "index_shelf_photos_on_library_id_and_created_at"
     t.index ["library_id"], name: "index_shelf_photos_on_library_id"
     t.index ["uploaded_by_user_id"], name: "index_shelf_photos_on_uploaded_by_user_id"
@@ -326,6 +328,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_11_152756) do
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "claude_usage"
     t.index ["status", "created_at"], name: "index_telegram_messages_on_status_and_created_at"
     t.index ["update_id"], name: "index_telegram_messages_on_update_id", unique: true
     t.index ["user_id"], name: "index_telegram_messages_on_user_id"

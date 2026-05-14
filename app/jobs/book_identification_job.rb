@@ -22,7 +22,8 @@ class BookIdentificationJob < ApplicationJob
 
     shelf_photo.update!(
       status: :completed,
-      claude_raw_response: result.raw
+      claude_raw_response: result.raw,
+      claude_usage: result.usage
     )
     broadcast(shelf_photo)
     notify_telegram(shelf_photo)

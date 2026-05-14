@@ -15,7 +15,7 @@ module Telegram
   # argv form, --output-format json envelope parsing, 120s timeout).
   class Agent
     Error = Class.new(StandardError)
-    Result = Struct.new(:ok, :text, :error, keyword_init: true)
+    Result = Struct.new(:ok, :text, :error, :usage, keyword_init: true)
 
     CLAUDE_TIMEOUT = 120
     MODEL = "claude-haiku-4-5"
@@ -126,7 +126,7 @@ module Telegram
         text = envelope["result"].to_s.strip
         return failure("claude returned an empty result") if text.empty?
 
-        Result.new(ok: true, text: text, error: nil)
+        Result.new(ok: true, text: text, error: nil, usage: envelope.except("result"))
       end
     rescue Timeout::Error
       failure("claude timed out after #{CLAUDE_TIMEOUT}s")
