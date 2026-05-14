@@ -7,10 +7,16 @@
         <p class="sub description"><%= @library.description %></p>
       <% end %>
     </div>
-    <div class="header-ctas">
-      <%= link_to "＋ Subir foto de estantería", new_library_shelf_photo_path(@library), class: "btn btn-seal" %>
-      <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-ghost" %>
-      <%= link_to "Configuración", settings_library_path(@library), class: "btn btn-ghost" %>
+    <div class="header-actions" data-controller="disclosure">
+      <button type="button"
+              class="header-ctas-toggle"
+              data-action="disclosure#toggle"
+              aria-label="Acciones de biblioteca">⋯</button>
+      <div class="header-ctas">
+        <%= link_to "＋ Subir foto de estantería", new_library_shelf_photo_path(@library), class: "btn btn-seal" %>
+        <%= link_to "＋ Añadir libro", new_library_book_path(@library), class: "btn btn-ghost" %>
+        <%= link_to "Configuración", settings_library_path(@library), class: "btn btn-ghost" %>
+      </div>
     </div>
   </header>
 
@@ -28,6 +34,12 @@
       <dd><%= @library.shelf_photos.count %></dd>
     </div>
   </dl>
+
+  <p class="stat-row-compact">
+    <%= pluralize(@library.books.count, "libro") %> ·
+    <%= pluralize(@library.users.count, "miembro") %> ·
+    <%= pluralize(@library.shelf_photos.count, "foto") %>
+  </p>
 
   <div class="library-toolbar">
     <%= form_with url: library_path(@library), method: :get, local: true, class: "book-search" do |f| %>

@@ -479,6 +479,60 @@ input, textarea, select { font: inherit; color: inherit; }
   gap: 10px;
   flex-wrap: wrap;
 }
+/* Disclosure wrapper: on desktop the toggle is invisible and the CTAs flow
+   inline as before. On mobile (<= 640px) the toggle becomes a "…" button and
+   the CTAs collapse into an absolute-positioned menu opened by the
+   `is-open` class set by disclosure_controller. */
+.page-head .header-actions { position: relative; }
+.page-head .header-ctas-toggle { display: none; }
+.stat-row-compact { display: none; }
+
+@media (max-width: 640px) {
+  .page-head { flex-wrap: wrap; }
+  .page-head .header-ctas-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    color: var(--ink-2);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+  }
+  .page-head .header-ctas-toggle:hover { color: var(--ink); }
+  .page-head .header-ctas {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    z-index: 20;
+    min-width: 220px;
+  }
+  .page-head .header-actions.is-open .header-ctas { display: flex; }
+  .page-head .header-ctas .btn { width: 100%; text-align: left; }
+
+  .stat-row { display: none; }
+  .stat-row-compact {
+    display: block;
+    margin: -8px 0 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+}
 
 /* ==========================================================================
    Flash messages
@@ -1409,6 +1463,36 @@ input, textarea, select { font: inherit; color: inherit; }
   gap: 6px 8px;
   margin-top: 2px;
   width: 100%;
+}
+
+/* Mobile: chips collapse into a single horizontal-scrolling row. The
+   responsive-details controller forces the <details> open so the extra
+   chips render; we hide the "+ N más" summary and turn .genre-chips-extra
+   into a small inline nowrap flex container that sits in line with the
+   top chips. (display: contents would be cleaner but Android Chrome
+   doesn't apply it reliably on <details> descendants.) */
+@media (max-width: 640px) {
+  .genre-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+    margin-left: -18px;
+    margin-right: -18px;
+    padding: 0 18px;
+  }
+  .genre-chips::-webkit-scrollbar { height: 4px; }
+  .genre-chips::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+  .genre-chips-more > summary { display: none; }
+  .genre-chips-extra {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 6px 8px;
+    margin-top: 0;
+    width: auto;
+    flex-shrink: 0;
+  }
+  .genre-chips-extra .chip { flex-shrink: 0; }
 }
 
 /* ==========================================================================
