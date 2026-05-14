@@ -439,6 +439,12 @@ input, textarea, select { font: inherit; color: inherit; }
   padding: 28px 36px 80px;
   max-width: 1400px;
   width: 100%;
+  /* Grid items default to min-width: auto, which lets oversized children
+     (e.g. the spine shelf with many books) stretch the whole grid track
+     and produce a page-wide horizontal scroll. Force the grid item to
+     respect its track width — children with overflow-x: auto then scroll
+     internally as intended. */
+  min-width: 0;
 }
 @media (max-width: 880px) { .main { padding: 20px 18px 80px; } }
 
