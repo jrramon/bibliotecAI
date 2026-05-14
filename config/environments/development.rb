@@ -43,6 +43,11 @@ Rails.application.configure do
 
   config.hosts << "web"
   config.hosts << /.*\.local/
+  # Allow LAN access (e.g. phone on the same Wi-Fi hitting the dev server).
+  # Covers RFC 1918 private ranges: 10.x.x.x, 172.16-31.x.x, 192.168.x.x.
+  config.hosts << /^10(\.\d{1,3}){3}$/
+  config.hosts << /^172\.(1[6-9]|2\d|3[01])(\.\d{1,3}){2}$/
+  config.hosts << /^192\.168(\.\d{1,3}){2}$/
   # Allow common dev tunnels (ngrok, cloudflared) so Telegram webhooks land.
   # Each tunnel session generates a fresh subdomain — wildcard the host suffix.
   config.hosts << /.*\.ngrok-free\.dev/
