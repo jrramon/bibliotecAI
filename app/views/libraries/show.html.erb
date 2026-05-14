@@ -58,6 +58,10 @@
     <%= render "layout_switcher" %>
   </div>
 
+  <% if @available_genres.any? %>
+    <%= render "genre_chips", available_genres: @available_genres %>
+  <% end %>
+
   <% if @reading_books&.any? %>
     <section class="reading-now">
       <h2 class="section-title">Leyendo ahora <span class="count">(<%= @reading_books.size %>)</span></h2>

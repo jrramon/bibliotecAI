@@ -1,0 +1,41 @@
+<%
+  # `available_genres` is [[name, count], ...] ordered by popularity.
+  # Always show the top 10. If the active genre falls outside that, pin it
+  # at the start so the user can always see and remove their filter.
+  top, rest = available_genres.first(10), available_genres.drop(10)
+  if @genre && top.none? { |name, _| name == @genre }
+    pinned = available_genres.find { |name, _| name == @genre }
+    if pinned
+      top = [pinned] + top
+      rest = rest.reject { |name, _| name == @genre }
+    end
+  end
+%>
+
+<nav class="genre-chips" aria-label="Filtrar por género">
+  <%= link_to library_genre_chip_path(@library, genre: nil, query: @query, sort: @sort),
+              class: "chip #{'on' if @genre.nil?}" do %>
+    Todos
+  <% end %>
+
+  <% top.each do |name, count| %>
+    <%= link_to library_genre_chip_path(@library, genre: name, query: @query, sort: @sort),
+                class: "chip #{'on' if name == @genre}" do %>
+      <%= name %> <span class="chip-count">(<%= count %>)</span>
+    <% end %>
+  <% end %>
+
+  <% if rest.any? %>
+    <details class="genre-chips-more">
+      <summary class="chip chip-more">+ <%= rest.size %> más</summary>
+      <div class="genre-chips-extra">
+        <% rest.each do |name, count| %>
+          <%= link_to library_genre_chip_path(@library, genre: name, query: @query, sort: @sort),
+                      class: "chip #{'on' if name == @genre}" do %>
+            <%= name %> <span class="chip-count">(<%= count %>)</span>
+          <% end %>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+</nav>

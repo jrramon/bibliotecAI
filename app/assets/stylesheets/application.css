@@ -1342,6 +1342,69 @@ input, textarea, select { font: inherit; color: inherit; }
   outline-offset: 2px;
 }
 
+/* Genre chips: filter the book list by genre */
+.genre-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  margin: -8px 0 20px;
+}
+.genre-chips .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 140ms, border-color 140ms, color 140ms;
+  white-space: nowrap;
+}
+.genre-chips .chip:hover {
+  border-color: var(--ink-4);
+  color: var(--ink);
+}
+.genre-chips .chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.genre-chips .chip.on .chip-count { color: rgba(255, 255, 255, 0.78); }
+.genre-chips .chip-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-4);
+}
+/* `display: contents` lets <summary> sit inline with the chips and
+   `.genre-chips-extra` break onto its own row when the details is open. */
+.genre-chips-more {
+  display: contents;
+}
+.genre-chips-more > summary {
+  list-style: none;
+  user-select: none;
+  cursor: pointer;
+}
+.genre-chips-more > summary::-webkit-details-marker { display: none; }
+.genre-chips-more[open] > summary {
+  background: var(--bg-sunken, var(--bg-raised));
+  color: var(--ink);
+}
+.genre-chips-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 2px;
+  width: 100%;
+}
+
 /* ==========================================================================
    Forms (simple_form)
    ========================================================================== */

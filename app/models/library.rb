@@ -16,6 +16,17 @@ class Library < ApplicationRecord
 
   after_create :create_owner_membership
 
+  # Returns [[genre, count], ...] for every distinct genre present across
+  # this library's books, sorted by popularity (count desc) then name asc.
+  def book_genres_with_counts
+    books
+      .where("array_length(genres, 1) > 0")
+      .pluck(Arel.sql("UNNEST(genres)"))
+      .tally
+      .to_a
+      .sort_by { |name, count| [-count, name.downcase] }
+  end
+
   private
 
   def create_owner_membership
