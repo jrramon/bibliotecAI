@@ -3991,20 +3991,56 @@ html[data-shelf-layout="list"] .books-layout--list { display: block; }
   line-height: 1.4;
 }
 
+/* Desktop default: wrap to multiple rows. The horizontal wooden plank
+   under each row is painted with a 234px-tall background tile (220
+   transparent + 14 plank), repeated vertically. Side bookends are two
+   continuous columns of 10px painted with background-image so they
+   span every row without HTML duplication. Row height is 234px = 220
+   (spine) + 14 (plank). */
 .shelf {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
+  align-content: flex-start;
   gap: 3px;
-  padding: 20px 0 22px;
-  min-height: 280px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--rule) transparent;
+  row-gap: 0;
+  padding: 20px 14px 0;
+  min-height: 254px;
+  background-image:
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--wood-dark), black 10%),
+      color-mix(in oklab, var(--wood-dark), black 35%)),
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--wood-dark), black 10%),
+      color-mix(in oklab, var(--wood-dark), black 35%)),
+    linear-gradient(180deg,
+      transparent 0,
+      transparent 220px,
+      var(--wood-dark) 220px,
+      color-mix(in oklab, var(--wood-dark), black 25%) 234px);
+  background-repeat: no-repeat, no-repeat, repeat-y;
+  background-position: 0 20px, 100% 20px, 0 20px;
+  background-size: 10px calc(100% - 20px), 10px calc(100% - 20px), 100% 234px;
 }
-.shelf::-webkit-scrollbar { height: 6px; }
-.shelf::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
-.shelf::after {
+
+/* In wrap mode, the existing ::after plank (single, full-width at bottom)
+   and the inline .bookend elements would collide with the background-image
+   bookends/planks — hide both. They come back in the mobile media query
+   and in the .reading-now-shelf override below. */
+.shelf > .bookend { display: none; }
+
+/* Reading-now is a single-row section (1–3 books). Revert to the original
+   look: no painted background, a single bottom plank via ::after, and the
+   HTML bookends visible at start/end. */
+.shelf.reading-now-shelf {
+  background-image: none;
+  flex-wrap: nowrap;
+  padding: 20px 0 22px;
+  min-height: 240px;
+}
+.shelf.reading-now-shelf > .bookend { display: block; }
+.shelf.reading-now-shelf::after {
   content: "";
   position: absolute;
   left: 0;
@@ -4016,6 +4052,34 @@ html[data-shelf-layout="list"] .books-layout--list { display: block; }
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 4px 12px rgba(60, 40, 20, 0.25);
   border-radius: 2px;
+}
+
+/* Mobile: revert to the original single-row, scrollable shelf. */
+@media (max-width: 640px) {
+  .shelf {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 20px 0 22px;
+    background-image: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+  .shelf::-webkit-scrollbar { height: 6px; }
+  .shelf::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+  .shelf::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 14px;
+    background: linear-gradient(180deg, var(--wood-dark), color-mix(in oklab, var(--wood-dark), black 25%));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      0 4px 12px rgba(60, 40, 20, 0.25);
+    border-radius: 2px;
+  }
+  .shelf > .bookend { display: block; }
 }
 
 .bookend {
