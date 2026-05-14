@@ -387,6 +387,16 @@ input, textarea, select { font: inherit; color: inherit; }
   }
 }
 
+/* Phone-only: pin the hamburguesa and the signout X to the edges of the
+   viewport so the search box has all the room available. Hide the user's
+   display name; the avatar stays as identity affordance. */
+@media (max-width: 640px) {
+  .header { padding-left: 4px; padding-right: 4px; gap: 8px; }
+  .header-search { margin: 0 4px; }
+  .header-actions .user-email { display: none; }
+  .header-profile-link { padding: 4px; }
+}
+
 /* ==========================================================================
    Buttons
    ========================================================================== */
