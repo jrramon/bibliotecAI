@@ -1,5 +1,10 @@
 # BibliotecAI 函
 
+[![CI](https://github.com/jrramon/bibliotecAI/actions/workflows/ci.yml/badge.svg)](https://github.com/jrramon/bibliotecAI/actions/workflows/ci.yml)
+[![Ruby](https://img.shields.io/badge/ruby-3.3.6-CC342D?logo=ruby&logoColor=white)](.ruby-version)
+[![Rails](https://img.shields.io/badge/rails-8.0.3-CC0000?logo=rubyonrails&logoColor=white)](Gemfile)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue)](LICENSE)
+
 A small, Japanese-aesthetic library app for groups of readers. You can:
 
 - Share one or more libraries with friends, family or a book club.
