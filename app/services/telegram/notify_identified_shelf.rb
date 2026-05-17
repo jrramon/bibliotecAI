@@ -38,11 +38,11 @@ module Telegram
       else
         title_list = added.first(PREVIEW_TITLES).map { |e| "*#{e["title"]}*" }.join(", ")
         more = (added.size > PREVIEW_TITLES) ? " (y #{added.size - PREVIEW_TITLES} más)" : ""
-        msg = "✅ He añadido #{added.size} libro#{(added.size == 1) ? "" : "s"} a *#{@shelf_photo.library.name}*: #{title_list}#{more}."
-        if below.any?
-          msg += " Hay #{below.size} sin identificar — revísalos en la web: #{link}"
+        msg = "✅ He añadido #{added.size} libro#{"s" unless added.size == 1} a *#{@shelf_photo.library.name}*: #{title_list}#{more}."
+        msg += if below.any?
+          " Hay #{below.size} sin identificar — revísalos en la web: #{link}"
         else
-          msg += " Verlos: #{link}"
+          " Verlos: #{link}"
         end
         msg
       end

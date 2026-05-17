@@ -308,7 +308,7 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     JSON.dump({"type" => "result", "is_error" => false, "result" => text})
   end
 
-  def stub_capture3(stdout:, stderr: "", success:, exit_status: 0)
+  def stub_capture3(stdout:, success:, stderr: "", exit_status: 0)
     status = success ? success_status : failure_status(exit_status)
     Open3.stubs(:capture3).returns([stdout, stderr, status])
   end

@@ -76,11 +76,11 @@ class ClaudeUsageReportTest < ActiveSupport::TestCase
     old.update_column(:created_at, 45.days.ago)
 
     parsed = run_report
-    last_7d  = parsed["windows"].find { |w| w["window"] == "últimos 7d" }
+    last_7d = parsed["windows"].find { |w| w["window"] == "últimos 7d" }
     last_30d = parsed["windows"].find { |w| w["window"] == "últimos 30d" }
     last_90d = parsed["windows"].find { |w| w["window"] == "últimos 90d" }
 
-    assert_equal 1, last_7d["shelf"]["count_total"],  "45d-old row must not enter 7d window"
+    assert_equal 1, last_7d["shelf"]["count_total"], "45d-old row must not enter 7d window"
     assert_equal 1, last_30d["shelf"]["count_total"], "45d-old row must not enter 30d window"
     assert_equal 2, last_90d["shelf"]["count_total"], "45d-old row must enter 90d window"
     assert_in_delta 1.0, last_30d["shelf"]["cost_real"], 0.0001

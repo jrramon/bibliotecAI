@@ -12,13 +12,13 @@ module AvatarsHelper
       image_classes = ["avatar", "avatar-#{size}", "avatar--image", extra_classes].compact.join(" ")
       variant = (size == :lg) ? :thumb : :small
       image_tag user.avatar.variant(variant), class: image_classes,
-                                              alt: user.display_name,
-                                              title: user.display_name
+        alt: user.display_name,
+        title: user.display_name
     else
       classes = ["avatar", "avatar-#{size}", "avatar-slot-#{avatar_slot(user)}", extra_classes].compact.join(" ")
       tag.span(avatar_initials(user), class: classes,
-                                      title: user.display_name,
-                                      aria: {label: user.display_name})
+        title: user.display_name,
+        aria: {label: user.display_name})
     end
   end
 

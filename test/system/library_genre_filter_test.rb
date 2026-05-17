@@ -18,8 +18,8 @@ class LibraryGenreFilterTest < ApplicationSystemTestCase
 
     within(".genre-chips") do
       assert_selector ".chip.on", text: "Todos"
-      assert_selector ".chip",    text: /Novela.*\(2\)/m
-      assert_selector ".chip",    text: /Ensayo.*\(1\)/m
+      assert_selector ".chip", text: /Novela.*\(2\)/m
+      assert_selector ".chip", text: /Ensayo.*\(1\)/m
     end
   end
 

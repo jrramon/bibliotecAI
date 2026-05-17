@@ -18,7 +18,7 @@ class PublicWishlistTest < ApplicationSystemTestCase
 
     assert_selector ".share-url-input", wait: 5
     share_url = find(".share-url-input").value
-    assert_match(%r{/w/[A-Za-z0-9_\-]{20,}}, share_url)
+    assert_match(%r{/w/[A-Za-z0-9_-]{20,}}, share_url)
 
     # Logged-out visitor:
     Capybara.reset_sessions!

@@ -276,7 +276,7 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     user.link_telegram!(chat_id: 333_333)
     Telegram::WebhooksController::THROTTLE_LIMIT.times do |i|
       Rails.cache.write(
-        "tg:throttle:#{user.id}:#{Time.current.utc.strftime('%Y%m%d%H')}",
+        "tg:throttle:#{user.id}:#{Time.current.utc.strftime("%Y%m%d%H")}",
         Telegram::WebhooksController::THROTTLE_LIMIT,
         expires_in: 90.minutes
       )
@@ -313,7 +313,7 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     post "/telegram/webhook/test-secret-abc",
       params: telegram_text_update(update_id: 403, chat_id: 444_444, text: "dos"), as: :json
 
-    bucket_key = "tg:throttle:#{user.id}:#{Time.current.utc.strftime('%Y%m%d%H')}"
+    bucket_key = "tg:throttle:#{user.id}:#{Time.current.utc.strftime("%Y%m%d%H")}"
     assert_equal 3, Rails.cache.read(bucket_key)
   end
 

@@ -35,9 +35,9 @@ module GreetingsHelper
 
   def time_of_day_greeting(now)
     case now.hour
-    when 5..12  then "Buenos días"
+    when 5..12 then "Buenos días"
     when 13..20 then "Buenas tardes"
-    else             "Buenas noches"
+    else "Buenas noches"
     end
   end
 end

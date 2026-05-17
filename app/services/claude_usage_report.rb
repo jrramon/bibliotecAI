@@ -9,21 +9,21 @@ require "json"
 class ClaudeUsageReport
   WINDOWS = [
     ["últimas 24h", 24.hours],
-    ["últimos 7d",   7.days],
+    ["últimos 7d", 7.days],
     ["últimos 30d", 30.days],
     ["últimos 90d", 90.days]
   ].freeze
 
   # Editable estimates for pre-instrumentation rows. Update after a few real
   # measurements are visible in the "real" columns of the report.
-  SHELF_ESTIMATE_USD    = 0.20
-  COVER_ESTIMATE_USD    = 0.02
+  SHELF_ESTIMATE_USD = 0.20
+  COVER_ESTIMATE_USD = 0.02
   TELEGRAM_ESTIMATE_USD = 0.05
 
   SERVICES = [
-    {key: :shelf,    label: "shelf",    model: "ShelfPhoto",       estimate: SHELF_ESTIMATE_USD},
-    {key: :cover,    label: "cover",    model: "CoverPhoto",       estimate: COVER_ESTIMATE_USD},
-    {key: :telegram, label: "telegram", model: "TelegramMessage",  estimate: TELEGRAM_ESTIMATE_USD}
+    {key: :shelf, label: "shelf", model: "ShelfPhoto", estimate: SHELF_ESTIMATE_USD},
+    {key: :cover, label: "cover", model: "CoverPhoto", estimate: COVER_ESTIMATE_USD},
+    {key: :telegram, label: "telegram", model: "TelegramMessage", estimate: TELEGRAM_ESTIMATE_USD}
   ].freeze
 
   def run(format: "table", io: $stdout)
@@ -47,30 +47,30 @@ class ClaudeUsageReport
 
   def stats_for(klass, since, estimate_usd)
     completed = klass.where(status: :completed).where("created_at >= ?", since)
-    measured  = completed.where.not(claude_usage: nil)
+    measured = completed.where.not(claude_usage: nil)
     estimated = completed.where(claude_usage: nil)
 
     real_cost = measured.sum("(claude_usage->>'total_cost_usd')::float").to_f
     estimated_cost = estimated.count * estimate_usd
 
     {
-      count_total:     completed.count,
-      count_measured:  measured.count,
+      count_total: completed.count,
+      count_measured: measured.count,
       count_estimated: estimated.count,
-      cost_real:       real_cost.round(4),
-      cost_estimated:  estimated_cost.round(4),
-      cost_total:      (real_cost + estimated_cost).round(4)
+      cost_real: real_cost.round(4),
+      cost_estimated: estimated_cost.round(4),
+      cost_total: (real_cost + estimated_cost).round(4)
     }
   end
 
   def aggregate(stats_list)
     {
-      count_total:     stats_list.sum { |s| s[:count_total] },
-      count_measured:  stats_list.sum { |s| s[:count_measured] },
+      count_total: stats_list.sum { |s| s[:count_total] },
+      count_measured: stats_list.sum { |s| s[:count_measured] },
       count_estimated: stats_list.sum { |s| s[:count_estimated] },
-      cost_real:       stats_list.sum { |s| s[:cost_real] }.round(4),
-      cost_estimated:  stats_list.sum { |s| s[:cost_estimated] }.round(4),
-      cost_total:      stats_list.sum { |s| s[:cost_total] }.round(4)
+      cost_real: stats_list.sum { |s| s[:cost_real] }.round(4),
+      cost_estimated: stats_list.sum { |s| s[:cost_estimated] }.round(4),
+      cost_total: stats_list.sum { |s| s[:cost_total] }.round(4)
     }
   end
 
@@ -80,8 +80,7 @@ class ClaudeUsageReport
 
     rows.each do |row|
       io.puts "=== #{row[:window]} ==="
-      io.puts format("  %-9s %8s %10s %10s %10s",
-        "servicio", "n", "$real", "$est", "$total")
+      io.puts "  servicio         n      $real       $est     $total"
       SERVICES.each do |svc|
         s = row[svc[:key]]
         io.puts format("  %-9s %8d %10.4f %10.4f %10.4f",

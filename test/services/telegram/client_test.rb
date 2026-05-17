@@ -83,7 +83,7 @@ class Telegram::ClientTest < ActiveSupport::TestCase
     assert_includes joined, "para dos"
     # Splits should land on newlines, not mid-paragraph: no chunk ends
     # mid-letter when a line break was available before the cap.
-    assert chunks.first.end_with?("a") || chunks.first.end_with?("dos"),
+    assert chunks.first.end_with?("a", "dos"),
       "expected split on a sentence boundary, got: #{chunks.first[-20..]}"
   end
 

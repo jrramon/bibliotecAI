@@ -119,7 +119,7 @@ class Mcp::ServerTest < ActiveSupport::TestCase
       const_set(:NAME, "crashes")
       const_set(:DESCRIPTION, "kaboom")
       const_set(:INPUT_SCHEMA, {type: "object", properties: {}, additionalProperties: false})
-      def call = raise(RuntimeError, "wat")
+      def call = raise("wat")
     end
 
     Mcp::Registry.stubs(:find).with("crashes").returns(fake_tool)

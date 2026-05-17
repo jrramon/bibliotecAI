@@ -76,7 +76,7 @@ class Book < ApplicationRecord
 
   scope :ordered_by, ->(key) {
     case key.to_s
-    when "title"  then order(Arel.sql("LOWER(title) ASC"))
+    when "title" then order(Arel.sql("LOWER(title) ASC"))
     when "author" then order(Arel.sql("LOWER(NULLIF(author, '')) ASC NULLS LAST"))
     else recent
     end

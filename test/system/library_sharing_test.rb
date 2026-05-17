@@ -72,7 +72,7 @@ class LibrarySharingTest < ApplicationSystemTestCase
   test "owner can resend a pending invitation and revive an expired one" do
     owner = create(:user, email: "owner@bibliotecai.test")
     library = create(:library, name: "Familia", owner: owner)
-    fresh = library.invitations.create!(invited_by: owner, email: "alice@bibliotecai.test")
+    library.invitations.create!(invited_by: owner, email: "alice@bibliotecai.test")
     expired = library.invitations.create!(invited_by: owner, email: "bob@bibliotecai.test")
     expired.update_column(:expires_at, 1.day.ago)
 

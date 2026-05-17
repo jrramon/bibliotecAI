@@ -192,7 +192,7 @@ module Telegram
     # a cost guardrail for the Claude calls behind it; a deny-listed
     # request leaves no trace beyond a log line.
     def throttle_exceeded?(user_id)
-      key = "tg:throttle:#{user_id}:#{Time.current.utc.strftime('%Y%m%d%H')}"
+      key = "tg:throttle:#{user_id}:#{Time.current.utc.strftime("%Y%m%d%H")}"
       count = Rails.cache.read(key).to_i
       return true if count >= THROTTLE_LIMIT
       Rails.cache.write(key, count + 1, expires_in: THROTTLE_WINDOW)
