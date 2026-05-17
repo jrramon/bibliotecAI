@@ -35,8 +35,8 @@ class PublicWishlistTest < ApplicationSystemTestCase
 
   test "rotating the token invalidates the old URL" do
     @alice.regenerate_wishlist_share_token!
-    old_url = Rails.application.routes.url_helpers.public_wishlist_url(
-      token: @alice.wishlist_share_token, host: Capybara.app_host || "http://web:3001"
+    old_path = Rails.application.routes.url_helpers.public_wishlist_path(
+      token: @alice.wishlist_share_token
     )
 
     fast_sign_in(@alice)
@@ -46,7 +46,7 @@ class PublicWishlistTest < ApplicationSystemTestCase
 
     # The old URL no longer matches any user → 404-ish.
     Capybara.reset_sessions!
-    visit old_url
+    visit old_path
     assert_no_selector "h1", text: /Alice Gómez/
   end
 
