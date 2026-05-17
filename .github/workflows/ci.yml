@@ -124,7 +124,7 @@ jobs:
       - name: Install system deps
         run: sudo apt-get update && sudo apt-get install -y libpq-dev libyaml-dev imagemagick
       - name: ERB lint
-        run: bundle exec erb_lint --lint-all
+        run: git ls-files -z '*.erb' | xargs -0 bundle exec erb_lint
 
   brakeman:
     runs-on: ubuntu-latest
