@@ -43,7 +43,7 @@
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("<%= pwa_service_worker_path %>", { scope: "/" })
+          navigator.serviceWorker.register(<%= pwa_service_worker_path.to_json %>, { scope: "/" })
         })
       }
     </script>
