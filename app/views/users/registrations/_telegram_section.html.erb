@@ -6,8 +6,7 @@
     Orden de las ramas: `linked?` primero (la rama del broadcast no
     tiene flash, así que no puede depender de él). Solo cuando el user
     no está linked + venimos de un POST a /telegram/link el flash trae
-    los enlaces para mostrar.
-%>
+    los enlaces para mostrar. %>
 <section class="profile-section" id="<%= dom_id(user, :telegram_status) %>">
   <h2 class="section-title">Telegram</h2>
   <% if user.telegram_linked? %>
