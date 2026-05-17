@@ -165,7 +165,7 @@
                             local: true do %>
                 <label for="finished_on">Elegir fecha</label>
                 <div class="row" style="gap: 6px;">
-                  <%= date_field_tag :finished_on, Date.current.iso8601, max: Date.current.iso8601 %>
+                  <%= date_field_tag :finished_on, Date.current.iso8601, max: Date.current.iso8601, autocomplete: "off" %>
                   <%= submit_tag "Guardar", class: "btn btn-ghost btn-small" %>
                 </div>
               <% end %>
