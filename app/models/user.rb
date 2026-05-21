@@ -9,6 +9,7 @@ class User < ApplicationRecord
 
   validates :name, length: {maximum: 80}, allow_blank: true
   validate :avatar_is_supported, if: -> { avatar.attached? }
+  validate :avatar_within_size_limit, if: -> { avatar.attached? }
 
   # Display name for greetings, avatar initials, search hits. Prefers the
   # explicit `name` column, falls back to the local part of the email.
@@ -81,5 +82,10 @@ class User < ApplicationRecord
   def avatar_is_supported
     return if avatar.blob.content_type.in?(%w[image/jpeg image/png image/webp image/heic])
     errors.add(:avatar, "debe ser JPEG, PNG, WebP o HEIC")
+  end
+
+  def avatar_within_size_limit
+    return if avatar.blob.byte_size <= 10.megabytes
+    errors.add(:avatar, "no debe superar 10 MB")
   end
 end

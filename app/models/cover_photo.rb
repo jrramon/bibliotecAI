@@ -14,6 +14,7 @@ class CoverPhoto < ApplicationRecord
 
   validate :image_present
   validate :image_is_supported, if: -> { image.attached? }
+  validate :image_within_size_limit, if: -> { image.attached? }
 
   # Flat accessors into `claude_raw_response` so views don't need to know
   # the JSON shape. A completed photo yields the identified-book hash;
@@ -46,5 +47,10 @@ class CoverPhoto < ApplicationRecord
   def image_is_supported
     return if image.blob.content_type.in?(%w[image/jpeg image/png image/webp image/heic])
     errors.add(:image, "debe ser JPEG, PNG, WebP o HEIC")
+  end
+
+  def image_within_size_limit
+    return if image.blob.byte_size <= 10.megabytes
+    errors.add(:image, "no debe superar 10 MB")
   end
 end
