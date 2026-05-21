@@ -302,6 +302,24 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     assert_match(/timed out/, result.error)
   end
 
+  test "sweeps stale MCP config files older than the safety window" do
+    base = Rails.root.join("tmp/mcp")
+    FileUtils.mkdir_p(base)
+    stale = base.join("stale_test.json").to_s
+    fresh = base.join("fresh_test.json").to_s
+    File.write(stale, "{}")
+    File.write(fresh, "{}")
+    old_time = Time.now - (Telegram::Agent::MCP_SESSION_TTL * 6) - 60
+    File.utime(old_time, old_time, stale)
+
+    Telegram::Agent.new(@message).send(:sweep_stale_mcp_configs, base)
+
+    refute File.exist?(stale), "expected stale file to be swept"
+    assert File.exist?(fresh), "expected fresh file to be left alone"
+  ensure
+    [stale, fresh].compact.each { |p| File.delete(p) if File.exist?(p) }
+  end
+
   private
 
   def envelope(text)

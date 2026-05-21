@@ -200,6 +200,7 @@ module Telegram
 
       base = Rails.root.join("tmp/mcp")
       FileUtils.mkdir_p(base)
+      sweep_stale_mcp_configs(base)
       path = base.join("#{@message.id}.json").to_s
 
       File.write(path, JSON.generate({
@@ -219,6 +220,18 @@ module Telegram
 
     def mcp_endpoint_url
       ENV.fetch("MCP_ENDPOINT_URL", "http://localhost:3000/mcp")
+    end
+
+    # Self-heal in case a previous turn was SIGKILL'd before its `ensure`
+    # ran. Files older than 6× the token TTL hold credentials that are
+    # long expired — drop them so the directory doesn't accumulate.
+    def sweep_stale_mcp_configs(base)
+      cutoff = (6 * MCP_SESSION_TTL).ago
+      Dir.glob(base.join("*.json").to_s).each do |path|
+        File.delete(path) if File.mtime(path) < cutoff
+      rescue Errno::ENOENT
+        # Another sweeper got there first — fine.
+      end
     end
 
     def run_claude(prompt, config_path, _mcp_token)
