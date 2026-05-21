@@ -105,4 +105,12 @@ Rails.application.configure do
   # `Host: <container-ip>` for health checks, so that path is excluded.
   config.hosts = app_hosts + ["web"] unless building_assets
   config.host_authorization = {exclude: ->(request) { request.path == "/up" }}
+
+  # Defense-in-depth response headers. The app doesn't use cam/mic/geo,
+  # and we'd rather not leak full URLs (which can carry share tokens)
+  # via Referer when users click out to third-party links.
+  config.action_dispatch.default_headers.merge!(
+    "Referrer-Policy" => "strict-origin-when-cross-origin",
+    "Permissions-Policy" => "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+  )
 end
