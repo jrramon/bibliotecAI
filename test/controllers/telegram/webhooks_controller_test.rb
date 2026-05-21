@@ -252,6 +252,29 @@ class Telegram::WebhooksControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "content_type is detected from the bytes, not hard-coded to JPEG" do
+    user = create(:user)
+    create(:library, owner: user)
+    user.link_telegram!(chat_id: 444_444)
+
+    # Smallest valid 1x1 PNG — Telegram's `photo` array supports PNG, and
+    # we want to confirm we save the actual MIME, not whatever the
+    # uploader claims.
+    png_bytes = Base64.strict_decode64(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    )
+    Telegram::Client.stubs(:get_file).returns({"file_path" => "p.png"})
+    Telegram::Client.stubs(:download_file).returns(png_bytes)
+    Telegram::Client.stubs(:send_chat_action)
+
+    post "/telegram/webhook/test-secret-abc",
+      params: telegram_photo_update(update_id: 240, chat_id: 444_444),
+      as: :json
+
+    assert_response :ok
+    assert_equal "image/png", TelegramMessage.last.photo.blob.content_type
+  end
+
   test "linked chat photo, telegram download fails → reply photo failed, no TelegramMessage" do
     user = create(:user)
     create(:library, owner: user)

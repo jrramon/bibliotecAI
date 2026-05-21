@@ -152,10 +152,12 @@ module Telegram
         text: message[:caption].to_s,
         status: :pending
       )
+      filename = "telegram_#{update_id}.jpg"
+      detected_type = Marcel::MimeType.for(bytes, name: filename)
       tg_message.photo.attach(
         io: StringIO.new(bytes),
-        filename: "telegram_#{update_id}.jpg",
-        content_type: "image/jpeg"
+        filename: filename,
+        content_type: detected_type
       )
       tg_message.save!
 
