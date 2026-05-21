@@ -8,6 +8,14 @@ class BookIdentificationJob < ApplicationJob
 
   def perform(shelf_photo_id)
     shelf_photo = ShelfPhoto.find(shelf_photo_id)
+
+    if ClaudeBudget.exceeded?
+      shelf_photo.update!(status: :failed, error_message: ClaudeBudget::EXHAUSTED_MESSAGE)
+      broadcast(shelf_photo)
+      notify_telegram(shelf_photo)
+      return
+    end
+
     shelf_photo.update!(status: :processing, error_message: nil)
     broadcast(shelf_photo)
 

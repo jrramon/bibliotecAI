@@ -41,6 +41,17 @@ class BookIdentificationJobTest < ActiveJob::TestCase
     end
   end
 
+  test "aborts and marks failed when ClaudeBudget is exceeded" do
+    shelf = create(:shelf_photo, library: @library, uploaded_by_user: @user, telegram_chat_id: nil)
+    ClaudeBudget.stubs(:exceeded?).returns(true)
+    ClaudeBookIdentifier.expects(:call).never
+
+    BookIdentificationJob.new.perform(shelf.id)
+
+    assert_equal "failed", shelf.reload.status
+    assert_equal ClaudeBudget::EXHAUSTED_MESSAGE, shelf.error_message
+  end
+
   test "a notifier crash never propagates out of the job" do
     shelf = create(:shelf_photo, library: @library, uploaded_by_user: @user, telegram_chat_id: 4242)
 

@@ -28,6 +28,12 @@ class TelegramMessageJob < ApplicationJob
     end
     return unless claimed
 
+    if ClaudeBudget.exceeded?
+      Telegram::Client.send_message(chat_id: message.chat_id, text: ClaudeBudget::EXHAUSTED_MESSAGE)
+      message.update!(status: :failed, error_message: ClaudeBudget::EXHAUSTED_MESSAGE, bot_reply: ClaudeBudget::EXHAUSTED_MESSAGE)
+      return
+    end
+
     result = Telegram::Agent.call(message)
 
     if result.ok

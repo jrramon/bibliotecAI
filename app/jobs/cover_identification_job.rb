@@ -6,6 +6,14 @@ class CoverIdentificationJob < ApplicationJob
 
   def perform(cover_photo_id)
     cover_photo = CoverPhoto.find(cover_photo_id)
+
+    if ClaudeBudget.exceeded?
+      cover_photo.update!(status: :failed, error_message: ClaudeBudget::EXHAUSTED_MESSAGE)
+      broadcast(cover_photo)
+      notify_telegram(cover_photo)
+      return
+    end
+
     cover_photo.update!(status: :processing, error_message: nil)
     broadcast(cover_photo)
 

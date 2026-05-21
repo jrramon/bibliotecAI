@@ -86,6 +86,20 @@ class TelegramMessageJobTest < ActiveJob::TestCase
     assert @message.reload.processing?
   end
 
+  test "aborts and marks failed when ClaudeBudget is exceeded" do
+    ClaudeBudget.stubs(:exceeded?).returns(true)
+    Telegram::Agent.expects(:call).never
+    Telegram::Client.expects(:send_message)
+      .with(chat_id: @message.chat_id, text: ClaudeBudget::EXHAUSTED_MESSAGE)
+      .returns({"message_id" => 1})
+
+    TelegramMessageJob.perform_now(@message.id)
+
+    assert @message.reload.failed?
+    assert_equal ClaudeBudget::EXHAUSTED_MESSAGE, @message.error_message
+    assert_equal ClaudeBudget::EXHAUSTED_MESSAGE, @message.bot_reply
+  end
+
   test "missing message is discarded silently" do
     Telegram::Agent.expects(:call).never
 
