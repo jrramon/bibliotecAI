@@ -17,7 +17,7 @@ gem "solid_cable"
 gem "bootsnap", require: false
 gem "thruster", require: false
 
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.0"
 gem "devise", "~> 5.0"
 gem "friendly_id", "~> 5.5"
 gem "simple_form"
