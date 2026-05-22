@@ -2,6 +2,7 @@ require "json"
 require "open3"
 require "fileutils"
 require "timeout"
+require "securerandom"
 
 # Asks the host Claude CLI to identify a single book from a photo of its
 # cover. Returns a flat hash with the metadata fields we pre-fill into the
@@ -51,6 +52,12 @@ class ClaudeCoverIdentifier
     - `confidence` reflects how sure you are about title + author together.
     - Never invent ISBNs or publishers — only include them if they are
       legible on the cover.
+    - CRITICAL — OUTPUT FORMAT: your entire reply must be exactly one JSON
+      object and nothing else. No preamble, no explanation, no apology, no
+      commentary, no markdown fences — not even when the image is not a
+      book cover, is unreadable, or you were unable to do something. If you
+      cannot identify the book for ANY reason, your entire reply is
+      exactly: {"title": "", "confidence": 0}
   PROMPT
 
   def self.call(...) = new(...).call
@@ -67,26 +74,65 @@ class ClaudeCoverIdentifier
     File.binwrite(image_path, @cover_photo.image.download)
 
     prompt = format(PROMPT_TEMPLATE, image_path: image_path)
-    stdout, stderr, status = nil
+    trace_id = SecureRandom.uuid
+    started_at = Time.now
 
-    Timeout.timeout(CLAUDE_TIMEOUT) do
-      stdout, stderr, status = Open3.capture3(
-        @claude_bin, "-p", prompt,
-        "--output-format", "json",
-        "--add-dir", base.to_s,
-        chdir: Rails.root.to_s
-      )
+    begin
+      stdout, stderr, status = nil
+
+      Timeout.timeout(CLAUDE_TIMEOUT) do
+        stdout, stderr, status = Open3.capture3(
+          @claude_bin, "-p", prompt,
+          "--output-format", "json",
+          "--add-dir", base.to_s,
+          chdir: Rails.root.to_s
+        )
+      end
+
+      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+
+      data, usage = parse(stdout)
+      record_trace(trace_id: trace_id, prompt: prompt, started_at: started_at, output: data, envelope: usage)
+      Result.new(data: data, usage: usage)
+    rescue => e
+      record_trace(trace_id: trace_id, prompt: prompt, started_at: started_at, error: e)
+      raise
     end
-
-    raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-    data, usage = parse(stdout)
-    Result.new(data: data, usage: usage)
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
   end
 
   private
+
+  # Sends one Langfuse trace with a single generation inside it. Built
+  # explicitly here so the trace/generation shape is visible — a later
+  # slice extracts this into a shared helper. The success path records the
+  # parsed book metadata; the error path records the failure at level
+  # ERROR. Langfuse::Client swallows its own errors, so a tracing problem
+  # never affects identification.
+  def record_trace(trace_id:, prompt:, started_at:, output: nil, envelope: nil, error: nil)
+    usage_details, cost_details = Langfuse::Client.usage_from_claude_envelope(envelope)
+
+    trace = Langfuse::Client.trace_event(
+      id: trace_id,
+      name: "cover-identification",
+      output: output,
+      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id}
+    )
+    generation = Langfuse::Client.generation_event(
+      trace_id: trace_id,
+      name: "claude -p (cover)",
+      started_at: started_at,
+      ended_at: Time.now,
+      input: prompt,
+      output: error ? nil : output,
+      usage_details: usage_details,
+      cost_details: cost_details,
+      level: error ? "ERROR" : nil,
+      status_message: error&.message
+    )
+    Langfuse::Client.ingest([trace, generation])
+  end
 
   # Returns [parsed_inner_json, envelope_metadata_or_nil] so callers can
   # persist usage/cost from the `claude -p --output-format json` envelope.
@@ -99,12 +145,8 @@ class ClaudeCoverIdentifier
       inner = stdout
       usage = nil
     end
-    [JSON.parse(strip_fences(inner)), usage]
+    [JSON.parse(ClaudeJson.extract(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.to_s.truncate(800)}"
-  end
-
-  def strip_fences(text)
-    text.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\s*\z/, "")
   end
 end
