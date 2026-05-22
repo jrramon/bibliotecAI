@@ -20,6 +20,10 @@ class BookClassifier
     - cdu is a string. Empty string if unsure.
     - genres are short Spanish tags like "Novela histórica", "Management", "Ensayo".
     - Empty genres array is fine when classification is genuinely unclear.
+    - CRITICAL — OUTPUT FORMAT: your entire reply must be exactly one JSON
+      object and nothing else — no preamble, no explanation, no markdown
+      fences. If you cannot classify the book, your entire reply is
+      exactly: {"cdu": "", "genres": []}
   PROMPT
 
   def self.call(...) = new(...).call
@@ -49,12 +53,8 @@ class BookClassifier
   def parse(stdout)
     envelope = JSON.parse(stdout)
     inner = (envelope.is_a?(Hash) && envelope["result"].is_a?(String)) ? envelope["result"] : stdout
-    JSON.parse(strip_fences(inner))
+    JSON.parse(ClaudeJson.extract(inner))
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON: #{e.message}\n--- raw ---\n#{stdout.truncate(500)}"
-  end
-
-  def strip_fences(text)
-    text.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\s*\z/, "")
   end
 end

@@ -46,6 +46,13 @@ class ClaudeBookIdentifier
       ["Novela histórica", "Guerra Civil"], ["Management", "Agile"],
       ["Ensayo", "Filosofía"]. Empty array is fine for non-obvious cases.
     - If you can't see any books, return empty arrays — never invent titles.
+    - CRITICAL — OUTPUT FORMAT: your entire reply must be exactly one JSON
+      object and nothing else. No preamble, no explanation, no apology, no
+      commentary, no markdown fences — not even when the photo is
+      low-resolution, unreadable, or you were unable to crop or zoom. If
+      you cannot identify any book for ANY reason, still return the object
+      with "image_width" / "image_height" filled and "books": [] and
+      "unidentified": [].
   PROMPT
 
   def self.call(...) = new(...).call
@@ -105,12 +112,8 @@ class ClaudeBookIdentifier
       inner = stdout
       usage = nil
     end
-    [JSON.parse(strip_fences(inner)), usage]
+    [JSON.parse(ClaudeJson.extract(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.truncate(800)}"
-  end
-
-  def strip_fences(text)
-    text.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\s*\z/, "")
   end
 end
