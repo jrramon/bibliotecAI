@@ -59,7 +59,10 @@ class CoverIdentificationJob < ApplicationJob
 
   def partial_for(cover_photo)
     case cover_photo.status
-    when "completed" then "books/new_form"
+    when "completed"
+      # A completed run can still mean "Claude read nothing" — route the
+      # user to the manual form instead of a blank pre-filled one.
+      cover_photo.identified? ? "books/new_form" : "cover_photos/identification_failed"
     when "failed" then "cover_photos/identification_failed"
     else "cover_photos/analyzing"
     end

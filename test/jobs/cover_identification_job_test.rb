@@ -16,4 +16,18 @@ class CoverIdentificationJobTest < ActiveJob::TestCase
     assert_equal "failed", cover.reload.status
     assert_equal ClaudeBudget::EXHAUSTED_MESSAGE, cover.error_message
   end
+
+  test "a completed cover with an identified title routes to the new-book form" do
+    cover = create(:cover_photo, library: @library, uploaded_by_user: @user,
+      status: :completed, claude_raw_response: {"title" => "Kokoro"})
+
+    assert_equal "books/new_form", CoverIdentificationJob.new.send(:partial_for, cover)
+  end
+
+  test "a completed cover with no identified title routes to the manual fallback" do
+    cover = create(:cover_photo, library: @library, uploaded_by_user: @user,
+      status: :completed, claude_raw_response: {"title" => "", "confidence" => 0})
+
+    assert_equal "cover_photos/identification_failed", CoverIdentificationJob.new.send(:partial_for, cover)
+  end
 end
