@@ -9,8 +9,10 @@ class BookClassifier
   Error = Class.new(StandardError)
   CLAUDE_TIMEOUT = 60
 
+  # Local fallback for the "book-classifier" prompt in Langfuse.
+  # Placeholders are Mustache so the same body serves both paths.
   PROMPT = <<~PROMPT
-    For the book "%<title>s" by %<author>s, return a SINGLE JSON object with
+    For the book "{{title}}" by {{author}}, return a SINGLE JSON object with
     the Spanish Clasificación Decimal Universal code and 1-4 short genre/topic
     tags in Spanish. No prose, no markdown fences, this exact schema:
 
@@ -35,7 +37,8 @@ class BookClassifier
 
   def call
     author = @book.author.presence || "unknown author"
-    prompt = format(PROMPT, title: @book.title, author: author)
+    prompt_obj = Langfuse::Prompt.get("book-classifier", fallback: PROMPT)
+    prompt = prompt_obj.compile(title: @book.title, author: author)
     started_at = Time.now
     lf = {
       trace_name: "book-classification",
@@ -43,7 +46,9 @@ class BookClassifier
       started_at: started_at,
       prompt: prompt,
       input: {title: @book.title, author: @book.author},
-      metadata: {book_id: @book.id}
+      metadata: {book_id: @book.id},
+      prompt_name: prompt_obj.name,
+      prompt_version: prompt_obj.version
     }
 
     begin

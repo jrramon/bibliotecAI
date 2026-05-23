@@ -111,7 +111,10 @@ module Telegram
     end
 
     def call
-      prompt = build_prompt
+      # The system prompt is managed in Langfuse as "telegram-agent-system".
+      # The dynamic parts (history + user message) stay assembled here.
+      system_prompt_obj = Langfuse::Prompt.get("telegram-agent-system", fallback: SYSTEM_PROMPT)
+      prompt = build_prompt(system_prompt_obj.compile)
       # trace_id is minted here so the MCP server (running in another
       # request) can attach tool-call spans to the same trace via the
       # bearer token.
@@ -137,7 +140,9 @@ module Telegram
         model: MODEL,
         metadata: {telegram_message_id: @message.id},
         user_id: @message.user_id&.to_s,
-        session_id: @message.chat_id&.to_s
+        session_id: @message.chat_id&.to_s,
+        prompt_name: system_prompt_obj.name,
+        prompt_version: system_prompt_obj.version
       )
       result
     end
@@ -172,9 +177,12 @@ module Telegram
       failure("claude returned non-JSON output: #{e.message}")
     end
 
-    def build_prompt
+    # The system block is supplied by the caller (either Langfuse-managed
+    # or the local SYSTEM_PROMPT fallback) so build_prompt stays purely
+    # responsible for assembling the dynamic per-turn pieces.
+    def build_prompt(system_block)
       <<~PROMPT
-        #{SYSTEM_PROMPT}
+        #{system_block}
         #{recent_history_block}
         <user_message>
         #{photo_marker}#{neutralize_tags(@message.text)}

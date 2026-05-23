@@ -8,9 +8,12 @@ class ClaudeBookIdentifier
   Error = Class.new(StandardError)
 
   CLAUDE_TIMEOUT = 180 # seconds
+  # Local fallback. The live version lives in Langfuse as
+  # "shelf-identification"; placeholders are Mustache so the same body
+  # works in both places (see ClaudeCoverIdentifier for the pattern).
   PROMPT_TEMPLATE = <<~PROMPT
     Look at the bookshelf photograph at the absolute path:
-    %<image_path>s
+    {{image_path}}
 
     Identify every book whose spine is readable. Return a SINGLE JSON object,
     no prose, no markdown fences, with this exact schema:
@@ -70,7 +73,8 @@ class ClaudeBookIdentifier
     image_path = base.join("#{@shelf_photo.id}-#{@shelf_photo.image.filename}").to_s
     File.binwrite(image_path, @shelf_photo.image.download)
 
-    prompt = format(PROMPT_TEMPLATE, image_path: image_path)
+    prompt_obj = Langfuse::Prompt.get("shelf-identification", fallback: PROMPT_TEMPLATE)
+    prompt = prompt_obj.compile(image_path: image_path)
     started_at = Time.now
     lf = {
       trace_name: "shelf-identification",
@@ -78,7 +82,9 @@ class ClaudeBookIdentifier
       started_at: started_at,
       prompt: prompt,
       input: @shelf_photo.image.filename.to_s,
-      metadata: {shelf_photo_id: @shelf_photo.id, library_id: @shelf_photo.library_id}
+      metadata: {shelf_photo_id: @shelf_photo.id, library_id: @shelf_photo.library_id},
+      prompt_name: prompt_obj.name,
+      prompt_version: prompt_obj.version
     }
 
     begin
