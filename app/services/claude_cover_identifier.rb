@@ -13,9 +13,14 @@ class ClaudeCoverIdentifier
   Error = Class.new(StandardError)
   CLAUDE_TIMEOUT = 120
 
+  # Local fallback for the prompt. The "live" version lives in Langfuse
+  # under the name "cover-identification" and is fetched via
+  # Langfuse::Prompt.get (5-min cached). This constant is what `compile`
+  # uses when Langfuse isn't configured / is unreachable. Placeholders use
+  # Mustache ({{image_path}}) so the same body works in both places.
   PROMPT_TEMPLATE = <<~PROMPT
     Look at the photograph of a single book cover at the absolute path:
-    %<image_path>s
+    {{image_path}}
 
     Identify the book and return a SINGLE JSON object (no prose, no markdown
     fences) with this exact schema:
@@ -72,7 +77,8 @@ class ClaudeCoverIdentifier
     image_path = base.join("#{@cover_photo.id}-#{@cover_photo.image.filename}").to_s
     File.binwrite(image_path, @cover_photo.image.download)
 
-    prompt = format(PROMPT_TEMPLATE, image_path: image_path)
+    prompt_obj = Langfuse::Prompt.get("cover-identification", fallback: PROMPT_TEMPLATE)
+    prompt = prompt_obj.compile(image_path: image_path)
     started_at = Time.now
     # Constant trace fields, splatted into the success and error calls below.
     lf = {
@@ -81,7 +87,9 @@ class ClaudeCoverIdentifier
       started_at: started_at,
       prompt: prompt,
       input: @cover_photo.image.filename.to_s,
-      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id}
+      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id},
+      prompt_name: prompt_obj.name,
+      prompt_version: prompt_obj.version
     }
 
     begin

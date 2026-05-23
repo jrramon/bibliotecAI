@@ -34,6 +34,27 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     assert_equal Langfuse::Config::ENVIRONMENT, event[:body][:environment]
   end
 
+  test "generation_event records the prompt link when given prompt_name and prompt_version" do
+    t = Time.now
+    event = Langfuse::Client.generation_event(
+      trace_id: "t", name: "g", started_at: t, ended_at: t,
+      prompt_name: "cover-identification", prompt_version: 3
+    )
+
+    assert_equal "cover-identification", event[:body][:promptName]
+    assert_equal 3, event[:body][:promptVersion]
+  end
+
+  test "generation_event omits the prompt link when version is nil (local fallback)" do
+    t = Time.now
+    event = Langfuse::Client.generation_event(
+      trace_id: "t", name: "g", started_at: t, ended_at: t,
+      prompt_name: "cover-identification", prompt_version: nil
+    )
+
+    assert_nil event[:body][:promptVersion], "version nil → no link to a Langfuse-stored version"
+  end
+
   test "span_event builds a well-formed span-create event" do
     t0 = Time.utc(2026, 5, 22, 10, 0, 0)
     t1 = Time.utc(2026, 5, 22, 10, 0, 1)

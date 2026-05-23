@@ -22,7 +22,8 @@ module Langfuse
     # the same trace.
     def record(trace_name:, generation_name:, started_at:, prompt:,
       trace_id: nil, input: nil, output: nil, envelope: nil,
-      error_message: nil, model: nil, metadata: {}, user_id: nil, session_id: nil)
+      error_message: nil, model: nil, metadata: {}, user_id: nil, session_id: nil,
+      prompt_name: nil, prompt_version: nil)
       trace_id ||= SecureRandom.uuid
       usage_details, cost_details = Client.usage_from_claude_envelope(envelope)
       recorded_output = error_message ? nil : output
@@ -47,7 +48,9 @@ module Langfuse
         usage_details: usage_details,
         cost_details: cost_details,
         level: error_message ? "ERROR" : nil,
-        status_message: error_message
+        status_message: error_message,
+        prompt_name: prompt_name,
+        prompt_version: prompt_version
       )
       Client.ingest([trace, generation])
     end

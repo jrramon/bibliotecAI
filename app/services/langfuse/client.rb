@@ -45,9 +45,13 @@ module Langfuse
 
     # Builds a `generation-create` event — one LLM call within a trace.
     # `level`/`status_message` carry the error state when a call fails.
+    # `prompt_name`/`prompt_version` link the generation to a managed
+    # prompt in Langfuse — the UI then shows "this output was produced
+    # by vN of <name>", which is the whole point of prompt versioning.
     def generation_event(trace_id:, name:, started_at:, ended_at:,
       model: nil, input: nil, output: nil, usage_details: nil, cost_details: nil,
-      level: nil, status_message: nil, metadata: {})
+      level: nil, status_message: nil, metadata: {},
+      prompt_name: nil, prompt_version: nil)
       {
         id: SecureRandom.uuid,
         type: "generation-create",
@@ -66,6 +70,8 @@ module Langfuse
           level: level,
           statusMessage: status_message,
           metadata: metadata.presence,
+          promptName: prompt_name,
+          promptVersion: prompt_version,
           environment: Langfuse::Config::ENVIRONMENT
         }.compact
       }
