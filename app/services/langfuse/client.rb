@@ -71,6 +71,31 @@ module Langfuse
       }
     end
 
+    # Builds a `span-create` event — a non-LLM unit of work inside a trace
+    # (e.g. an MCP tool call). Same field set as a generation minus the
+    # model/tokens/cost concepts.
+    def span_event(trace_id:, name:, started_at:, ended_at:,
+      input: nil, output: nil, level: nil, status_message: nil, metadata: {})
+      {
+        id: SecureRandom.uuid,
+        type: "span-create",
+        timestamp: now_iso,
+        body: {
+          id: SecureRandom.uuid,
+          traceId: trace_id,
+          name: name,
+          input: input,
+          output: output,
+          startTime: started_at.utc.iso8601(3),
+          endTime: ended_at.utc.iso8601(3),
+          level: level,
+          statusMessage: status_message,
+          metadata: metadata.presence,
+          environment: Langfuse::Config::ENVIRONMENT
+        }.compact
+      }
+    end
+
     # Maps the `claude -p --output-format json` envelope (everything the CLI
     # returns besides "result") into Langfuse's usageDetails (integer token
     # counts) and costDetails (USD amounts). Defensive: only maps the keys

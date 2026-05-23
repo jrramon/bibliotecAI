@@ -36,24 +36,47 @@ class BookClassifier
   def call
     author = @book.author.presence || "unknown author"
     prompt = format(PROMPT, title: @book.title, author: author)
+    started_at = Time.now
+    lf = {
+      trace_name: "book-classification",
+      generation_name: "claude -p (classify)",
+      started_at: started_at,
+      prompt: prompt,
+      input: {title: @book.title, author: @book.author},
+      metadata: {book_id: @book.id}
+    }
 
-    stdout, stderr, status = nil
-    Timeout.timeout(CLAUDE_TIMEOUT) do
-      stdout, stderr, status = Open3.capture3(@claude_bin, "-p", prompt, "--output-format", "json")
+    begin
+      stdout, stderr, status = nil
+      Timeout.timeout(CLAUDE_TIMEOUT) do
+        stdout, stderr, status = Open3.capture3(@claude_bin, "-p", prompt, "--output-format", "json")
+      end
+      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+
+      payload, usage = parse(stdout)
+      @book.update(cdu: payload["cdu"].presence, genres: Array(payload["genres"]))
+      Langfuse::Trace.record(**lf, output: payload, envelope: usage)
+      payload
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise
     end
-    raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-    payload = parse(stdout)
-    @book.update(cdu: payload["cdu"].presence, genres: Array(payload["genres"]))
-    payload
   end
 
   private
 
+  # Returns [parsed_inner_json, envelope_metadata_or_nil] — the envelope
+  # carries the token usage and cost for Langfuse.
   def parse(stdout)
     envelope = JSON.parse(stdout)
-    inner = (envelope.is_a?(Hash) && envelope["result"].is_a?(String)) ? envelope["result"] : stdout
-    JSON.parse(ClaudeJson.extract(inner))
+    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
+      inner = envelope["result"]
+      usage = envelope.except("result")
+    else
+      inner = stdout
+      usage = nil
+    end
+    [JSON.parse(ClaudeJson.extract(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON: #{e.message}\n--- raw ---\n#{stdout.truncate(500)}"
   end

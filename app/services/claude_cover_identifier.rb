@@ -2,7 +2,6 @@ require "json"
 require "open3"
 require "fileutils"
 require "timeout"
-require "securerandom"
 
 # Asks the host Claude CLI to identify a single book from a photo of its
 # cover. Returns a flat hash with the metadata fields we pre-fill into the
@@ -74,8 +73,16 @@ class ClaudeCoverIdentifier
     File.binwrite(image_path, @cover_photo.image.download)
 
     prompt = format(PROMPT_TEMPLATE, image_path: image_path)
-    trace_id = SecureRandom.uuid
     started_at = Time.now
+    # Constant trace fields, splatted into the success and error calls below.
+    lf = {
+      trace_name: "cover-identification",
+      generation_name: "claude -p (cover)",
+      started_at: started_at,
+      prompt: prompt,
+      input: @cover_photo.image.filename.to_s,
+      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id}
+    }
 
     begin
       stdout, stderr, status = nil
@@ -92,10 +99,10 @@ class ClaudeCoverIdentifier
       raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
 
       data, usage = parse(stdout)
-      record_trace(trace_id: trace_id, prompt: prompt, started_at: started_at, output: data, envelope: usage)
+      Langfuse::Trace.record(**lf, output: data, envelope: usage)
       Result.new(data: data, usage: usage)
     rescue => e
-      record_trace(trace_id: trace_id, prompt: prompt, started_at: started_at, error: e)
+      Langfuse::Trace.record(**lf, error_message: e.message)
       raise
     end
   ensure
@@ -103,36 +110,6 @@ class ClaudeCoverIdentifier
   end
 
   private
-
-  # Sends one Langfuse trace with a single generation inside it. Built
-  # explicitly here so the trace/generation shape is visible — a later
-  # slice extracts this into a shared helper. The success path records the
-  # parsed book metadata; the error path records the failure at level
-  # ERROR. Langfuse::Client swallows its own errors, so a tracing problem
-  # never affects identification.
-  def record_trace(trace_id:, prompt:, started_at:, output: nil, envelope: nil, error: nil)
-    usage_details, cost_details = Langfuse::Client.usage_from_claude_envelope(envelope)
-
-    trace = Langfuse::Client.trace_event(
-      id: trace_id,
-      name: "cover-identification",
-      output: output,
-      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id}
-    )
-    generation = Langfuse::Client.generation_event(
-      trace_id: trace_id,
-      name: "claude -p (cover)",
-      started_at: started_at,
-      ended_at: Time.now,
-      input: prompt,
-      output: error ? nil : output,
-      usage_details: usage_details,
-      cost_details: cost_details,
-      level: error ? "ERROR" : nil,
-      status_message: error&.message
-    )
-    Langfuse::Client.ingest([trace, generation])
-  end
 
   # Returns [parsed_inner_json, envelope_metadata_or_nil] so callers can
   # persist usage/cost from the `claude -p --output-format json` envelope.

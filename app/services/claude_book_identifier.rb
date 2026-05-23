@@ -71,28 +71,44 @@ class ClaudeBookIdentifier
     File.binwrite(image_path, @shelf_photo.image.download)
 
     prompt = format(PROMPT_TEMPLATE, image_path: image_path)
-    stdout, stderr, status = nil
+    started_at = Time.now
+    lf = {
+      trace_name: "shelf-identification",
+      generation_name: "claude -p (shelf)",
+      started_at: started_at,
+      prompt: prompt,
+      input: @shelf_photo.image.filename.to_s,
+      metadata: {shelf_photo_id: @shelf_photo.id, library_id: @shelf_photo.library_id}
+    }
 
-    Timeout.timeout(CLAUDE_TIMEOUT) do
-      stdout, stderr, status = Open3.capture3(
-        @claude_bin, "-p", prompt,
-        "--output-format", "json",
-        "--add-dir", base.to_s,
-        chdir: Rails.root.to_s
+    begin
+      stdout, stderr, status = nil
+
+      Timeout.timeout(CLAUDE_TIMEOUT) do
+        stdout, stderr, status = Open3.capture3(
+          @claude_bin, "-p", prompt,
+          "--output-format", "json",
+          "--add-dir", base.to_s,
+          chdir: Rails.root.to_s
+        )
+      end
+
+      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+
+      payload, usage = parse(stdout)
+      Langfuse::Trace.record(**lf, output: payload, envelope: usage)
+      Result.new(
+        books: Array(payload["books"]),
+        unidentified: Array(payload["unidentified"]),
+        raw: payload,
+        image_width: payload["image_width"]&.to_i,
+        image_height: payload["image_height"]&.to_i,
+        usage: usage
       )
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise
     end
-
-    raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-    payload, usage = parse(stdout)
-    Result.new(
-      books: Array(payload["books"]),
-      unidentified: Array(payload["unidentified"]),
-      raw: payload,
-      image_width: payload["image_width"]&.to_i,
-      image_height: payload["image_height"]&.to_i,
-      usage: usage
-    )
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
   end

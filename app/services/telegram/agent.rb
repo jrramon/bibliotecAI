@@ -3,6 +3,7 @@ require "open3"
 require "timeout"
 require "fileutils"
 require "tmpdir"
+require "securerandom"
 
 module Telegram
   # Asks the host Claude CLI to answer a single Telegram message, with
@@ -110,8 +111,45 @@ module Telegram
     end
 
     def call
-      with_mcp_config do |config_path, mcp_token|
-        stdout, stderr, status = run_claude(build_prompt, config_path, mcp_token)
+      prompt = build_prompt
+      # trace_id is minted here so the MCP server (running in another
+      # request) can attach tool-call spans to the same trace via the
+      # bearer token.
+      trace_id = SecureRandom.uuid
+      started_at = Time.now
+      result = produce_result(prompt, trace_id)
+
+      # One trace per turn. sessionId = chat_id groups every turn of a
+      # conversation in the Langfuse UI; userId ties it to the app User.
+      # The trace `input` is the user's actual text — distinct from the
+      # generation `prompt`, which carries the whole assembled prompt
+      # (system + history + user message).
+      Langfuse::Trace.record(
+        trace_id: trace_id,
+        trace_name: "telegram-agent-turn",
+        generation_name: "claude -p (telegram)",
+        started_at: started_at,
+        prompt: prompt,
+        input: @message.text.presence,
+        output: result.text,
+        envelope: result.usage,
+        error_message: result.ok ? nil : result.error,
+        model: MODEL,
+        metadata: {telegram_message_id: @message.id},
+        user_id: @message.user_id&.to_s,
+        session_id: @message.chat_id&.to_s
+      )
+      result
+    end
+
+    private
+
+    # The actual turn. Always returns a Result — every failure path is a
+    # `failure(...)` Result, never a raised exception — so `call` can trace
+    # the outcome uniformly.
+    def produce_result(prompt, trace_id)
+      with_mcp_config(trace_id) do |config_path, mcp_token|
+        stdout, stderr, status = run_claude(prompt, config_path, mcp_token)
 
         unless status.success?
           return failure("claude exited #{status.exitstatus}: #{stderr.to_s.truncate(400)}")
@@ -133,8 +171,6 @@ module Telegram
     rescue JSON::ParserError => e
       failure("claude returned non-JSON output: #{e.message}")
     end
-
-    private
 
     def build_prompt
       <<~PROMPT
@@ -191,11 +227,12 @@ module Telegram
 
     # Yields an MCP config file path + the bearer token claude will send,
     # and cleans the file up at the end of the block. The token embeds
-    # both user_id and message_id so even a leaked token can't be reused
-    # for a different conversation after it expires.
-    def with_mcp_config
+    # user_id, message_id and trace_id so a) a leaked token can't be
+    # reused for a different conversation after it expires, and b) the
+    # MCP server can attach tool-call spans to the same Langfuse trace.
+    def with_mcp_config(trace_id)
       mcp_token = Rails.application.message_verifier(:mcp_session)
-        .generate({user_id: @message.user_id, message_id: @message.id},
+        .generate({user_id: @message.user_id, message_id: @message.id, trace_id: trace_id},
           expires_in: MCP_SESSION_TTL)
 
       base = Rails.root.join("tmp/mcp")

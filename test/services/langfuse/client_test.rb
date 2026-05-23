@@ -34,6 +34,35 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     assert_equal Langfuse::Config::ENVIRONMENT, event[:body][:environment]
   end
 
+  test "span_event builds a well-formed span-create event" do
+    t0 = Time.utc(2026, 5, 22, 10, 0, 0)
+    t1 = Time.utc(2026, 5, 22, 10, 0, 1)
+    event = Langfuse::Client.span_event(
+      trace_id: "trace-1", name: "mcp::search_books",
+      started_at: t0, ended_at: t1,
+      input: {"q" => "Asimov"}, output: [{"title" => "Fundación"}]
+    )
+
+    assert_equal "span-create", event[:type]
+    assert_equal "trace-1", event[:body][:traceId]
+    assert_equal "mcp::search_books", event[:body][:name]
+    assert_equal "2026-05-22T10:00:00.000Z", event[:body][:startTime]
+    assert_equal "2026-05-22T10:00:01.000Z", event[:body][:endTime]
+    assert_equal({"q" => "Asimov"}, event[:body][:input])
+    assert_equal Langfuse::Config::ENVIRONMENT, event[:body][:environment]
+  end
+
+  test "span_event flags failures with level ERROR and a status message" do
+    t = Time.now
+    event = Langfuse::Client.span_event(
+      trace_id: "t", name: "mcp::boom", started_at: t, ended_at: t,
+      level: "ERROR", status_message: "bad arg"
+    )
+
+    assert_equal "ERROR", event[:body][:level]
+    assert_equal "bad arg", event[:body][:statusMessage]
+  end
+
   test "generation_event flags errors with level ERROR and a status message" do
     t = Time.now
     event = Langfuse::Client.generation_event(
