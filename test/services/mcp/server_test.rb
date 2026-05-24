@@ -154,12 +154,13 @@ class Mcp::ServerTest < ActiveSupport::TestCase
       "params" => {"name" => "echo", "arguments" => {"q" => "Asimov"}}
     })
 
-    span = captured.first
-    assert_equal "span-create", span[:type]
-    assert_equal "trace-xyz", span[:body][:traceId]
-    assert_equal "mcp::echo", span[:body][:name]
-    assert_equal({"q" => "Asimov"}, span[:body][:input])
-    assert_equal({"echoed" => true}, span[:body][:output])
+    observation = captured.first
+    assert_equal "observation-create", observation[:type]
+    assert_equal "TOOL", observation[:body][:type]
+    assert_equal "trace-xyz", observation[:body][:traceId]
+    assert_equal "mcp::echo", observation[:body][:name]
+    assert_equal({"q" => "Asimov"}, observation[:body][:input])
+    assert_equal({"echoed" => true}, observation[:body][:output])
   end
 
   test "does not emit a span when no trace_id is provided (non-Telegram caller)" do

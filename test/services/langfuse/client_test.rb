@@ -55,16 +55,18 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     assert_nil event[:body][:promptVersion], "version nil → no link to a Langfuse-stored version"
   end
 
-  test "span_event builds a well-formed span-create event" do
+  test "observation_event builds a well-formed observation-create with the given type" do
     t0 = Time.utc(2026, 5, 22, 10, 0, 0)
     t1 = Time.utc(2026, 5, 22, 10, 0, 1)
-    event = Langfuse::Client.span_event(
+    event = Langfuse::Client.observation_event(
+      type: "TOOL",
       trace_id: "trace-1", name: "mcp::search_books",
       started_at: t0, ended_at: t1,
       input: {"q" => "Asimov"}, output: [{"title" => "Fundación"}]
     )
 
-    assert_equal "span-create", event[:type]
+    assert_equal "observation-create", event[:type]
+    assert_equal "TOOL", event[:body][:type]
     assert_equal "trace-1", event[:body][:traceId]
     assert_equal "mcp::search_books", event[:body][:name]
     assert_equal "2026-05-22T10:00:00.000Z", event[:body][:startTime]
@@ -73,9 +75,10 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     assert_equal Langfuse::Config::ENVIRONMENT, event[:body][:environment]
   end
 
-  test "span_event flags failures with level ERROR and a status message" do
+  test "observation_event flags failures with level ERROR and a status message" do
     t = Time.now
-    event = Langfuse::Client.span_event(
+    event = Langfuse::Client.observation_event(
+      type: "TOOL",
       trace_id: "t", name: "mcp::boom", started_at: t, ended_at: t,
       level: "ERROR", status_message: "bad arg"
     )

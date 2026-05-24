@@ -77,7 +77,7 @@ module Mcp
       started_at = Time.now
       begin
         result = tool.call(user: @user, arguments: arguments, context: @context)
-        record_span(tool_name, arguments, started_at, output: result)
+        record_tool_call(tool_name, arguments, started_at, output: result)
         success(id, {
           content: [{type: "text", text: JSON.generate(result)}],
           isError: false
@@ -85,26 +85,29 @@ module Mcp
       rescue ArgumentError, ActiveRecord::RecordInvalid => e
         # Tool argument validation / model validation. Surface to the model
         # as a tool error so it can recover, not as a transport error.
-        record_span(tool_name, arguments, started_at, error: e)
+        record_tool_call(tool_name, arguments, started_at, error: e)
         success(id, {
           content: [{type: "text", text: e.message}],
           isError: true
         })
       rescue => e
         Rails.logger.error("[Mcp::Server] tool=#{tool_name} crashed: #{e.class}: #{e.message}")
-        record_span(tool_name, arguments, started_at, error: e)
+        record_tool_call(tool_name, arguments, started_at, error: e)
         error(id, :internal_error, "tool crashed: #{e.class}")
       end
     end
 
-    # Emits one Langfuse span per tool invocation, attached to the trace
-    # minted by Telegram::Agent (id passed through the MCP bearer token).
-    # No-op when no trace_id is in context (e.g. tests, or a non-Telegram
+    # Emits one Langfuse observation of type TOOL per tool invocation,
+    # attached to the trace minted by Telegram::Agent (id passed through
+    # the MCP bearer token). The TOOL type makes the call render with the
+    # tool icon in the Langfuse UI and lets you filter by tool calls.
+    # No-op when no trace_id is in context (tests, or a non-Telegram
     # caller of /mcp). Langfuse::Client swallows its own errors.
-    def record_span(tool_name, arguments, started_at, output: nil, error: nil)
+    def record_tool_call(tool_name, arguments, started_at, output: nil, error: nil)
       return unless @trace_id
 
-      span = Langfuse::Client.span_event(
+      observation = Langfuse::Client.observation_event(
+        type: "TOOL",
         trace_id: @trace_id,
         name: "mcp::#{tool_name}",
         started_at: started_at,
@@ -114,7 +117,7 @@ module Mcp
         level: error ? "ERROR" : nil,
         status_message: error&.message
       )
-      Langfuse::Client.ingest([span])
+      Langfuse::Client.ingest([observation])
     end
 
     def success(id, result)
