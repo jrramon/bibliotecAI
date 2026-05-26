@@ -106,6 +106,31 @@ module Langfuse
       }
     end
 
+    # Builds a `score-create` event. Scores are how Langfuse surfaces eval
+    # results: each score attaches a numeric value (here 0..1) to a trace
+    # (or to a specific observation, via `observation_id:`), with a name
+    # that lets the UI aggregate "average shelf_quality per model" across
+    # all traces in a dataset run. `data_type: "NUMERIC"` is the default;
+    # CATEGORICAL/BOOLEAN exist for non-numeric judgments.
+    def score_event(trace_id:, name:, value:, data_type: "NUMERIC",
+      observation_id: nil, comment: nil)
+      {
+        id: SecureRandom.uuid,
+        type: "score-create",
+        timestamp: now_iso,
+        body: {
+          id: SecureRandom.uuid,
+          traceId: trace_id,
+          observationId: observation_id,
+          name: name,
+          value: value,
+          dataType: data_type,
+          comment: comment,
+          environment: Langfuse::Config::ENVIRONMENT
+        }.compact
+      }
+    end
+
     # Maps the `claude -p --output-format json` envelope (everything the CLI
     # returns besides "result") into Langfuse's usageDetails (integer token
     # counts) and costDetails (USD amounts). Defensive: only maps the keys

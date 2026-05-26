@@ -17,6 +17,11 @@ module Langfuse
     ENVIRONMENT = ENV.fetch("LANGFUSE_TRACING_ENVIRONMENT", Rails.env.to_s)
 
     def self.configured?
+      # Tests must never hit Langfuse, even when the env vars happen to
+      # be set (the Docker web container has them in dev). The early
+      # return makes the integration a no-op under Rails.env.test? so
+      # the suite stays offline and the cloud project stays clean.
+      return false if Rails.env.test?
       PUBLIC_KEY.present? && SECRET_KEY.present?
     end
   end

@@ -60,9 +60,11 @@ class ClaudeBookIdentifier
 
   def self.call(...) = new(...).call
 
-  def initialize(shelf_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"))
+  def initialize(shelf_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), model: nil, trace_id: nil)
     @shelf_photo = shelf_photo
     @claude_bin = claude_bin
+    @model = model
+    @trace_id = trace_id
   end
 
   def call
@@ -77,6 +79,7 @@ class ClaudeBookIdentifier
     prompt = prompt_obj.compile(image_path: image_path)
     started_at = Time.now
     lf = {
+      trace_id: @trace_id,
       trace_name: "shelf-identification",
       generation_name: "claude -p (shelf)",
       started_at: started_at,
@@ -90,13 +93,11 @@ class ClaudeBookIdentifier
     begin
       stdout, stderr, status = nil
 
+      argv = [@claude_bin, "-p", prompt, "--output-format", "json", "--add-dir", base.to_s]
+      argv += ["--model", @model] if @model
+
       Timeout.timeout(CLAUDE_TIMEOUT) do
-        stdout, stderr, status = Open3.capture3(
-          @claude_bin, "-p", prompt,
-          "--output-format", "json",
-          "--add-dir", base.to_s,
-          chdir: Rails.root.to_s
-        )
+        stdout, stderr, status = Open3.capture3(*argv, chdir: Rails.root.to_s)
       end
 
       raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?

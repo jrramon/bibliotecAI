@@ -147,4 +147,30 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     assert_nil Langfuse::Client.ingest([])
     assert_nil Langfuse::Client.ingest(nil)
   end
+
+  test "score_event builds a well-formed score-create event" do
+    event = Langfuse::Client.score_event(
+      trace_id: "trace-1", name: "shelf_quality", value: 0.78,
+      comment: "11/14 títulos OK"
+    )
+
+    assert_equal "score-create", event[:type]
+    assert event[:id].present?
+    assert_equal "trace-1", event[:body][:traceId]
+    assert_equal "shelf_quality", event[:body][:name]
+    assert_equal 0.78, event[:body][:value]
+    assert_equal "NUMERIC", event[:body][:dataType]
+    assert_equal "11/14 títulos OK", event[:body][:comment]
+    assert_equal Langfuse::Config::ENVIRONMENT, event[:body][:environment]
+    assert_nil event[:body][:observationId], "trace-level score: no observationId"
+  end
+
+  test "score_event attaches to a specific observation when observation_id is given" do
+    event = Langfuse::Client.score_event(
+      trace_id: "trace-1", observation_id: "obs-9",
+      name: "shelf_quality", value: 1.0
+    )
+
+    assert_equal "obs-9", event[:body][:observationId]
+  end
 end
