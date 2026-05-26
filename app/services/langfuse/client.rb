@@ -113,7 +113,7 @@ module Langfuse
     # all traces in a dataset run. `data_type: "NUMERIC"` is the default;
     # CATEGORICAL/BOOLEAN exist for non-numeric judgments.
     def score_event(trace_id:, name:, value:, data_type: "NUMERIC",
-      observation_id: nil, comment: nil)
+      observation_id: nil, comment: nil, metadata: {})
       {
         id: SecureRandom.uuid,
         type: "score-create",
@@ -126,6 +126,7 @@ module Langfuse
           value: value,
           dataType: data_type,
           comment: comment,
+          metadata: metadata.presence,
           environment: Langfuse::Config::ENVIRONMENT
         }.compact
       }

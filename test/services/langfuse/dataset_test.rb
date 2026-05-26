@@ -102,11 +102,11 @@ class Langfuse::DatasetTest < ActiveSupport::TestCase
     )
 
     assert_equal "/api/public/dataset-run-items", captured_path
-    assert_equal "shelf-identification-eval", captured_body["datasetName"]
     assert_equal "shelf-1", captured_body["datasetItemId"]
     assert_equal "abc-123", captured_body["traceId"]
     assert_equal "claude-sonnet-4-6", captured_body["runName"]
     assert_equal "Comparativa modelos shelf 2026-05-26", captured_body["runDescription"]
+    refute captured_body.key?("datasetName"), "datasetName no es válido en este endpoint"
   end
 
   test "link_run_item is a no-op without Langfuse configured" do

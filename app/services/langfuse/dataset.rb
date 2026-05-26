@@ -58,7 +58,12 @@ module Langfuse
     # produced when our code ran that item, tagged with a `runName` that
     # identifies the experiment (typically the model under test). All run
     # items sharing the same `runName` show up as one "run" in the
-    # Langfuse UI — that's how runs are created (no separate endpoint).
+    # Langfuse UI — the run is auto-created by name on first POST (no
+    # separate dataset-runs endpoint exists). The endpoint does NOT
+    # accept a `datasetName` key — the dataset is derived from the item.
+    # `dataset_name` is kept on the signature so callers stay readable;
+    # we just don't send it. Returns the response on success so callers
+    # can log helpful diagnostics, false on failure.
     def link_run_item(dataset_name:, dataset_item_id:, trace_id:, run_name:,
       run_description: nil, metadata: nil)
       return false unless Langfuse::Config.configured?
@@ -66,7 +71,6 @@ module Langfuse
       response = post(
         "/api/public/dataset-run-items",
         {
-          datasetName: dataset_name,
           datasetItemId: dataset_item_id,
           traceId: trace_id,
           runName: run_name,
@@ -76,7 +80,7 @@ module Langfuse
       )
       code = response&.code.to_i
       return true if (200..299).cover?(code)
-      Rails.logger.warn("[Langfuse::Dataset] link_run_item run='#{run_name}' item='#{dataset_item_id}' HTTP #{code}: #{response&.body.to_s.truncate(200)}")
+      Rails.logger.warn("[Langfuse::Dataset] link_run_item dataset='#{dataset_name}' run='#{run_name}' item='#{dataset_item_id}' HTTP #{code}: #{response&.body.to_s.truncate(300)}")
       false
     end
 

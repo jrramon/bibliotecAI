@@ -98,16 +98,18 @@ namespace :langfuse do
 
               score_event = Langfuse::Client.score_event(
                 trace_id: trace_id, name: "shelf_quality",
-                value: scoring[:score], comment: comment
+                value: scoring[:score], comment: comment,
+                metadata: {model: model, item: key}
               )
               Langfuse::Client.ingest([score_event])
-              Langfuse::Dataset.link_run_item(
+              linked = Langfuse::Dataset.link_run_item(
                 dataset_name: dataset_name,
                 dataset_item_id: key,
                 trace_id: trace_id,
                 run_name: model,
                 run_description: run_description
               )
+              warn "    ⚠️  link_run_item devolvió false — mira log/development.log" unless linked
 
               results[model] << {item: key, score: scoring[:score],
                                  recall: scoring[:details][:recall],

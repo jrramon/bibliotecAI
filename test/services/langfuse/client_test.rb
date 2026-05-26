@@ -173,4 +173,21 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
 
     assert_equal "obs-9", event[:body][:observationId]
   end
+
+  test "score_event carries metadata when given (so the model shows in the Scores UI)" do
+    event = Langfuse::Client.score_event(
+      trace_id: "t", name: "shelf_quality", value: 0.5,
+      metadata: {model: "claude-opus-4-7", item: "shelf-1"}
+    )
+
+    assert_equal({model: "claude-opus-4-7", item: "shelf-1"}, event[:body][:metadata])
+  end
+
+  test "score_event omits metadata when empty" do
+    event = Langfuse::Client.score_event(
+      trace_id: "t", name: "shelf_quality", value: 0.5
+    )
+
+    refute event[:body].key?(:metadata), "no debería mandarse clave metadata vacía"
+  end
 end
