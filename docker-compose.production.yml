@@ -39,7 +39,6 @@ services:
     volumes:
       - ./storage:/rails/storage
       - /home/linuxbrew/.linuxbrew/Caskroom/claude-code/2.1.104/claude:/usr/local/bin/claude:ro
-      - ./.claude-credentials.json:/home/rails/.claude/.credentials.json:ro
     networks:
       - biblio-prod
     depends_on:
