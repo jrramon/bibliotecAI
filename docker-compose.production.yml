@@ -38,8 +38,7 @@ services:
     command: ["bundle", "exec", "bin/rails", "runner", "bin/claude-worker.rb"]
     volumes:
       - ./storage:/rails/storage
-      - /home/linuxbrew/.linuxbrew/bin/claude:/usr/local/bin/claude:ro
-      - ./.claude-credentials.json:/home/rails/.claude/.credentials.json:ro
+      - /home/linuxbrew/.linuxbrew/Caskroom/claude-code/2.1.104/claude:/usr/local/bin/claude:ro
     networks:
       - biblio-prod
     depends_on:

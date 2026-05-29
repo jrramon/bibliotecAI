@@ -8,9 +8,12 @@ class ClaudeBookIdentifier
   Error = Class.new(StandardError)
 
   CLAUDE_TIMEOUT = 180 # seconds
+  # Local fallback. The live version lives in Langfuse as
+  # "shelf-identification"; placeholders are Mustache so the same body
+  # works in both places (see ClaudeCoverIdentifier for the pattern).
   PROMPT_TEMPLATE = <<~PROMPT
     Look at the bookshelf photograph at the absolute path:
-    %<image_path>s
+    {{image_path}}
 
     Identify every book whose spine is readable. Return a SINGLE JSON object,
     no prose, no markdown fences, with this exact schema:
@@ -46,13 +49,22 @@ class ClaudeBookIdentifier
       ["Novela histórica", "Guerra Civil"], ["Management", "Agile"],
       ["Ensayo", "Filosofía"]. Empty array is fine for non-obvious cases.
     - If you can't see any books, return empty arrays — never invent titles.
+    - CRITICAL — OUTPUT FORMAT: your entire reply must be exactly one JSON
+      object and nothing else. No preamble, no explanation, no apology, no
+      commentary, no markdown fences — not even when the photo is
+      low-resolution, unreadable, or you were unable to crop or zoom. If
+      you cannot identify any book for ANY reason, still return the object
+      with "image_width" / "image_height" filled and "books": [] and
+      "unidentified": [].
   PROMPT
 
   def self.call(...) = new(...).call
 
-  def initialize(shelf_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"))
+  def initialize(shelf_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), model: nil, trace_id: nil)
     @shelf_photo = shelf_photo
     @claude_bin = claude_bin
+    @model = model
+    @trace_id = trace_id
   end
 
   def call
@@ -63,29 +75,47 @@ class ClaudeBookIdentifier
     image_path = base.join("#{@shelf_photo.id}-#{@shelf_photo.image.filename}").to_s
     File.binwrite(image_path, @shelf_photo.image.download)
 
-    prompt = format(PROMPT_TEMPLATE, image_path: image_path)
-    stdout, stderr, status = nil
+    prompt_obj = Langfuse::Prompt.get("shelf-identification", fallback: PROMPT_TEMPLATE)
+    prompt = prompt_obj.compile(image_path: image_path)
+    started_at = Time.now
+    lf = {
+      trace_id: @trace_id,
+      trace_name: "shelf-identification",
+      generation_name: "claude -p (shelf)",
+      started_at: started_at,
+      prompt: prompt,
+      input: @shelf_photo.image.filename.to_s,
+      metadata: {shelf_photo_id: @shelf_photo.id, library_id: @shelf_photo.library_id},
+      prompt_name: prompt_obj.name,
+      prompt_version: prompt_obj.version
+    }
 
-    Timeout.timeout(CLAUDE_TIMEOUT) do
-      stdout, stderr, status = Open3.capture3(
-        @claude_bin, "-p", prompt,
-        "--output-format", "json",
-        "--add-dir", base.to_s,
-        chdir: Rails.root.to_s
+    begin
+      stdout, stderr, status = nil
+
+      argv = [@claude_bin, "-p", prompt, "--output-format", "json", "--add-dir", base.to_s]
+      argv += ["--model", @model] if @model
+
+      Timeout.timeout(CLAUDE_TIMEOUT) do
+        stdout, stderr, status = Open3.capture3(*argv, chdir: Rails.root.to_s)
+      end
+
+      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+
+      payload, usage = parse(stdout)
+      Langfuse::Trace.record(**lf, output: payload, envelope: usage)
+      Result.new(
+        books: Array(payload["books"]),
+        unidentified: Array(payload["unidentified"]),
+        raw: payload,
+        image_width: payload["image_width"]&.to_i,
+        image_height: payload["image_height"]&.to_i,
+        usage: usage
       )
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise
     end
-
-    raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-    payload, usage = parse(stdout)
-    Result.new(
-      books: Array(payload["books"]),
-      unidentified: Array(payload["unidentified"]),
-      raw: payload,
-      image_width: payload["image_width"]&.to_i,
-      image_height: payload["image_height"]&.to_i,
-      usage: usage
-    )
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
   end
@@ -105,12 +135,8 @@ class ClaudeBookIdentifier
       inner = stdout
       usage = nil
     end
-    [JSON.parse(strip_fences(inner)), usage]
+    [JSON.parse(ClaudeJson.extract(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.truncate(800)}"
-  end
-
-  def strip_fences(text)
-    text.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\s*\z/, "")
   end
 end

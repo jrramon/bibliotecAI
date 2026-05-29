@@ -320,6 +320,17 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     [stale, fresh].compact.each { |p| File.delete(p) if File.exist?(p) }
   end
 
+  test "emits a Langfuse trace with the chat as session and the app user as userId" do
+    stub_capture3(stdout: envelope("¡hola!"), success: true)
+    Langfuse::Trace.expects(:record).with do |kw|
+      kw[:trace_name] == "telegram-agent-turn" &&
+        kw[:session_id] == @message.chat_id.to_s &&
+        kw[:user_id] == @message.user_id.to_s
+    end
+
+    Telegram::Agent.call(@message)
+  end
+
   private
 
   def envelope(text)

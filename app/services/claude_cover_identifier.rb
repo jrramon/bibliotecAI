@@ -13,9 +13,14 @@ class ClaudeCoverIdentifier
   Error = Class.new(StandardError)
   CLAUDE_TIMEOUT = 120
 
+  # Local fallback for the prompt. The "live" version lives in Langfuse
+  # under the name "cover-identification" and is fetched via
+  # Langfuse::Prompt.get (5-min cached). This constant is what `compile`
+  # uses when Langfuse isn't configured / is unreachable. Placeholders use
+  # Mustache ({{image_path}}) so the same body works in both places.
   PROMPT_TEMPLATE = <<~PROMPT
     Look at the photograph of a single book cover at the absolute path:
-    %<image_path>s
+    {{image_path}}
 
     Identify the book and return a SINGLE JSON object (no prose, no markdown
     fences) with this exact schema:
@@ -51,6 +56,12 @@ class ClaudeCoverIdentifier
     - `confidence` reflects how sure you are about title + author together.
     - Never invent ISBNs or publishers — only include them if they are
       legible on the cover.
+    - CRITICAL — OUTPUT FORMAT: your entire reply must be exactly one JSON
+      object and nothing else. No preamble, no explanation, no apology, no
+      commentary, no markdown fences — not even when the image is not a
+      book cover, is unreadable, or you were unable to do something. If you
+      cannot identify the book for ANY reason, your entire reply is
+      exactly: {"title": "", "confidence": 0}
   PROMPT
 
   def self.call(...) = new(...).call
@@ -66,22 +77,42 @@ class ClaudeCoverIdentifier
     image_path = base.join("#{@cover_photo.id}-#{@cover_photo.image.filename}").to_s
     File.binwrite(image_path, @cover_photo.image.download)
 
-    prompt = format(PROMPT_TEMPLATE, image_path: image_path)
-    stdout, stderr, status = nil
+    prompt_obj = Langfuse::Prompt.get("cover-identification", fallback: PROMPT_TEMPLATE)
+    prompt = prompt_obj.compile(image_path: image_path)
+    started_at = Time.now
+    # Constant trace fields, splatted into the success and error calls below.
+    lf = {
+      trace_name: "cover-identification",
+      generation_name: "claude -p (cover)",
+      started_at: started_at,
+      prompt: prompt,
+      input: @cover_photo.image.filename.to_s,
+      metadata: {cover_photo_id: @cover_photo.id, library_id: @cover_photo.library_id},
+      prompt_name: prompt_obj.name,
+      prompt_version: prompt_obj.version
+    }
 
-    Timeout.timeout(CLAUDE_TIMEOUT) do
-      stdout, stderr, status = Open3.capture3(
-        @claude_bin, "-p", prompt,
-        "--output-format", "json",
-        "--add-dir", base.to_s,
-        chdir: Rails.root.to_s
-      )
+    begin
+      stdout, stderr, status = nil
+
+      Timeout.timeout(CLAUDE_TIMEOUT) do
+        stdout, stderr, status = Open3.capture3(
+          @claude_bin, "-p", prompt,
+          "--output-format", "json",
+          "--add-dir", base.to_s,
+          chdir: Rails.root.to_s
+        )
+      end
+
+      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+
+      data, usage = parse(stdout)
+      Langfuse::Trace.record(**lf, output: data, envelope: usage)
+      Result.new(data: data, usage: usage)
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise
     end
-
-    raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-    data, usage = parse(stdout)
-    Result.new(data: data, usage: usage)
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
   end
@@ -99,12 +130,8 @@ class ClaudeCoverIdentifier
       inner = stdout
       usage = nil
     end
-    [JSON.parse(strip_fences(inner)), usage]
+    [JSON.parse(ClaudeJson.extract(inner)), usage]
   rescue JSON::ParserError => e
     raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.to_s.truncate(800)}"
-  end
-
-  def strip_fences(text)
-    text.to_s.strip.sub(/\A```(?:json)?\s*/, "").sub(/```\s*\z/, "")
   end
 end

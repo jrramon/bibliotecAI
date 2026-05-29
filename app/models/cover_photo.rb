@@ -38,6 +38,14 @@ class CoverPhoto < ApplicationRecord
     claude_raw_response&.dig("confidence")&.to_f
   end
 
+  # True when Claude actually recognised a book. `title` is the required
+  # field — Claude returns {"title": "", "confidence": 0} when the image
+  # isn't a book cover or is unreadable. A completed-but-not-identified
+  # photo should send the user to the manual form, not a blank pre-fill.
+  def identified?
+    title.present?
+  end
+
   private
 
   def image_present

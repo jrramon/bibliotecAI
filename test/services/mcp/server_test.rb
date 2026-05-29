@@ -133,4 +133,74 @@ class Mcp::ServerTest < ActiveSupport::TestCase
 
     assert_equal(-32603, response[:error][:code])
   end
+
+  test "emits a Langfuse span for a successful tool call when given a trace_id" do
+    fake_tool = Class.new(Mcp::Tool) do
+      const_set(:NAME, "echo")
+      const_set(:DESCRIPTION, "echoes the input")
+      const_set(:INPUT_SCHEMA, {type: "object", properties: {}, additionalProperties: true})
+      def call(**) = {"echoed" => true}
+    end
+    Mcp::Registry.stubs(:find).with("echo").returns(fake_tool)
+
+    captured = nil
+    Langfuse::Client.stubs(:ingest).with do |events|
+      captured = events
+      true
+    end
+
+    Mcp::Server.call(user: @user, trace_id: "trace-xyz", payload: {
+      "jsonrpc" => "2.0", "id" => 1, "method" => "tools/call",
+      "params" => {"name" => "echo", "arguments" => {"q" => "Asimov"}}
+    })
+
+    observation = captured.first
+    assert_equal "observation-create", observation[:type]
+    assert_equal "TOOL", observation[:body][:type]
+    assert_equal "trace-xyz", observation[:body][:traceId]
+    assert_equal "mcp::echo", observation[:body][:name]
+    assert_equal({"q" => "Asimov"}, observation[:body][:input])
+    assert_equal({"echoed" => true}, observation[:body][:output])
+  end
+
+  test "does not emit a span when no trace_id is provided (non-Telegram caller)" do
+    fake_tool = Class.new(Mcp::Tool) do
+      const_set(:NAME, "noop")
+      const_set(:DESCRIPTION, "no-op")
+      const_set(:INPUT_SCHEMA, {type: "object", properties: {}, additionalProperties: true})
+      def call(**) = {}
+    end
+    Mcp::Registry.stubs(:find).with("noop").returns(fake_tool)
+    Langfuse::Client.expects(:ingest).never
+
+    Mcp::Server.call(user: @user, payload: {
+      "jsonrpc" => "2.0", "id" => 1, "method" => "tools/call",
+      "params" => {"name" => "noop"}
+    })
+  end
+
+  test "emits a span at level ERROR when a tool raises ArgumentError" do
+    fake_tool = Class.new(Mcp::Tool) do
+      const_set(:NAME, "boom")
+      const_set(:DESCRIPTION, "raises")
+      const_set(:INPUT_SCHEMA, {type: "object", properties: {}, additionalProperties: true})
+      def call(**) = raise(ArgumentError, "bad arg")
+    end
+    Mcp::Registry.stubs(:find).with("boom").returns(fake_tool)
+
+    captured = nil
+    Langfuse::Client.stubs(:ingest).with do |events|
+      captured = events
+      true
+    end
+
+    Mcp::Server.call(user: @user, trace_id: "trace-z", payload: {
+      "jsonrpc" => "2.0", "id" => 1, "method" => "tools/call",
+      "params" => {"name" => "boom"}
+    })
+
+    span = captured.first
+    assert_equal "ERROR", span[:body][:level]
+    assert_equal "bad arg", span[:body][:statusMessage]
+  end
 end

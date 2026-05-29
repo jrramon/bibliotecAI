@@ -1,6 +1,7 @@
-<%# Rendered when CoverIdentificationJob fails (Claude error, timeout…).
-    Gives the user a way to retry with the text form. Expects `library`,
-    `cover_photo`, `book`. %>
+<%# Rendered when CoverIdentificationJob fails (Claude error, timeout…)
+    OR completes without recognising a book (empty result). Gives the user
+    a way to fall back to the text form. Expects `library`, `cover_photo`,
+    `book`. %>
 <div id="new-book-form">
   <div class="new-book-card cover-analyzing cover-analyzing--failed">
     <div class="cover-analyzing-body">
@@ -9,7 +10,9 @@
       </figure>
       <div class="cover-analyzing-copy">
         <p class="analyzing-title">No pude leer la portada</p>
-        <p class="analyzing-sub"><%= cover_photo.error_message.to_s.truncate(140) %></p>
+        <% if cover_photo.error_message.present? %>
+          <p class="analyzing-sub"><%= cover_photo.error_message.to_s.truncate(140) %></p>
+        <% end %>
         <p class="analyzing-sub">Puedes escribir los datos a mano.</p>
       </div>
     </div>

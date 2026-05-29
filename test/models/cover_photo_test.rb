@@ -13,4 +13,22 @@ class CoverPhotoTest < ActiveSupport::TestCase
     photo.image.blob.update!(byte_size: 10.megabytes)
     assert photo.valid?
   end
+
+  test "identified? is true when Claude returned a title" do
+    photo = build(:cover_photo)
+    photo.claude_raw_response = {"title" => "Kokoro", "confidence" => 0.9}
+    assert photo.identified?
+  end
+
+  test "identified? is false for an empty Claude result" do
+    photo = build(:cover_photo)
+    photo.claude_raw_response = {"title" => "", "confidence" => 0}
+    assert_not photo.identified?
+  end
+
+  test "identified? is false when Claude was never run" do
+    photo = build(:cover_photo)
+    assert_nil photo.claude_raw_response
+    assert_not photo.identified?
+  end
 end
