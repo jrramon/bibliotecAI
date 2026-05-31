@@ -10,4 +10,15 @@ class InvitationsMailerTest < ActionMailer::TestCase
     assert_match invitation.invited_by.display_name, mail.subject
     assert_match invitation.token, mail.body.encoded
   end
+
+  test "invite for an account invitation (no library) renders a magic link without mentioning a library" do
+    invitation = create(:invitation, library: nil, email: "to@example.test")
+    mail = InvitationsMailer.invite(invitation)
+
+    assert_equal ["to@example.test"], mail.to
+    assert_match invitation.invited_by.display_name, mail.subject
+    assert_match "BibliotecAI", mail.subject
+    assert_match invitation.token, mail.body.encoded
+    assert_match "tu propia biblioteca", mail.body.encoded
+  end
 end

@@ -1,14 +1,25 @@
-<h1>Te han invitado a una biblioteca</h1>
+<% if @library %>
+  <h1>Te han invitado a una biblioteca</h1>
 
-<p>Hola,</p>
+  <p>Hola,</p>
 
-<p>
-  <strong><%= @invited_by.email %></strong> te ha invitado a unirte a
-  <strong>«<%= @library.name %>»</strong> en BibliotecAI.
-</p>
+  <p>
+    <strong><%= @invited_by.email %></strong> te ha invitado a unirte a
+    <strong>«<%= @library.name %>»</strong> en BibliotecAI.
+  </p>
 
-<% if @library.description.present? %>
-  <p><em><%= @library.description %></em></p>
+  <% if @library.description.present? %>
+    <p><em><%= @library.description %></em></p>
+  <% end %>
+<% else %>
+  <h1>Te han invitado a BibliotecAI</h1>
+
+  <p>Hola,</p>
+
+  <p>
+    <strong><%= @invited_by.email %></strong> te ha invitado a BibliotecAI.
+    Crea tu cuenta y tendrás tu propia biblioteca para empezar.
+  </p>
 <% end %>
 
 <p>

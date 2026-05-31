@@ -43,4 +43,38 @@ class Users::RegistrationsControllerTest < ActionDispatch::IntegrationTest
       }
     end
   end
+
+  test "POST /users with an invalid password for an invited email re-renders the registration form with errors, not the waitlist" do
+    @library.invitations.create!(email: "invited@example.com", invited_by: @library_owner)
+
+    assert_no_difference -> { User.count } do
+      post user_registration_path, params: {
+        user: {email: "invited@example.com", password: "short", password_confirmation: "short", name: "Invited"}
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match(/Crea tu cuenta/i, response.body)           # invitee registration form
+    assert_no_match(/Apuntarme a la lista/i, response.body)  # NOT the waitlist form
+  end
+
+  test "POST /users persists the name on an invited registration" do
+    @library.invitations.create!(email: "named@example.com", invited_by: @library_owner)
+
+    post user_registration_path, params: {
+      user: {email: "named@example.com", password: "password123", password_confirmation: "password123", name: "Ada"}
+    }
+
+    assert_equal "Ada", User.find_by(email: "named@example.com").name
+  end
+
+  test "POST /users allows registration when an account invitation (no library) matches the email" do
+    Invitation.create!(email: "indep@example.com", invited_by: @library_owner, library: nil)
+
+    assert_difference -> { User.count }, 1 do
+      post user_registration_path, params: {
+        user: {email: "indep@example.com", password: "password123", password_confirmation: "password123", name: "Indie"}
+      }
+    end
+  end
 end

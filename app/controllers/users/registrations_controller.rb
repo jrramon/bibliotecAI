@@ -2,6 +2,8 @@ module Users
   class RegistrationsController < Devise::RegistrationsController
     REGISTRATION_CLOSED_ALERT = "Las cuentas son por invitación. Si quieres probar BibliotecAI, déjanos tu email aquí abajo y te avisamos."
 
+    before_action :configure_sign_up_parameters, only: :create
+
     # Public sign-up is closed by default. Two paths land on this page:
     # 1. Random visitor → render the waitlist form.
     # 2. Invitee following an Invitation link → render the actual
@@ -23,6 +25,11 @@ module Users
     def create
       email = params.dig(:user, :email).to_s.strip.downcase
       if email.present? && Invitation.pending.where(email: email).exists?
+        # Mark as invitee so that if validation fails, super re-renders the
+        # invitee registration form (with errors) instead of falling back
+        # to the waitlist form, which would hide the error and look like the
+        # signup silently turned into a waitlist sign-up.
+        @invitee = true
         super
       else
         redirect_to new_user_registration_path, alert: REGISTRATION_CLOSED_ALERT
@@ -56,6 +63,12 @@ module Users
     end
 
     protected
+
+    # The invitee registration form collects a name; permit it so Devise's
+    # sign_up flow persists it instead of silently dropping it.
+    def configure_sign_up_parameters
+      devise_parameter_sanitizer.permit(:sign_up, keys: [:name])
+    end
 
     def account_update_params
       params.require(:user).permit(:name, :avatar, :email, :current_password, :password, :password_confirmation)
