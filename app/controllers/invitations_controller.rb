@@ -44,14 +44,25 @@ class InvitationsController < ApplicationController
 
     unless user_signed_in?
       store_location_for(:user, request.fullpath)
-      redirect_to new_user_registration_path(email: @invitation.email),
-        notice: "Crea una cuenta con #{@invitation.email} para unirte a «#{@invitation.library.name}»."
+      notice =
+        if @invitation.library
+          "Crea una cuenta con #{@invitation.email} para unirte a «#{@invitation.library.name}»."
+        else
+          "Crea una cuenta con #{@invitation.email} para empezar tu biblioteca."
+        end
+      redirect_to new_user_registration_path(email: @invitation.email), notice: notice
       return
     end
 
     if @invitation.claimable_by?(current_user)
-      @invitation.accept!(current_user)
-      redirect_to @invitation.library, notice: "Te has unido a «#{@invitation.library.name}»."
+      library = @invitation.accept!(current_user)
+      notice =
+        if @invitation.library
+          "Te has unido a «#{library.name}»."
+        else
+          "¡Bienvenido! Hemos creado tu biblioteca «#{library.name}»."
+        end
+      redirect_to library, notice: notice
     else
       redirect_to root_path, alert: "Esta invitación fue enviada a #{@invitation.email}. Inicia sesión con esa cuenta."
     end

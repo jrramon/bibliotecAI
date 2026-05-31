@@ -1,5 +1,5 @@
 class Invitation < ApplicationRecord
-  belongs_to :library
+  belongs_to :library, optional: true
   belongs_to :invited_by, class_name: "User"
 
   has_secure_token
@@ -35,10 +35,23 @@ class Invitation < ApplicationRecord
     user.present? && user.email.casecmp?(email) && !expired? && !accepted?
   end
 
+  # Accepts the invitation and returns the library the user lands on.
+  # With a library: joins it as :member (collaborator). Without one: this is
+  # an account invitation, so we provision the user's own library (:owner via
+  # Library's create_owner_membership callback).
   def accept!(user)
     transaction do
-      library.memberships.find_or_create_by!(user: user) { |m| m.role = :member }
+      target =
+        if library
+          library.memberships.find_or_create_by!(user: user) { |m| m.role = :member }
+          library
+        else
+          user.owned_libraries.create!(
+            name: "Biblioteca de #{user.name.presence || user.email.split("@").first}"
+          )
+        end
       update!(accepted_at: Time.current)
+      target
     end
   end
 
