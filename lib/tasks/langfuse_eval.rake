@@ -55,7 +55,7 @@ namespace :langfuse do
         raise "Langfuse no está configurado" unless Langfuse::Config.configured?
 
         dataset_name = "shelf-identification-eval"
-        default_models = ["claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-7"]
+        default_models = ["claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-7", "claude-opus-4-8"]
         models = ENV["MODELS"].present? ? ENV["MODELS"].split(",").map(&:strip) : default_models
 
         yaml_path = Rails.root.join("test/fixtures/files/eval_shelves/expected.yml")
