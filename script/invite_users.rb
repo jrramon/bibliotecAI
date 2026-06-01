@@ -41,7 +41,7 @@ emails.each do |email|
     begin
       opts = ActionMailer::Base.default_url_options
       Rails.application.routes.url_helpers.invitation_url(token: invitation.token, **opts)
-    rescue StandardError
+    rescue
       "(configura default_url_options para ver el link) token=#{invitation.token}"
     end
 
