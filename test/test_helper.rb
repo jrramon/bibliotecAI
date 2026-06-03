@@ -1,4 +1,8 @@
 ENV["RAILS_ENV"] ||= "test"
+# Pin the LLM provider so the suite never resolves to nan_api (and never hits
+# the network), even if the dev env has LLM_PROVIDER set. NaN-specific tests
+# instantiate Llm::Providers::NanApi directly with a fake key/base_url.
+ENV["LLM_PROVIDER"] = "claude_cli"
 require_relative "../config/environment"
 require "rails/test_help"
 require "factory_bot_rails"

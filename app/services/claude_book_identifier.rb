@@ -1,7 +1,4 @@
 require "json"
-require "open3"
-require "tempfile"
-require "timeout"
 
 class ClaudeBookIdentifier
   Result = Struct.new(:books, :unidentified, :raw, :image_width, :image_height, :usage, keyword_init: true)
@@ -60,9 +57,8 @@ class ClaudeBookIdentifier
 
   def self.call(...) = new(...).call
 
-  def initialize(shelf_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), model: nil, trace_id: nil)
+  def initialize(shelf_photo, model: nil, trace_id: nil)
     @shelf_photo = shelf_photo
-    @claude_bin = claude_bin
     @model = model
     @trace_id = trace_id
   end
@@ -91,18 +87,17 @@ class ClaudeBookIdentifier
     }
 
     begin
-      stdout, stderr, status = nil
+      provider, model = Llm::Config.resolve(:shelf, override_model: @model)
+      response = provider.complete(Llm::Request.new(
+        prompt: prompt,
+        image_paths: [image_path],
+        model: model,
+        timeout: CLAUDE_TIMEOUT,
+        response_format: :json
+      ))
 
-      argv = [@claude_bin, "-p", prompt, "--output-format", "json", "--add-dir", base.to_s]
-      argv += ["--model", @model] if @model
-
-      Timeout.timeout(CLAUDE_TIMEOUT) do
-        stdout, stderr, status = Open3.capture3(*argv, chdir: Rails.root.to_s)
-      end
-
-      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-      payload, usage = parse(stdout)
+      payload = extract_payload(response.text)
+      usage = response.usage_envelope
       Langfuse::Trace.record(**lf, output: payload, envelope: usage)
       Result.new(
         books: Array(payload["books"]),
@@ -122,21 +117,11 @@ class ClaudeBookIdentifier
 
   private
 
-  # Claude's `-p --output-format json` wraps the assistant output as a string in
-  # `{"result": "<assistant text>", "usage": {...}, "total_cost_usd": …, …}`;
-  # we need the inner JSON for the assistant output and the rest of the
-  # envelope for usage telemetry.
-  def parse(stdout)
-    envelope = JSON.parse(stdout)
-    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
-      inner = envelope["result"]
-      usage = envelope.except("result")
-    else
-      inner = stdout
-      usage = nil
-    end
-    [JSON.parse(ClaudeJson.extract(inner)), usage]
+  # The model is asked for "a SINGLE JSON object, no prose" but doesn't always
+  # comply; ClaudeJson.extract slices the object out of any surrounding chatter.
+  def extract_payload(text)
+    JSON.parse(ClaudeJson.extract(text))
   rescue JSON::ParserError => e
-    raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.truncate(800)}"
+    raise Error, "model returned non-JSON output: #{e.message}\n--- raw ---\n#{text.to_s.truncate(800)}"
   end
 end
