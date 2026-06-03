@@ -46,4 +46,30 @@ class Llm::Providers::NanApiTest < ActiveSupport::TestCase
     p = Llm::Providers::NanApi.new(api_key: "", base_url: "https://api.test/v1")
     assert_raises(Llm::Error) { p.complete(request) }
   end
+
+  test "complete injects total_cost_usd when the model price is configured" do
+    Llm::Pricing.stubs(:table).returns("qwen3.6" => {"input" => 0.30, "output" => 0.90})
+    p = provider
+    p.stubs(:post).returns(
+      "choices" => [{"message" => {"content" => "{}"}}],
+      "usage" => {"prompt_tokens" => 1_000_000, "completion_tokens" => 1_000_000}
+    )
+
+    response = p.complete(request)
+
+    assert_in_delta 1.20, response.usage_envelope["total_cost_usd"], 1e-6
+  end
+
+  test "complete omits total_cost_usd when the model price is unknown" do
+    Llm::Pricing.stubs(:table).returns({})
+    p = provider
+    p.stubs(:post).returns(
+      "choices" => [{"message" => {"content" => "{}"}}],
+      "usage" => {"prompt_tokens" => 10, "completion_tokens" => 5}
+    )
+
+    response = p.complete(request)
+
+    refute response.usage_envelope.key?("total_cost_usd")
+  end
 end

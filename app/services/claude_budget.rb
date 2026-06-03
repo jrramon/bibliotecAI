@@ -1,7 +1,10 @@
-# Global kill-switch for `claude -p` consumption. Sums the rolling-30-day
-# spend across the three models that capture it (ShelfPhoto, CoverPhoto,
-# TelegramMessage) and compares it to `ENV["MONTHLY_CLAUDE_BUDGET"]` in
-# USD.
+# Global kill-switch for LLM consumption. Sums the rolling-30-day spend across
+# the three models that capture it (ShelfPhoto, CoverPhoto, TelegramMessage)
+# and compares it to `ENV["MONTHLY_CLAUDE_BUDGET"]` in USD.
+#
+# Provider-agnostic: it reads total_cost_usd from claude_usage. claude_cli rows
+# get it from the CLI envelope; nan_api rows get it from Llm::Pricing when the
+# model's price is configured (LLM_PRICES) — otherwise they count as $0.
 #
 # - When the env var is missing, `exceeded?` always returns false. No env
 #   var = no protection (deliberate: dev/test shouldn't trip it, prod opts

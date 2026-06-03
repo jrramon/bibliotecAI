@@ -28,7 +28,7 @@ module Llm
 
         data = post("/chat/completions", body, timeout: request.timeout || DEFAULT_TIMEOUT)
         text = data.dig("choices", 0, "message", "content").to_s
-        Llm::Response.new(text: text, usage_envelope: usage_envelope(data["usage"]))
+        Llm::Response.new(text: text, usage_envelope: usage_envelope(data["usage"], request.model))
       end
 
       private
@@ -55,15 +55,20 @@ module Llm
       end
 
       # OpenAI usage -> claude-shaped envelope so the Langfuse + budget code
-      # downstream needs no change. NaN returns no cost (added in a later slice).
-      def usage_envelope(usage)
+      # downstream needs no change. Cost (total_cost_usd) is injected from
+      # Llm::Pricing when the model's price is configured; otherwise absent
+      # (the row counts as $0 against ClaudeBudget).
+      def usage_envelope(usage, model)
         return nil unless usage.is_a?(Hash)
-        {
-          "usage" => {
-            "input_tokens" => usage["prompt_tokens"],
-            "output_tokens" => usage["completion_tokens"]
-          }.compact
+
+        input = usage["prompt_tokens"]
+        output = usage["completion_tokens"]
+        envelope = {
+          "usage" => {"input_tokens" => input, "output_tokens" => output}.compact
         }
+        cost = Llm::Pricing.cost_usd(model: model, input_tokens: input, output_tokens: output)
+        envelope["total_cost_usd"] = cost if cost
+        envelope
       end
 
       def post(path, body, timeout:)

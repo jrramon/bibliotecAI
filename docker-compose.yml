@@ -54,6 +54,7 @@ services:
       LLM_MODEL_TELEGRAM: ${LLM_MODEL_TELEGRAM:-}
       NAN_API_KEY: ${NAN_API_KEY:-}
       NAN_BASE_URL: ${NAN_BASE_URL:-https://api.nan.builders/v1}
+      LLM_PRICES: ${LLM_PRICES:-}
     stdin_open: true
     tty: true
 
