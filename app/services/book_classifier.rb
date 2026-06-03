@@ -1,5 +1,4 @@
 require "json"
-require "open3"
 require "timeout"
 
 # Calls the host-installed Claude CLI to assign a CDU code + genre tags to an
@@ -30,9 +29,8 @@ class BookClassifier
 
   def self.call(...) = new(...).call
 
-  def initialize(book, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"))
+  def initialize(book)
     @book = book
-    @claude_bin = claude_bin
   end
 
   def call
@@ -52,37 +50,33 @@ class BookClassifier
     }
 
     begin
-      stdout, stderr, status = nil
-      Timeout.timeout(CLAUDE_TIMEOUT) do
-        stdout, stderr, status = Open3.capture3(@claude_bin, "-p", prompt, "--output-format", "json")
-      end
-      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
+      provider, model = Llm::Config.resolve(:classify)
+      response = provider.complete(Llm::Request.new(
+        prompt: prompt,
+        image_paths: [],
+        model: model,
+        timeout: CLAUDE_TIMEOUT,
+        response_format: :json
+      ))
 
-      payload, usage = parse(stdout)
+      payload = extract_payload(response.text)
       @book.update(cdu: payload["cdu"].presence, genres: Array(payload["genres"]))
-      Langfuse::Trace.record(**lf, output: payload, envelope: usage)
+      Langfuse::Trace.record(**lf, output: payload, envelope: response.usage_envelope)
       payload
-    rescue => e
+    rescue Timeout::Error => e
       Langfuse::Trace.record(**lf, error_message: e.message)
       raise
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise Error, e.message
     end
   end
 
   private
 
-  # Returns [parsed_inner_json, envelope_metadata_or_nil] — the envelope
-  # carries the token usage and cost for Langfuse.
-  def parse(stdout)
-    envelope = JSON.parse(stdout)
-    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
-      inner = envelope["result"]
-      usage = envelope.except("result")
-    else
-      inner = stdout
-      usage = nil
-    end
-    [JSON.parse(ClaudeJson.extract(inner)), usage]
+  def extract_payload(text)
+    JSON.parse(ClaudeJson.extract(text))
   rescue JSON::ParserError => e
-    raise Error, "claude returned non-JSON: #{e.message}\n--- raw ---\n#{stdout.truncate(500)}"
+    raise Error, "model returned non-JSON: #{e.message}\n--- raw ---\n#{text.to_s.truncate(500)}"
   end
 end

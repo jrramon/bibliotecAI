@@ -1,4 +1,5 @@
 require "json"
+require "timeout"
 
 class ClaudeBookIdentifier
   Result = Struct.new(:books, :unidentified, :raw, :image_width, :image_height, :usage, keyword_init: true)
@@ -107,9 +108,16 @@ class ClaudeBookIdentifier
         image_height: payload["image_height"]&.to_i,
         usage: usage
       )
-    rescue => e
+    rescue Timeout::Error => e
+      # Preserve the existing job contract: timeouts propagate as-is (jobs
+      # rescue Timeout::Error and mark the photo failed, without retrying).
       Langfuse::Trace.record(**lf, error_message: e.message)
       raise
+    rescue => e
+      # Any other failure (provider Llm::Error, non-JSON, …) surfaces as this
+      # service's Error so the job's retry_on/rescue keeps working.
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise Error, e.message
     end
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)

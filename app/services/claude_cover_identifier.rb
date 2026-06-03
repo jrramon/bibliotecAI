@@ -1,5 +1,4 @@
 require "json"
-require "open3"
 require "fileutils"
 require "timeout"
 
@@ -66,9 +65,8 @@ class ClaudeCoverIdentifier
 
   def self.call(...) = new(...).call
 
-  def initialize(cover_photo, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"))
+  def initialize(cover_photo)
     @cover_photo = cover_photo
-    @claude_bin = claude_bin
   end
 
   def call
@@ -93,25 +91,25 @@ class ClaudeCoverIdentifier
     }
 
     begin
-      stdout, stderr, status = nil
+      provider, model = Llm::Config.resolve(:cover)
+      response = provider.complete(Llm::Request.new(
+        prompt: prompt,
+        image_paths: [image_path],
+        model: model,
+        timeout: CLAUDE_TIMEOUT,
+        response_format: :json
+      ))
 
-      Timeout.timeout(CLAUDE_TIMEOUT) do
-        stdout, stderr, status = Open3.capture3(
-          @claude_bin, "-p", prompt,
-          "--output-format", "json",
-          "--add-dir", base.to_s,
-          chdir: Rails.root.to_s
-        )
-      end
-
-      raise Error, "claude exited #{status.exitstatus}: #{stderr}" unless status.success?
-
-      data, usage = parse(stdout)
+      data = extract_payload(response.text)
+      usage = response.usage_envelope
       Langfuse::Trace.record(**lf, output: data, envelope: usage)
       Result.new(data: data, usage: usage)
-    rescue => e
+    rescue Timeout::Error => e
       Langfuse::Trace.record(**lf, error_message: e.message)
       raise
+    rescue => e
+      Langfuse::Trace.record(**lf, error_message: e.message)
+      raise Error, e.message
     end
   ensure
     File.delete(image_path) if defined?(image_path) && File.exist?(image_path.to_s)
@@ -119,19 +117,9 @@ class ClaudeCoverIdentifier
 
   private
 
-  # Returns [parsed_inner_json, envelope_metadata_or_nil] so callers can
-  # persist usage/cost from the `claude -p --output-format json` envelope.
-  def parse(stdout)
-    envelope = JSON.parse(stdout)
-    if envelope.is_a?(Hash) && envelope["result"].is_a?(String)
-      inner = envelope["result"]
-      usage = envelope.except("result")
-    else
-      inner = stdout
-      usage = nil
-    end
-    [JSON.parse(ClaudeJson.extract(inner)), usage]
+  def extract_payload(text)
+    JSON.parse(ClaudeJson.extract(text))
   rescue JSON::ParserError => e
-    raise Error, "claude returned non-JSON output: #{e.message}\n--- raw ---\n#{stdout.to_s.truncate(800)}"
+    raise Error, "model returned non-JSON output: #{e.message}\n--- raw ---\n#{text.to_s.truncate(800)}"
   end
 end

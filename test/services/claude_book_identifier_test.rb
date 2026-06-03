@@ -30,6 +30,14 @@ class ClaudeBookIdentifierTest < ActiveSupport::TestCase
     refute_includes captured_args, "--model"
   end
 
+  test "surfaces a provider failure as ClaudeBookIdentifier::Error (job retry contract)" do
+    Open3.stubs(:capture3).returns(["", "boom", Struct.new(:success?, :exitstatus).new(false, 1)])
+
+    assert_raises(ClaudeBookIdentifier::Error) do
+      ClaudeBookIdentifier.new(@shelf_photo).call
+    end
+  end
+
   private
 
   def envelope
