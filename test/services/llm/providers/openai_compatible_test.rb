@@ -1,10 +1,10 @@
 require "test_helper"
 
-class Llm::Providers::NanApiTest < ActiveSupport::TestCase
+class Llm::Providers::OpenaiCompatibleTest < ActiveSupport::TestCase
   IMAGE = Rails.root.join("test/fixtures/files/eval_shelves/shelf-4.jpg").to_s
 
   def provider
-    Llm::Providers::NanApi.new(api_key: "sk-test", base_url: "https://api.test/v1")
+    Llm::Providers::OpenaiCompatible.new(api_key: "sk-test", base_url: "https://api.test/v1")
   end
 
   def request(image_paths: [])
@@ -43,7 +43,7 @@ class Llm::Providers::NanApiTest < ActiveSupport::TestCase
   end
 
   test "complete raises Llm::Error when the API key is blank" do
-    p = Llm::Providers::NanApi.new(api_key: "", base_url: "https://api.test/v1")
+    p = Llm::Providers::OpenaiCompatible.new(api_key: "", base_url: "https://api.test/v1")
     assert_raises(Llm::Error) { p.complete(request) }
   end
 

@@ -7,7 +7,7 @@ module Llm
     def for(key)
       case key.to_sym
       when :claude_cli then Providers::ClaudeCli.new
-      when :nan_api then Providers::NanApi.new
+      when :openai_compatible then Providers::OpenaiCompatible.new
       else raise ArgumentError, "unknown LLM provider: #{key.inspect}"
       end
     end

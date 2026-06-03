@@ -4,20 +4,23 @@ require "base64"
 
 module Llm
   module Providers
-    # OpenAI-compatible HTTP provider (NaN.builders). Uses stdlib net/http,
-    # mirroring Langfuse::Client. Images are sent inline as base64 data URLs.
-    class NanApi
+    # Generic OpenAI-compatible HTTP provider. Works with any endpoint that
+    # speaks the /chat/completions schema (NaN.builders, OpenRouter, Together,
+    # a local vLLM, …) — point LLM_API_BASE_URL + LLM_API_KEY at it. Uses stdlib
+    # net/http, mirroring Langfuse::Client. Images are sent inline as base64
+    # data URLs.
+    class OpenaiCompatible
       DEFAULT_TIMEOUT = 120
       OPEN_TIMEOUT = 10
       MAX_ATTEMPTS = 2 # retry once on HTTP 429
 
-      def initialize(api_key: Llm::Config::NAN_API_KEY, base_url: Llm::Config::NAN_BASE_URL)
+      def initialize(api_key: Llm::Config::API_KEY, base_url: Llm::Config::API_BASE_URL)
         @api_key = api_key
         @base_url = base_url.to_s.chomp("/")
       end
 
       def complete(request)
-        raise Llm::Error, "NAN_API_KEY is not set" if @api_key.blank?
+        raise Llm::Error, "LLM_API_KEY is not set" if @api_key.blank?
 
         body = {
           model: request.model,
@@ -57,7 +60,7 @@ module Llm
       # OpenAI usage -> claude-shaped envelope so the Langfuse + budget code
       # downstream needs no change. Cost (total_cost_usd) is injected from
       # Llm::Pricing when the model's price is configured; otherwise absent
-      # (the row counts as $0 against ClaudeBudget).
+      # (the row counts as $0 against ClaudeBudget — correct for flat-rate APIs).
       def usage_envelope(usage, model)
         return nil unless usage.is_a?(Hash)
 
@@ -85,11 +88,11 @@ module Llm
 
         response = request_with_retry(http, req)
         unless response.is_a?(Net::HTTPSuccess)
-          raise Llm::Error, "NaN API #{response.code}: #{response.body.to_s.truncate(500)}"
+          raise Llm::Error, "LLM API #{response.code}: #{response.body.to_s.truncate(500)}"
         end
         JSON.parse(response.body)
       rescue JSON::ParserError => e
-        raise Llm::Error, "NaN API returned non-JSON: #{e.message}"
+        raise Llm::Error, "LLM API returned non-JSON: #{e.message}"
       end
 
       def request_with_retry(http, req)

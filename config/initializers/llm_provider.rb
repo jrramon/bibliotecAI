@@ -1,19 +1,21 @@
 # LLM provider config — read from ENV. Mirrors Langfuse::Config / Telegram::Config.
 #
 # Picks, per task, between the `claude` Code CLI (claude_cli, the default —
-# subscription auth, host binary) and an OpenAI-compatible HTTP API (nan_api,
-# NaN.builders) so the app can run against non-Claude models.
+# subscription auth, host binary) and a generic OpenAI-compatible HTTP API
+# (openai_compatible — NaN.builders, OpenRouter, a local vLLM, …) so the app
+# can run against non-Claude models.
 #
-#   LLM_PROVIDER          global default: "claude_cli" | "nan_api"
+#   LLM_PROVIDER          global default: "claude_cli" | "openai_compatible"
 #   LLM_PROVIDER_<TASK>   per-task override (SHELF, COVER, CLASSIFY, TELEGRAM)
 #   LLM_MODEL_<TASK>      model id for that task (e.g. qwen3.6, deepseek-v4-flash)
-#   NAN_API_KEY           Bearer key for nan_api (sk-…)
-#   NAN_BASE_URL          defaults to https://api.nan.builders/v1
+#   LLM_API_KEY           Bearer key for openai_compatible (sk-…)
+#   LLM_API_BASE_URL      OpenAI-compatible base URL (defaults to NaN.builders)
+#   LLM_API_MODEL         default model when a task is on openai_compatible
 module Llm
   module Config
-    NAN_API_KEY = ENV["NAN_API_KEY"].to_s
-    NAN_BASE_URL = ENV.fetch("NAN_BASE_URL", "https://api.nan.builders/v1")
-    NAN_DEFAULT_MODEL = ENV.fetch("LLM_NAN_DEFAULT_MODEL", "qwen3.6")
+    API_KEY = ENV["LLM_API_KEY"].to_s
+    API_BASE_URL = ENV.fetch("LLM_API_BASE_URL", "https://api.nan.builders/v1")
+    API_DEFAULT_MODEL = ENV.fetch("LLM_API_MODEL", "qwen3.6")
     TASKS = %i[shelf cover classify telegram].freeze
 
     module_function
@@ -36,20 +38,20 @@ module Llm
     # Returns [provider_instance, model] for a task.
     #
     # `override_model` (used by the eval, which passes MODELS=…) wins over the
-    # configured model and, when it's a non-Claude id, also infers the nan_api
-    # provider — so `MODELS=qwen3.6` routes to NaN while `claude-opus-4-8` stays
-    # on the CLI within the same eval run.
+    # configured model and, when it's a non-Claude id, also infers the
+    # openai_compatible provider — so `MODELS=qwen3.6` routes to the HTTP API
+    # while `claude-opus-4-8` stays on the CLI within the same eval run.
     def resolve(task, override_model: nil)
       model = override_model.presence || model_for(task)
       key = provider_key(task)
-      key = :nan_api if override_model.present? && !claude_model?(override_model)
-      model = NAN_DEFAULT_MODEL if key == :nan_api && model.blank?
+      key = :openai_compatible if override_model.present? && !claude_model?(override_model)
+      model = API_DEFAULT_MODEL if key == :openai_compatible && model.blank?
       [Llm::Provider.for(key), model]
     end
 
     def configured?(task)
       case provider_key(task)
-      when :nan_api then NAN_API_KEY.present?
+      when :openai_compatible then API_KEY.present?
       else true
       end
     end
@@ -60,8 +62,8 @@ end
 # in production instead of failing a job at call time.
 if Rails.env.production?
   Llm::Config::TASKS.each do |task|
-    if Llm::Config.provider_key(task) == :nan_api && Llm::Config::NAN_API_KEY.blank?
-      Rails.logger.warn("[Llm] task #{task} resolves to nan_api but NAN_API_KEY is blank")
+    if Llm::Config.provider_key(task) == :openai_compatible && Llm::Config::API_KEY.blank?
+      Rails.logger.warn("[Llm] task #{task} resolves to openai_compatible but LLM_API_KEY is blank")
     end
   end
 end
