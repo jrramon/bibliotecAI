@@ -204,5 +204,45 @@ namespace :langfuse do
         end
       end
     end
+
+    namespace :telegram do
+      desc "Sube a Langfuse el dataset 'telegram-agent-eval' (1 item por conversación curada). Idempotente."
+      task seed: :environment do
+        raise "Langfuse no está configurado" unless Langfuse::Config.configured?
+
+        name = "telegram-agent-eval"
+        yaml_path = Rails.root.join("test/fixtures/files/eval_telegram/conversations.yml")
+        abort "[langfuse:eval:telegram:seed] falta #{yaml_path.relative_path_from(Rails.root)}" unless File.exist?(yaml_path)
+
+        items = YAML.safe_load_file(yaml_path)
+        abort "[langfuse:eval:telegram:seed] conversations.yml vacío" if items.blank?
+
+        unless Langfuse::Dataset.ensure(name: name,
+          description: "Conversaciones de Telegram para evaluar el tool-routing del agente entre modelos. expected_output = trayectoria de tools esperada (nombre + args).")
+          abort "[langfuse:eval:telegram:seed] no pude asegurar el dataset"
+        end
+        puts "[langfuse:eval:telegram:seed] dataset '#{name}' listo"
+
+        items.each do |key, item|
+          expected = Array(item["expected_tools"])
+          ok = Langfuse::Dataset.upsert_item(
+            dataset_name: name,
+            id: key,
+            input: {
+              user_message: item.fetch("user_message"),
+              history: item["history"] || [],
+              photo: item["photo"] || false
+            },
+            expected_output: {tools: expected},
+            metadata: {expected_tool_count: expected.size}
+          )
+          if ok
+            puts "[langfuse:eval:telegram:seed] #{key}: ok (#{expected.size} tool(s) esperada(s))"
+          else
+            abort "[langfuse:eval:telegram:seed] #{key}: fallo al subir el item"
+          end
+        end
+      end
+    end
   end
 end
