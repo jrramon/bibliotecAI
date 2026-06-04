@@ -31,13 +31,16 @@ module Mcp
       end
     end
 
-    # Emits one Langfuse observation of type TOOL per invocation, attached to the
+    # Emits one Langfuse SPAN observation per tool invocation, attached to the
     # turn's trace. No-op without a trace_id (tests / non-traced callers).
+    # NOTE: Langfuse only accepts GENERATION | SPAN | EVENT — a "TOOL" type is
+    # rejected (400) and silently dropped, so tool calls use SPAN. The name
+    # (mcp::<tool>) is what marks them as tools in the UI.
     def record(tool_name, arguments, started_at, trace_id, output: nil, error: nil)
       return unless trace_id
 
       observation = Langfuse::Client.observation_event(
-        type: "TOOL",
+        type: "SPAN",
         trace_id: trace_id,
         name: "mcp::#{tool_name}",
         started_at: started_at,

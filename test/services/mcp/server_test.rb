@@ -156,7 +156,7 @@ class Mcp::ServerTest < ActiveSupport::TestCase
 
     observation = captured.first
     assert_equal "observation-create", observation[:type]
-    assert_equal "TOOL", observation[:body][:type]
+    assert_equal "SPAN", observation[:body][:type]
     assert_equal "trace-xyz", observation[:body][:traceId]
     assert_equal "mcp::echo", observation[:body][:name]
     assert_equal({"q" => "Asimov"}, observation[:body][:input])

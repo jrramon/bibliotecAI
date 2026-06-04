@@ -59,14 +59,14 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
     t0 = Time.utc(2026, 5, 22, 10, 0, 0)
     t1 = Time.utc(2026, 5, 22, 10, 0, 1)
     event = Langfuse::Client.observation_event(
-      type: "TOOL",
+      type: "SPAN",
       trace_id: "trace-1", name: "mcp::search_books",
       started_at: t0, ended_at: t1,
       input: {"q" => "Asimov"}, output: [{"title" => "Fundación"}]
     )
 
     assert_equal "observation-create", event[:type]
-    assert_equal "TOOL", event[:body][:type]
+    assert_equal "SPAN", event[:body][:type]
     assert_equal "trace-1", event[:body][:traceId]
     assert_equal "mcp::search_books", event[:body][:name]
     assert_equal "2026-05-22T10:00:00.000Z", event[:body][:startTime]
@@ -78,7 +78,7 @@ class Langfuse::ClientTest < ActiveSupport::TestCase
   test "observation_event flags failures with level ERROR and a status message" do
     t = Time.now
     event = Langfuse::Client.observation_event(
-      type: "TOOL",
+      type: "SPAN",
       trace_id: "t", name: "mcp::boom", started_at: t, ended_at: t,
       level: "ERROR", status_message: "bad arg"
     )
