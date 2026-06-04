@@ -105,9 +105,13 @@ module Telegram
 
     def self.call(...) = new(...).call
 
-    def initialize(message, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"))
+    # tool_executor: injectable for the openai_compatible path (the eval passes
+    # an Eval::FixtureToolExecutor to mock tools + record the trajectory). When
+    # nil, the real in-process Llm::ToolExecutor is built per turn.
+    def initialize(message, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), tool_executor: nil)
       @message = message
       @claude_bin = claude_bin
+      @tool_executor = tool_executor
     end
 
     def call
@@ -169,7 +173,7 @@ module Telegram
     # from the model's arguments.
     def produce_openai_result(trace_id)
       provider, model = Llm::Config.resolve(:telegram)
-      executor = Llm::ToolExecutor.new(
+      executor = @tool_executor || Llm::ToolExecutor.new(
         user: @message.user,
         context: {message_id: @message.id}.compact,
         trace_id: trace_id

@@ -38,6 +38,23 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     assert_equal "Hola desde la API", result.text
   end
 
+  test "openai_compatible path uses an injected tool_executor (eval seam)" do
+    Llm::Config.stubs(:provider_key).returns(:claude_cli)
+    Llm::Config.stubs(:provider_key).with(:telegram).returns(:openai_compatible)
+
+    fixture = Eval::FixtureToolExecutor.new
+    captured = nil
+    fake_provider = mock("provider")
+    fake_provider.stubs(:run_agent).with { |**kw| captured = kw[:tool_executor]; true }.returns(
+      Llm::AgentResult.new(ok: true, text: "ok", error: nil, usage_envelope: {})
+    )
+    Llm::Config.stubs(:resolve).with(:telegram).returns([fake_provider, "qwen3.6"])
+
+    Telegram::Agent.new(@message, tool_executor: fixture).call
+
+    assert_same fixture, captured
+  end
+
   test "passes the right argv to claude including MCP flags" do
     captured_args = nil
     Open3.stubs(:capture3).with do |*args|
