@@ -68,56 +68,24 @@ module Mcp
     private
 
     def call_tool(id, params)
-      tool_name = params["name"]
-      arguments = params["arguments"] || {}
-      tool = Registry.find(tool_name)
-
-      return error(id, :invalid_params, "unknown tool: #{tool_name}") unless tool
-
-      started_at = Time.now
-      begin
-        result = tool.call(user: @user, arguments: arguments, context: @context)
-        record_tool_call(tool_name, arguments, started_at, output: result)
-        success(id, {
-          content: [{type: "text", text: JSON.generate(result)}],
-          isError: false
-        })
-      rescue ArgumentError, ActiveRecord::RecordInvalid => e
-        # Tool argument validation / model validation. Surface to the model
-        # as a tool error so it can recover, not as a transport error.
-        record_tool_call(tool_name, arguments, started_at, error: e)
-        success(id, {
-          content: [{type: "text", text: e.message}],
-          isError: true
-        })
-      rescue => e
-        Rails.logger.error("[Mcp::Server] tool=#{tool_name} crashed: #{e.class}: #{e.message}")
-        record_tool_call(tool_name, arguments, started_at, error: e)
-        error(id, :internal_error, "tool crashed: #{e.class}")
-      end
-    end
-
-    # Emits one Langfuse observation of type TOOL per tool invocation,
-    # attached to the trace minted by Telegram::Agent (id passed through
-    # the MCP bearer token). The TOOL type makes the call render with the
-    # tool icon in the Langfuse UI and lets you filter by tool calls.
-    # No-op when no trace_id is in context (tests, or a non-Telegram
-    # caller of /mcp). Langfuse::Client swallows its own errors.
-    def record_tool_call(tool_name, arguments, started_at, output: nil, error: nil)
-      return unless @trace_id
-
-      observation = Langfuse::Client.observation_event(
-        type: "TOOL",
-        trace_id: @trace_id,
-        name: "mcp::#{tool_name}",
-        started_at: started_at,
-        ended_at: Time.now,
-        input: arguments,
-        output: error ? nil : output,
-        level: error ? "ERROR" : nil,
-        status_message: error&.message
+      result = Mcp::ToolRunner.run(
+        tool_name: params["name"],
+        arguments: params["arguments"] || {},
+        user: @user,
+        context: @context,
+        trace_id: @trace_id
       )
-      Langfuse::Client.ingest([observation])
+
+      case result.kind
+      when :ok
+        success(id, {content: [{type: "text", text: JSON.generate(result.output)}], isError: false})
+      when :tool_error
+        success(id, {content: [{type: "text", text: result.message}], isError: true})
+      when :unknown
+        error(id, :invalid_params, result.message)
+      else # :crash
+        error(id, :internal_error, result.message)
+      end
     end
 
     def success(id, result)

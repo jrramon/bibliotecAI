@@ -22,6 +22,22 @@ class Telegram::AgentTest < ActiveSupport::TestCase
     assert_nil result.error
   end
 
+  test "openai_compatible path runs the in-process agent and returns its text" do
+    Llm::Config.stubs(:provider_key).returns(:claude_cli)
+    Llm::Config.stubs(:provider_key).with(:telegram).returns(:openai_compatible)
+
+    fake_provider = mock("provider")
+    fake_provider.expects(:run_agent).returns(
+      Llm::AgentResult.new(ok: true, text: "Hola desde la API", error: nil, usage_envelope: {"usage" => {}})
+    )
+    Llm::Config.stubs(:resolve).with(:telegram).returns([fake_provider, "qwen3.6"])
+
+    result = Telegram::Agent.call(@message)
+
+    assert result.ok
+    assert_equal "Hola desde la API", result.text
+  end
+
   test "passes the right argv to claude including MCP flags" do
     captured_args = nil
     Open3.stubs(:capture3).with do |*args|

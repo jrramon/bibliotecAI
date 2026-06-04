@@ -34,7 +34,78 @@ module Llm
         Llm::Response.new(text: text, usage_envelope: usage_envelope(data["usage"], request.model))
       end
 
+      # Multi-turn tool-calling loop. Advertises `tools` (OpenAI function
+      # schemas), and on each `finish_reason: tool_calls` runs every requested
+      # call through `tool_executor` and feeds the results back, until the model
+      # answers in plain text or max_turns is hit.
+      def run_agent(system_text:, user_text:, tools:, tool_executor:, model:, max_turns:, timeout: DEFAULT_TIMEOUT)
+        raise Llm::Error, "LLM_API_KEY is not set" if @api_key.blank?
+
+        messages = [
+          {role: "system", content: system_text},
+          {role: "user", content: user_text}
+        ]
+        totals = {input: 0, output: 0}
+
+        max_turns.times do
+          body = {model: model, messages: messages, tools: tools, tool_choice: "auto", temperature: 0}
+          data = post("/chat/completions", body, timeout: timeout)
+          accumulate(totals, data["usage"])
+
+          message = data.dig("choices", 0, "message") || {}
+          tool_calls = message["tool_calls"]
+
+          if tool_calls.is_a?(Array) && tool_calls.any?
+            messages << message # echo assistant turn (carries the tool_call ids)
+            tool_calls.each do |tc|
+              name = tc.dig("function", "name")
+              args = parse_arguments(tc.dig("function", "arguments"))
+              messages << {
+                role: "tool",
+                tool_call_id: tc["id"],
+                content: tool_executor.call(name, args).to_s
+              }
+            end
+            next
+          end
+
+          return Llm::AgentResult.new(
+            ok: true,
+            text: message["content"].to_s.strip,
+            error: nil,
+            usage_envelope: agent_usage_envelope(totals, model)
+          )
+        end
+
+        Llm::AgentResult.new(
+          ok: false,
+          text: nil,
+          error: "agent hit max_turns (#{max_turns}) without a final answer",
+          usage_envelope: agent_usage_envelope(totals, model)
+        )
+      end
+
       private
+
+      def parse_arguments(raw)
+        return {} if raw.blank?
+        JSON.parse(raw)
+      rescue JSON::ParserError
+        {}
+      end
+
+      def accumulate(totals, usage)
+        return unless usage.is_a?(Hash)
+        totals[:input] += usage["prompt_tokens"].to_i
+        totals[:output] += usage["completion_tokens"].to_i
+      end
+
+      def agent_usage_envelope(totals, model)
+        envelope = {"usage" => {"input_tokens" => totals[:input], "output_tokens" => totals[:output]}}
+        cost = Llm::Pricing.cost_usd(model: model, input_tokens: totals[:input], output_tokens: totals[:output])
+        envelope["total_cost_usd"] = cost if cost
+        envelope
+      end
 
       def content_blocks(request)
         blocks = [{type: "text", text: request.prompt}]

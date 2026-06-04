@@ -72,4 +72,66 @@ class Llm::Providers::OpenaiCompatibleTest < ActiveSupport::TestCase
 
     refute response.usage_envelope.key?("total_cost_usd")
   end
+
+  # --- run_agent (tool-calling loop) ---
+
+  class FakeExecutor
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def call(name, args)
+      @calls << [name, args]
+      "TOOL_RESULT"
+    end
+  end
+
+  def tool_call_response
+    {
+      "choices" => [{
+        "message" => {"role" => "assistant", "tool_calls" => [
+          {"id" => "t1", "function" => {"name" => "search_books", "arguments" => '{"q":"kokoro"}'}}
+        ]},
+        "finish_reason" => "tool_calls"
+      }],
+      "usage" => {"prompt_tokens" => 10, "completion_tokens" => 5}
+    }
+  end
+
+  def final_response(text = "Encontré 1 libro.")
+    {
+      "choices" => [{"message" => {"content" => text}, "finish_reason" => "stop"}],
+      "usage" => {"prompt_tokens" => 8, "completion_tokens" => 4}
+    }
+  end
+
+  test "run_agent executes tool calls then returns the final text + summed usage" do
+    p = provider
+    p.stubs(:post).returns(tool_call_response, final_response)
+    executor = FakeExecutor.new
+
+    result = p.run_agent(
+      system_text: "sys", user_text: "hola", tools: [], tool_executor: executor,
+      model: "qwen3.6", max_turns: 5
+    )
+
+    assert result.ok
+    assert_equal "Encontré 1 libro.", result.text
+    assert_equal [["search_books", {"q" => "kokoro"}]], executor.calls
+    assert_equal({"input_tokens" => 18, "output_tokens" => 9}, result.usage_envelope["usage"])
+  end
+
+  test "run_agent fails after max_turns without a final answer" do
+    p = provider
+    p.stubs(:post).returns(tool_call_response) # always asks for a tool
+    result = p.run_agent(
+      system_text: "sys", user_text: "hola", tools: [], tool_executor: FakeExecutor.new,
+      model: "qwen3.6", max_turns: 2
+    )
+
+    refute result.ok
+    assert_match(/max_turns/, result.error)
+  end
 end

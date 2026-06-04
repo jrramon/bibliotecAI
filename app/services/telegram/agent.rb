@@ -114,7 +114,8 @@ module Telegram
       # The system prompt is managed in Langfuse as "telegram-agent-system".
       # The dynamic parts (history + user message) stay assembled here.
       system_prompt_obj = Langfuse::Prompt.get("telegram-agent-system", fallback: SYSTEM_PROMPT)
-      prompt = build_prompt(system_prompt_obj.compile)
+      @system_block = system_prompt_obj.compile
+      prompt = build_prompt(@system_block)
       # trace_id is minted here so the MCP server (running in another
       # request) can attach tool-call spans to the same trace via the
       # bearer token.
@@ -130,14 +131,14 @@ module Telegram
       Langfuse::Trace.record(
         trace_id: trace_id,
         trace_name: "telegram-agent-turn",
-        generation_name: "claude -p (telegram)",
+        generation_name: telegram_generation_name,
         started_at: started_at,
         prompt: prompt,
         input: @message.text.presence,
         output: result.text,
         envelope: result.usage,
         error_message: result.ok ? nil : result.error,
-        model: MODEL,
+        model: telegram_model,
         metadata: {telegram_message_id: @message.id},
         user_id: @message.user_id&.to_s,
         session_id: @message.chat_id&.to_s,
@@ -151,8 +152,50 @@ module Telegram
 
     # The actual turn. Always returns a Result — every failure path is a
     # `failure(...)` Result, never a raised exception — so `call` can trace
-    # the outcome uniformly.
+    # the outcome uniformly. Dispatches by configured provider: claude_cli
+    # drives tools through the MCP HTTP runtime; openai_compatible runs the
+    # tool loop in-process.
     def produce_result(prompt, trace_id)
+      if Llm::Config.provider_key(:telegram) == :openai_compatible
+        produce_openai_result(trace_id)
+      else
+        produce_claude_result(prompt, trace_id)
+      end
+    end
+
+    # OpenAI-compatible path: the provider runs the tool-calling loop, executing
+    # each tool in-process via Llm::ToolExecutor (same Mcp tools + TOOL telemetry
+    # the CLI path uses). The user + signed message_id are bound here, never read
+    # from the model's arguments.
+    def produce_openai_result(trace_id)
+      provider, model = Llm::Config.resolve(:telegram)
+      executor = Llm::ToolExecutor.new(
+        user: @message.user,
+        context: {message_id: @message.id}.compact,
+        trace_id: trace_id
+      )
+
+      result = provider.run_agent(
+        system_text: @system_block,
+        user_text: dynamic_block,
+        tools: Llm::OpenaiTools.from_registry,
+        tool_executor: executor,
+        model: model,
+        max_turns: MAX_TURNS,
+        timeout: CLAUDE_TIMEOUT
+      )
+
+      return failure(result.error) unless result.ok
+
+      text = result.text.to_s.strip
+      return failure("model returned an empty result") if text.empty?
+
+      Result.new(ok: true, text: text, error: nil, usage: result.usage_envelope)
+    rescue => e
+      failure("openai agent error: #{e.message}")
+    end
+
+    def produce_claude_result(prompt, trace_id)
       with_mcp_config(trace_id) do |config_path, mcp_token|
         stdout, stderr, status = run_claude(prompt, config_path, mcp_token)
 
@@ -181,13 +224,38 @@ module Telegram
     # or the local SYSTEM_PROMPT fallback) so build_prompt stays purely
     # responsible for assembling the dynamic per-turn pieces.
     def build_prompt(system_block)
+      "#{system_block}\n#{dynamic_block}"
+    end
+
+    # The per-turn pieces (history + user message) without the system block, so
+    # the openai_compatible path can pass them as a separate `user` message.
+    def dynamic_block
       <<~PROMPT
-        #{system_block}
         #{recent_history_block}
         <user_message>
         #{photo_marker}#{neutralize_tags(@message.text)}
         </user_message>
       PROMPT
+    end
+
+    # The model id reported to Langfuse. The claude_cli path is pinned to MODEL;
+    # the openai_compatible path uses the configured per-task model.
+    def telegram_model
+      if Llm::Config.provider_key(:telegram) == :openai_compatible
+        Llm::Config.model_for(:telegram).presence || Llm::Config::API_DEFAULT_MODEL
+      else
+        MODEL
+      end
+    end
+
+    # The Langfuse generation label. Reflects the transport so the UI doesn't
+    # say "claude -p" for a turn that actually ran against the HTTP API.
+    def telegram_generation_name
+      if Llm::Config.provider_key(:telegram) == :openai_compatible
+        "chat completions (telegram)"
+      else
+        "claude -p (telegram)"
+      end
     end
 
     # Tells Claude "there's a photo attached to the current message"
