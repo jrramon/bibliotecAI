@@ -263,6 +263,16 @@ namespace :langfuse do
         results = {}
         ENV["LLM_PROVIDER_TELEGRAM"] = "openai_compatible" # fuerza el camino API para el eval
 
+        # runName must differ across prompt versions so Langfuse keeps each run
+        # as its own comparable row (same runName appends/merges items). Default
+        # label = the system prompt version (so editing the prompt → new run);
+        # override with RUN_LABEL for ad-hoc experiments.
+        run_label = ENV["RUN_LABEL"].presence || begin
+          version = Langfuse::Prompt.get("telegram-agent-system", fallback: Telegram::Agent::SYSTEM_PROMPT).version
+          version ? "pv#{version}" : "local"
+        end
+        puts "[telegram:run] run_label=#{run_label}"
+
         seed_history = lambda do |user, history|
           Array(history).each do |turn|
             TelegramMessage.create!(user: user, chat_id: 1, update_id: SecureRandom.random_number(10**9),
@@ -302,7 +312,7 @@ namespace :langfuse do
                 metadata: {model: model, item: key}
               )])
               Langfuse::Dataset.link_run_item(dataset_name: dataset_name, dataset_item_id: key,
-                trace_id: trace_id, run_name: model, run_description: run_description)
+                trace_id: trace_id, run_name: "#{model} · #{run_label}", run_description: run_description)
 
               results[model] << {item: key, score: scoring[:score]}
               puts "score=#{scoring[:score]}  trayectoria=#{fixture.trajectory.map { _1[:tool] }.inspect}"
