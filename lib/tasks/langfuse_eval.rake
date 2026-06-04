@@ -243,6 +243,90 @@ namespace :langfuse do
           end
         end
       end
+
+      desc "Corre el eval del agente: por cada (modelo × conversación) corre el agente con tools mockeadas (FixtureToolExecutor), puntúa la trayectoria, sube score + run-item. ENV: MODELS=qwen3.6,deepseek-v4-flash ITEMS=lib-list,..."
+      task run: :environment do
+        require "securerandom"
+        raise "Langfuse no está configurado" unless Langfuse::Config.configured?
+
+        dataset_name = "telegram-agent-eval"
+        yaml_path = Rails.root.join("test/fixtures/files/eval_telegram/conversations.yml")
+        abort "[telegram:run] falta #{yaml_path.relative_path_from(Rails.root)}" unless File.exist?(yaml_path)
+        all_items = YAML.safe_load_file(yaml_path)
+
+        models = ENV["MODELS"].present? ? ENV["MODELS"].split(",").map(&:strip) : %w[qwen3.6 deepseek-v4-flash]
+        item_keys = ENV["ITEMS"].present? ? ENV["ITEMS"].split(",").map(&:strip) : all_items.keys
+        unknown = item_keys - all_items.keys
+        abort "[telegram:run] items desconocidos: #{unknown.join(", ")}" if unknown.any?
+
+        run_description = "Eval #{Time.now.utc.iso8601}"
+        results = {}
+        ENV["LLM_PROVIDER_TELEGRAM"] = "openai_compatible" # fuerza el camino API para el eval
+
+        seed_history = lambda do |user, history|
+          Array(history).each do |turn|
+            TelegramMessage.create!(user: user, chat_id: 1, update_id: SecureRandom.random_number(10**9),
+              text: turn["user"], bot_reply: turn["bot"], status: :completed)
+          end
+        end
+
+        models.each do |model|
+          ENV["LLM_MODEL_TELEGRAM"] = model
+          puts "\n=== Modelo: #{model} ==="
+          results[model] = []
+
+          item_keys.each do |key|
+            item = all_items.fetch(key)
+            print "  #{key}… "
+            $stdout.flush
+            trace_id = SecureRandom.uuid
+            user = nil
+
+            begin
+              user = User.create!(email: "tgeval-#{SecureRandom.hex(4)}@example.test", password: "password123", name: "Eval")
+              seed_history.call(user, item["history"])
+              msg = TelegramMessage.create!(user: user, chat_id: 1, update_id: SecureRandom.random_number(10**9),
+                text: item.fetch("user_message"), status: :pending)
+              if item["photo"]
+                msg.photo.attach(io: File.open(Rails.root.join("test/fixtures/files/eval_shelves/shelf-4.jpg")),
+                  filename: "shelf.jpg", content_type: "image/jpeg")
+              end
+
+              fixture = Eval::FixtureToolExecutor.new
+              Telegram::Agent.new(msg, tool_executor: fixture, trace_id: trace_id).call
+              scoring = Eval::TrajectoryScorer.call(actual: fixture.trajectory, expected: item["expected_tools"])
+
+              comment = "matched=#{scoring[:details][:matched]} missed=#{scoring[:details][:missed]} extra=#{scoring[:details][:extra]}"
+              Langfuse::Client.ingest([Langfuse::Client.score_event(
+                trace_id: trace_id, name: "trajectory", value: scoring[:score], comment: comment,
+                metadata: {model: model, item: key}
+              )])
+              Langfuse::Dataset.link_run_item(dataset_name: dataset_name, dataset_item_id: key,
+                trace_id: trace_id, run_name: model, run_description: run_description)
+
+              results[model] << {item: key, score: scoring[:score]}
+              puts "score=#{scoring[:score]}  trayectoria=#{fixture.trajectory.map { _1[:tool] }.inspect}"
+            rescue => e
+              puts "FALLO: #{e.class}: #{e.message}"
+              results[model] << {item: key, error: e.message}
+            ensure
+              if user
+                TelegramMessage.where(user_id: user.id).destroy_all
+                user.destroy
+              end
+            end
+          end
+        end
+
+        puts "\n=== Resumen ==="
+        results.each do |model, items|
+          scores = items.map { _1[:score] }.compact
+          avg = scores.any? ? (scores.sum / scores.size).round(4) : nil
+          errors = items.count { _1[:error] }
+          puts "#{model}: avg_score=#{avg || "n/a"} (#{scores.size} ok, #{errors} fallos)"
+        end
+        puts "\nUI: Datasets → #{dataset_name} → Runs (#{run_description})"
+      end
     end
   end
 end

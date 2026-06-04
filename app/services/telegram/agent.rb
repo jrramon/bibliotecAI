@@ -108,10 +108,13 @@ module Telegram
     # tool_executor: injectable for the openai_compatible path (the eval passes
     # an Eval::FixtureToolExecutor to mock tools + record the trajectory). When
     # nil, the real in-process Llm::ToolExecutor is built per turn.
-    def initialize(message, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), tool_executor: nil)
+    # trace_id: injectable so an eval runner can mint it and link the
+    # dataset-run-item + score to the same trace (mirrors ClaudeBookIdentifier).
+    def initialize(message, claude_bin: ENV.fetch("CLAUDE_BIN", "claude"), tool_executor: nil, trace_id: nil)
       @message = message
       @claude_bin = claude_bin
       @tool_executor = tool_executor
+      @trace_id = trace_id
     end
 
     def call
@@ -122,8 +125,8 @@ module Telegram
       prompt = build_prompt(@system_block)
       # trace_id is minted here so the MCP server (running in another
       # request) can attach tool-call spans to the same trace via the
-      # bearer token.
-      trace_id = SecureRandom.uuid
+      # bearer token. An eval runner may inject its own.
+      trace_id = @trace_id || SecureRandom.uuid
       started_at = Time.now
       result = produce_result(prompt, trace_id)
 
