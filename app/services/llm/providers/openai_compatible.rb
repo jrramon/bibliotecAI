@@ -19,6 +19,10 @@ module Llm
         @base_url = base_url.to_s.chomp("/")
       end
 
+      # Images are sent inline (base64), so the prompt must NOT point the model
+      # at a file path it can't open — the service substitutes a note instead.
+      def inline_images? = true
+
       def complete(request)
         raise Llm::Error, "LLM_API_KEY is not set" if @api_key.blank?
 

@@ -30,6 +30,24 @@ class ClaudeBookIdentifierTest < ActiveSupport::TestCase
     refute_includes captured_args, "--model"
   end
 
+  test "openai_compatible path: prompt references the attached image, not a tmp file path" do
+    captured = nil
+    fake = Object.new
+    fake.define_singleton_method(:inline_images?) { true }
+    fake.define_singleton_method(:complete) do |request|
+      captured = request
+      Llm::Response.new(text: '{"image_width":1,"image_height":1,"books":[],"unidentified":[]}', usage_envelope: nil)
+    end
+    Llm::Config.stubs(:resolve).with(:shelf, override_model: nil).returns([fake, "qwen3.6"])
+
+    ClaudeBookIdentifier.new(@shelf_photo).call
+
+    refute_includes captured.prompt, "tmp/shelf_photos"
+    assert_includes captured.prompt, "attached directly to this message"
+    # The bytes still travel via image_paths even though the prompt has no path.
+    assert_equal 1, captured.image_paths.size
+  end
+
   test "surfaces a provider failure as ClaudeBookIdentifier::Error (job retry contract)" do
     Open3.stubs(:capture3).returns(["", "boom", Struct.new(:success?, :exitstatus).new(false, 1)])
 

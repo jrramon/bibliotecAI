@@ -11,6 +11,9 @@ class ClaudeCoverIdentifier
   Result = Struct.new(:data, :usage, keyword_init: true)
   Error = Class.new(StandardError)
   CLAUDE_TIMEOUT = 120
+  # Substituted for {{image_path}} when the provider sends the image inline
+  # (openai_compatible) — there is no file for the model to open.
+  INLINE_IMAGE_NOTE = "the image attached directly to this message (there is no file path to open)"
 
   # Local fallback for the prompt. The "live" version lives in Langfuse
   # under the name "cover-identification" and is fetched via
@@ -75,8 +78,11 @@ class ClaudeCoverIdentifier
     image_path = base.join("#{@cover_photo.id}-#{@cover_photo.image.filename}").to_s
     File.binwrite(image_path, @cover_photo.image.download)
 
+    provider, model = Llm::Config.resolve(:cover)
+    image_ref = provider.inline_images? ? INLINE_IMAGE_NOTE : image_path
+
     prompt_obj = Langfuse::Prompt.get("cover-identification", fallback: PROMPT_TEMPLATE)
-    prompt = prompt_obj.compile(image_path: image_path)
+    prompt = prompt_obj.compile(image_path: image_ref)
     started_at = Time.now
     # Constant trace fields, splatted into the success and error calls below.
     lf = {
@@ -91,7 +97,6 @@ class ClaudeCoverIdentifier
     }
 
     begin
-      provider, model = Llm::Config.resolve(:cover)
       response = provider.complete(Llm::Request.new(
         prompt: prompt,
         image_paths: [image_path],

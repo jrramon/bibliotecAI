@@ -6,6 +6,9 @@ class ClaudeBookIdentifier
   Error = Class.new(StandardError)
 
   CLAUDE_TIMEOUT = 180 # seconds
+  # Substituted for {{image_path}} when the provider sends the image inline
+  # (openai_compatible) — there is no file for the model to open.
+  INLINE_IMAGE_NOTE = "the image attached directly to this message (there is no file path to open)"
   # Local fallback. The live version lives in Langfuse as
   # "shelf-identification"; placeholders are Mustache so the same body
   # works in both places (see ClaudeCoverIdentifier for the pattern).
@@ -72,8 +75,11 @@ class ClaudeBookIdentifier
     image_path = base.join("#{@shelf_photo.id}-#{@shelf_photo.image.filename}").to_s
     File.binwrite(image_path, @shelf_photo.image.download)
 
+    provider, model = Llm::Config.resolve(:shelf, override_model: @model)
+    image_ref = provider.inline_images? ? INLINE_IMAGE_NOTE : image_path
+
     prompt_obj = Langfuse::Prompt.get("shelf-identification", fallback: PROMPT_TEMPLATE)
-    prompt = prompt_obj.compile(image_path: image_path)
+    prompt = prompt_obj.compile(image_path: image_ref)
     started_at = Time.now
     lf = {
       trace_id: @trace_id,
@@ -88,7 +94,6 @@ class ClaudeBookIdentifier
     }
 
     begin
-      provider, model = Llm::Config.resolve(:shelf, override_model: @model)
       response = provider.complete(Llm::Request.new(
         prompt: prompt,
         image_paths: [image_path],

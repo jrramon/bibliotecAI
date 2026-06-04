@@ -11,6 +11,10 @@ module Llm
         @claude_bin = claude_bin
       end
 
+      # The CLI reads images by PATH (--add-dir), so the prompt should carry
+      # the file path, not the bytes.
+      def inline_images? = false
+
       def complete(request)
         argv = [@claude_bin, "-p", request.prompt, "--output-format", "json"]
         # The CLI reads images by PATH from a whitelisted dir (it does not get
