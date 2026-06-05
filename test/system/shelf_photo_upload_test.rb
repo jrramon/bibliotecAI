@@ -13,6 +13,9 @@ class ShelfPhotoUploadTest < ApplicationSystemTestCase
     click_on "＋ Subir foto de estantería"
 
     attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
+    # The client-side pre-flight (shelf_upload_controller) shows a count/size
+    # summary as soon as files are picked.
+    assert_selector ".upload-status", text: /1 foto ·/i
     click_on "Subir e identificar"
 
     assert_selector ".eyebrow", text: /foto de estantería/i

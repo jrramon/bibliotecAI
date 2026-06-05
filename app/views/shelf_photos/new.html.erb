@@ -8,20 +8,22 @@
 
   <div class="card">
     <%= form_with url: library_shelf_photos_path(@library), method: :post,
-                  multipart: true, html: {class: "shelf-photo-upload"} do %>
+                  multipart: true, html: {class: "shelf-photo-upload", data: {controller: "shelf-upload"}} do %>
       <div class="form-inputs">
         <label class="field">
           <span class="field-label">Imágenes de la estantería</span>
           <%= file_field_tag "shelf_photo[images][]",
                              multiple: true,
                              accept: "image/jpeg,image/png,image/webp,image/heic",
-                             required: true %>
-          <small>JPEG, PNG, WebP o HEIC. Puedes seleccionar varias a la vez.</small>
+                             required: true,
+                             data: {shelf_upload_target: "input", action: "change->shelf-upload#validate"} %>
+          <small>JPEG, PNG, WebP o HEIC. Puedes seleccionar varias a la vez. Máximo 10 MB por foto, 100 MB en total.</small>
+          <small class="upload-status" data-shelf-upload-target="status" hidden></small>
         </label>
       </div>
 
       <div class="form-actions">
-        <%= submit_tag "Subir e identificar", class: "btn btn-primary" %>
+        <%= submit_tag "Subir e identificar", class: "btn btn-primary", data: {shelf_upload_target: "submit"} %>
         <%= link_to "Cancelar", library_path(@library), class: "btn btn-ghost" %>
       </div>
     <% end %>

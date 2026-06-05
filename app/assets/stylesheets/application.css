@@ -2254,6 +2254,10 @@ dialog.modal-dialog::backdrop {
 }
 .form-errors li + li { margin-top: 2px; }
 
+/* Shelf-photo upload pre-flight status (count/size + over-limit warning) */
+.upload-status { display: block; margin-top: 4px; font-weight: 600; color: var(--ink-2); }
+.upload-status.is-error { color: var(--vermillion); }
+
 /* Swatch grid (11 options: 10 colours + auto) */
 .swatches { border: 0; padding: 0; margin: 0; }
 .swatches legend {
