@@ -1,7 +1,11 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # Pool must cover Puma's threads (RAILS_MAX_THREADS) AND SolidQueue running
+  # in-process (SOLID_QUEUE_IN_PUMA: 1 dispatcher + a worker with 3 threads).
+  # Sizing it to RAILS_MAX_THREADS alone starves web requests during job bursts
+  # (e.g. AnalyzeJob fan-out on a multi-photo upload). Override with DB_POOL.
+  pool: <%= ENV.fetch("DB_POOL") { ENV.fetch("RAILS_MAX_THREADS", 5).to_i + 10 }.to_i %>
   host: <%= ENV.fetch("DATABASE_HOST", "localhost") %>
   port: <%= ENV.fetch("DATABASE_PORT", 5432) %>
   username: <%= ENV.fetch("DATABASE_USERNAME", "rails_dev") %>
