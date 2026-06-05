@@ -20,7 +20,7 @@ class BookIdentificationTest < ApplicationSystemTestCase
     ClaudeBookIdentifier.stubs(:call).returns(fake_result)
 
     visit library_path(@library)
-    click_on "＋ Subir foto de estantería"
+    click_on "Estanterías"
     attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
     click_on "Subir e identificar"
 

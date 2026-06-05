@@ -10,7 +10,7 @@ class ShelfPhotoUploadTest < ApplicationSystemTestCase
   test "user uploads a shelf photo and lands on the pending status page" do
     visit library_path(@library)
 
-    click_on "＋ Subir foto de estantería"
+    click_on "Estanterías"
 
     attach_file "shelf_photo[images][]", Rails.root.join("test/fixtures/files/shelf.jpg").to_s, make_visible: true
     # The client-side pre-flight (shelf_upload_controller) shows a count/size
