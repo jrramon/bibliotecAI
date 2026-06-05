@@ -1284,6 +1284,11 @@ input, textarea, select { font: inherit; color: inherit; }
   order: 1;
 }
 
+/* Shelf-photo count links through to the Estanterías page */
+.stat-link { color: inherit; text-decoration: none; transition: color 140ms var(--ease-out); }
+.stat-link:hover { color: var(--accent); }
+.stat-row-compact .stat-link { text-decoration: underline dotted; text-underline-offset: 2px; }
+
 /* Library book search */
 .book-search {
   display: flex;
