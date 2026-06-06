@@ -936,6 +936,51 @@ input, textarea, select { font: inherit; color: inherit; }
   font-style: normal;
 }
 
+/* ----- "¿Qué es?" + FAQ (plain factual content, extractable by AI search) ----- */
+.landing-about {
+  max-width: 60ch;
+  margin: 0 auto;
+  padding: 28px 32px;
+  text-align: center;
+}
+.landing-about h2,
+.landing-faq > h2 {
+  font-family: var(--serif);
+  font-weight: 300;
+  font-size: clamp(22px, 2.6vw, 30px);
+  letter-spacing: -0.015em;
+  color: var(--ink-1);
+  margin: 0 0 16px;
+}
+.landing-about p {
+  color: var(--ink-2);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0;
+}
+.landing-faq {
+  max-width: 64ch;
+  margin: 0 auto;
+  padding: 32px;
+}
+.landing-faq > h2 { text-align: center; margin-bottom: 24px; }
+.faq-list { margin: 0; }
+.faq-item { padding: 18px 0; border-top: 1px solid var(--rule); }
+.faq-item:first-child { border-top: none; }
+.faq-item dt {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink-1);
+  margin: 0 0 8px;
+}
+.faq-item dd {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
 /* ----- Final CTA ----- */
 .landing-final {
   text-align: center;

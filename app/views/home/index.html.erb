@@ -59,6 +59,11 @@
     </article>
   </section>
 
+  <section class="landing-about" data-controller="reveal" aria-labelledby="landing-about-title">
+    <h2 id="landing-about-title">¿Qué es BibliotecAI?</h2>
+    <p><%= SeoHelper::ABOUT %></p>
+  </section>
+
   <section class="landing-telegram" aria-labelledby="landing-telegram-title"
            data-controller="reveal">
     <div class="landing-telegram-copy">
@@ -101,6 +106,18 @@
       </p>
       <cite>— Heinrich Mann</cite>
     </blockquote>
+  </section>
+
+  <section class="landing-faq" data-controller="reveal" aria-labelledby="landing-faq-title">
+    <h2 id="landing-faq-title">Preguntas frecuentes</h2>
+    <dl class="faq-list">
+      <% SeoHelper::FAQ_ITEMS.each do |item| %>
+        <div class="faq-item">
+          <dt><%= item[:q] %></dt>
+          <dd><%= item[:a] %></dd>
+        </div>
+      <% end %>
+    </dl>
   </section>
 
   <section class="landing-final" data-controller="reveal">

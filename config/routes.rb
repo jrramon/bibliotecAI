@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   # under public/ that were tied to one domain.
   get "robots.txt" => "seo#robots", :as => :robots
   get "sitemap.xml" => "seo#sitemap", :as => :sitemap
+  get "llms.txt" => "seo#llms", :as => :llms
 
   # PWA manifest + service worker. Served at the root so the browser
   # finds them at their conventional paths.

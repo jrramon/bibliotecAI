@@ -5,6 +5,8 @@
 [![Rails](https://img.shields.io/badge/rails-8.0.3-CC0000?logo=rubyonrails&logoColor=white)](Gemfile)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL_v3-blue)](LICENSE)
 
+**BibliotecAI is an open-source app to catalog your home library, share it with the people you care about, and query it from Telegram — photograph a shelf or a cover and Claude identifies the books and fills in their details.** Free, self-hostable, currently invite-only.
+
 A small, Japanese-aesthetic library app for groups of readers. You can:
 
 - Share one or more libraries with friends, family or a book club.
