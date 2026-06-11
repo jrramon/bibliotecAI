@@ -87,20 +87,36 @@ module Telegram
                («estantería», «toda la balda», «todos estos», «estos libros»).
         2) DESPUÉS de la llamada, responde UNA frase corta confirmando que has
            recibido la foto y que los resultados llegarán en un mensaje aparte.
-      - NO veas la foto tú directamente. Si es ambigua y el caption no aclara,
-        pregunta antes de llamar (sin llamar tool). Una foto sin caption suele
-        ser una portada, pero solo si el contexto lo apoya.
+      - NO veas la foto tú directamente. Si el caption no aclara qué tool usar
+        (o no hay caption), llama process_book_cover_photo sin `intent` —
+        NUNCA respondas a una foto sin llamar antes una tool de foto.
       - La identificación corre en background; su resultado llega en otro mensaje.
     PROMPT
 
     # Tags that, if present in user-supplied text, would let an attacker
-    # close our framing block and inject pseudo-system instructions.
+    # close our framing block and inject pseudo-system instructions, or
+    # fake a photo attachment (which would now trip the photo guardrail).
     # We sanitize them by swapping the angle brackets for square ones
     # so the content stays visible to Claude (and to the user reading
     # logs) but no longer parses as a tag boundary.
-    INJECTABLE_TAGS_RE = %r{</?(?:user_message|recent_conversation)>}
+    INJECTABLE_TAGS_RE = %r{</?(?:user_message|recent_conversation)>|<attached_photo/>}
 
     HISTORY_LIMIT = 5
+
+    # Server-side guardrail for the openai_compatible path: a message with a
+    # photo MUST end up calling one of these tools. Models (qwen3.6 in prod,
+    # 2026-06-11) sometimes answer "estoy procesando la foto" without calling
+    # anything, and the photo silently vanishes.
+    PHOTO_TOOLS = %w[process_book_cover_photo process_shelf_photo].freeze
+
+    PHOTO_RETRY_REMINDER = <<~TXT.strip
+      <system-reminder>
+      El mensaje del usuario incluye <attached_photo/> y NO llamaste ninguna
+      tool de foto. Es OBLIGATORIO llamar process_book_cover_photo o
+      process_shelf_photo ahora mismo. Si dudas del intent, llama
+      process_book_cover_photo sin `intent` (default: biblioteca).
+      </system-reminder>
+    TXT
 
     def self.call(...) = new(...).call
 
@@ -145,7 +161,8 @@ module Telegram
         envelope: result.usage,
         error_message: result.ok ? nil : result.error,
         model: telegram_model,
-        metadata: {telegram_message_id: @message.id},
+        metadata: {telegram_message_id: @message.id,
+                   photo_tool_retried: (@photo_tool_retried || nil)}.compact,
         user_id: @message.user_id&.to_s,
         session_id: @message.chat_id&.to_s,
         prompt_name: system_prompt_obj.name,
@@ -181,15 +198,24 @@ module Telegram
         trace_id: trace_id
       )
 
-      result = provider.run_agent(
-        system_text: @system_block,
-        user_text: dynamic_block,
-        tools: Llm::OpenaiTools.from_registry,
-        tool_executor: executor,
-        model: model,
-        max_turns: MAX_TURNS,
-        timeout: CLAUDE_TIMEOUT
-      )
+      result = run_openai_agent(provider, model, executor, dynamic_block)
+
+      # Guardrail: a photo message that produced no photo-tool call is a model
+      # failure, not a valid answer — the text is typically a false "estoy
+      # procesando la foto" and the photo would be silently dropped. Retry once
+      # with an explicit reminder; if the model still skips the tool, fail
+      # noisily so the job marks the message failed instead of completed.
+      if result.ok && photo_attached? && !photo_tool_called?(result)
+        @photo_tool_retried = true
+        first_usage = result.usage_envelope
+        result = run_openai_agent(provider, model, executor,
+          "#{dynamic_block}\n#{PHOTO_RETRY_REMINDER}")
+        result.usage_envelope = merge_usage(first_usage, result.usage_envelope)
+
+        if result.ok && !photo_tool_called?(result)
+          return failure("agent skipped mandatory photo tool (after retry)")
+        end
+      end
 
       return failure(result.error) unless result.ok
 
@@ -199,6 +225,45 @@ module Telegram
       Result.new(ok: true, text: text, error: nil, usage: result.usage_envelope)
     rescue => e
       failure("openai agent error: #{e.message}")
+    end
+
+    def run_openai_agent(provider, model, executor, user_text)
+      provider.run_agent(
+        system_text: @system_block,
+        user_text: user_text,
+        tools: Llm::OpenaiTools.from_registry,
+        tool_executor: executor,
+        model: model,
+        max_turns: MAX_TURNS,
+        timeout: CLAUDE_TIMEOUT
+      )
+    end
+
+    def photo_attached?
+      photo_marker.present?
+    end
+
+    def photo_tool_called?(result)
+      (Array(result.tool_names) & PHOTO_TOOLS).any?
+    end
+
+    # Sums the token usage of the first attempt into the retry's envelope so
+    # Langfuse + the budget see the real cost of the turn.
+    def merge_usage(first, second)
+      return second if first.blank?
+      return first if second.blank?
+
+      merged = {"usage" => {
+        "input_tokens" => usage_tokens(first, "input_tokens") + usage_tokens(second, "input_tokens"),
+        "output_tokens" => usage_tokens(first, "output_tokens") + usage_tokens(second, "output_tokens")
+      }}
+      cost = first["total_cost_usd"].to_f + second["total_cost_usd"].to_f
+      merged["total_cost_usd"] = cost if cost.positive?
+      merged
+    end
+
+    def usage_tokens(envelope, key)
+      envelope.dig("usage", key).to_i
     end
 
     def produce_claude_result(prompt, trace_id)

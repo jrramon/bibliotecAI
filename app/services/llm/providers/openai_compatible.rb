@@ -50,6 +50,7 @@ module Llm
           {role: "user", content: user_text}
         ]
         totals = {input: 0, output: 0}
+        tool_names = []
 
         max_turns.times do
           body = {model: model, messages: messages, tools: tools, tool_choice: "auto", temperature: 0}
@@ -64,6 +65,7 @@ module Llm
             tool_calls.each do |tc|
               name = tc.dig("function", "name")
               args = parse_arguments(tc.dig("function", "arguments"))
+              tool_names << name
               messages << {
                 role: "tool",
                 tool_call_id: tc["id"],
@@ -77,7 +79,8 @@ module Llm
             ok: true,
             text: message["content"].to_s.strip,
             error: nil,
-            usage_envelope: agent_usage_envelope(totals, model)
+            usage_envelope: agent_usage_envelope(totals, model),
+            tool_names: tool_names
           )
         end
 
@@ -85,7 +88,8 @@ module Llm
           ok: false,
           text: nil,
           error: "agent hit max_turns (#{max_turns}) without a final answer",
-          usage_envelope: agent_usage_envelope(totals, model)
+          usage_envelope: agent_usage_envelope(totals, model),
+          tool_names: tool_names
         )
       end
 

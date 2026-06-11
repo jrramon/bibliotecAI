@@ -121,6 +121,20 @@ class Llm::Providers::OpenaiCompatibleTest < ActiveSupport::TestCase
     assert_equal "Encontré 1 libro.", result.text
     assert_equal [["search_books", {"q" => "kokoro"}]], executor.calls
     assert_equal({"input_tokens" => 18, "output_tokens" => 9}, result.usage_envelope["usage"])
+    assert_equal ["search_books"], result.tool_names
+  end
+
+  test "run_agent returns empty tool_names when the model answers without calling tools" do
+    p = provider
+    p.stubs(:post).returns(final_response("He recibido la foto."))
+
+    result = p.run_agent(
+      system_text: "sys", user_text: "hola", tools: [], tool_executor: FakeExecutor.new,
+      model: "qwen3.6", max_turns: 5
+    )
+
+    assert result.ok
+    assert_equal [], result.tool_names
   end
 
   test "run_agent fails after max_turns without a final answer" do
@@ -133,5 +147,6 @@ class Llm::Providers::OpenaiCompatibleTest < ActiveSupport::TestCase
 
     refute result.ok
     assert_match(/max_turns/, result.error)
+    assert_equal %w[search_books search_books], result.tool_names
   end
 end

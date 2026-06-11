@@ -2,6 +2,9 @@ require "test_helper"
 
 class ClaudeBookIdentifierTest < ActiveSupport::TestCase
   setup do
+    # Isolate from the deploy env (.env sets LLM_MODEL_SHELF, which would
+    # inject --model into the "default behavior" test).
+    Llm::Config.stubs(:model_for).returns(nil)
     @shelf_photo = create(:shelf_photo)
   end
 
