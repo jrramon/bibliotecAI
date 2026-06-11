@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gold editor · eval estanterías</title>
+  <!-- js-yaml para leer/escribir expected.yml (necesita conexión la primera vez) -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      --bg: #16130f; --panel: #1f1b15; --panel-2: #272118; --ink: #ece3d2;
+      --ink-2: #b7ab93; --ink-3: #8a7e68; --rule: #38301f; --accent: #d98b3a;
+      --ok: #6fbf73; --bad: #e06a5a; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font: 14px/1.5 system-ui, -apple-system, sans-serif; }
+    header { position: sticky; top: 0; z-index: 5; display: flex; gap: 16px;
+      align-items: center; padding: 12px 18px; background: var(--panel);
+      border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
+    header h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+    header h1 span { color: var(--accent); }
+    .spacer { flex: 1; }
+    button, .btn { font: inherit; cursor: pointer; background: var(--panel-2);
+      color: var(--ink); border: 1px solid var(--rule); border-radius: 7px;
+      padding: 7px 12px; }
+    button:hover { border-color: var(--accent); }
+    button.primary { background: var(--accent); color: #1a140c; border-color: var(--accent); font-weight: 600; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .dirty { color: var(--accent); font-size: 12px; }
+    .tabs { display: flex; gap: 6px; padding: 12px 18px 0; flex-wrap: wrap; }
+    .tab { padding: 6px 12px; border-radius: 7px 7px 0 0; border: 1px solid var(--rule);
+      border-bottom: none; background: var(--panel); color: var(--ink-2); }
+    .tab.active { background: var(--panel-2); color: var(--ink); }
+    .tab .n { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+    .tab.changed::after { content: " ●"; color: var(--accent); }
+    main { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 16px; padding: 16px 18px 40px; align-items: start; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    .panel { background: var(--panel-2); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+    .panel-head { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+      border-bottom: 1px solid var(--rule); font-size: 12px; color: var(--ink-2); }
+    .panel-head .count { margin-left: auto; color: var(--ink); font-weight: 600; }
+    .photo-wrap { background: #000; max-height: 78vh; overflow: auto; }
+    .photo-wrap img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+    .photo-wrap.zoom { }
+    .photo-wrap.zoom img { width: auto; max-width: none; cursor: zoom-out; }
+    .meta { padding: 8px 12px; font-size: 11px; color: var(--ink-3); border-top: 1px solid var(--rule);
+      display: flex; gap: 14px; flex-wrap: wrap; }
+    .meta a { color: var(--accent); }
+    .editor textarea { width: 100%; min-height: 70vh; resize: vertical; border: none;
+      background: #14110c; color: var(--ink); font: 12.5px/1.55 var(--mono); padding: 12px; outline: none; }
+    .editor textarea.invalid { box-shadow: inset 0 0 0 2px var(--bad); }
+    .editor-toolbar { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--rule); align-items: center; }
+    .status { font-size: 12px; }
+    .status.ok { color: var(--ok); } .status.bad { color: var(--bad); }
+    .loader { margin: 60px auto; max-width: 560px; text-align: center; padding: 32px;
+      border: 1px dashed var(--rule); border-radius: 12px; color: var(--ink-2); }
+    .loader.drag { border-color: var(--accent); background: var(--panel); }
+    .loader h2 { color: var(--ink); }
+    .hidden { display: none; }
+    code { font-family: var(--mono); color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gold editor · <span>eval estanterías</span></h1>
+    <span id="dirty" class="dirty hidden">● cambios sin exportar</span>
+    <div class="spacer"></div>
+    <input type="file" id="file" accept=".yml,.yaml,text/yaml" class="hidden">
+    <button id="loadBtn">Cargar expected.yml…</button>
+    <button id="copyBtn" disabled>Copiar YAML</button>
+    <button id="downloadBtn" class="primary" disabled>Descargar expected.yml</button>
+  </header>
+
+  <div id="loader" class="loader">
+    <h2>Abre el eval de estanterías</h2>
+    <p>Si abres este HTML <b>servido</b> (p.ej. <code>python3 -m http.server</code> en esta carpeta),
+       carga <code>expected.yml</code> solo. Si lo abres con doble clic, selecciónalo abajo
+       (está en esta misma carpeta).</p>
+    <p><button id="pickBtn" class="primary">Seleccionar expected.yml</button></p>
+    <p id="loaderMsg" style="font-size:12px"></p>
+  </div>
+
+  <div id="tabs" class="tabs hidden"></div>
+  <main id="main" class="hidden"></main>
+
+<script>
+(function () {
+  "use strict";
+  var DATA = null;        // parsed YAML object {shelf-1: {...}, ...}
+  var ORIGINAL = "";      // JSON string of the loaded data, to detect changes
+  var currentKey = null;
+
+  var els = {
+    loader: byId("loader"), loaderMsg: byId("loaderMsg"), tabs: byId("tabs"),
+    main: byId("main"), dirty: byId("dirty"), file: byId("file"),
+    copyBtn: byId("copyBtn"), downloadBtn: byId("downloadBtn")
+  };
+  function byId(id) { return document.getElementById(id); }
+  function yamlReady() { return typeof window.jsyaml !== "undefined"; }
+
+  // ---- load ----------------------------------------------------------------
+  function ingest(text, sourceLabel) {
+    if (!yamlReady()) { els.loaderMsg.textContent = "No se cargó js-yaml (¿sin conexión?). Conéctate una vez y recarga."; return; }
+    try {
+      var parsed = window.jsyaml.load(text);
+      if (!parsed || typeof parsed !== "object") throw new Error("YAML vacío o no es un objeto");
+      DATA = parsed;
+      ORIGINAL = JSON.stringify(DATA);
+      currentKey = Object.keys(DATA)[0];
+      els.loader.classList.add("hidden");
+      els.tabs.classList.remove("hidden");
+      els.main.classList.remove("hidden");
+      els.copyBtn.disabled = els.downloadBtn.disabled = false;
+      render();
+    } catch (e) {
+      els.loaderMsg.textContent = "No pude parsear " + (sourceLabel || "el fichero") + ": " + e.message;
+    }
+  }
+
+  // Best-effort auto-load when served over http(s).
+  function tryFetch() {
+    fetch("expected.yml").then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    }).then(function (t) { ingest(t, "expected.yml (fetch)"); })
+      .catch(function () { /* file:// or missing — user picks it */ });
+  }
+
+  els.file.addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    f.text().then(function (t) { ingest(t, f.name); });
+  });
+  byId("loadBtn").addEventListener("click", function () { els.file.click(); });
+  byId("pickBtn").addEventListener("click", function () { els.file.click(); });
+
+  // drag & drop onto the loader
+  ["dragover", "dragleave", "drop"].forEach(function (ev) {
+    els.loader.addEventListener(ev, function (e) {
+      e.preventDefault();
+      els.loader.classList.toggle("drag", ev === "dragover");
+      if (ev === "drop" && e.dataTransfer.files[0]) {
+        e.dataTransfer.files[0].text().then(function (t) { ingest(t, e.dataTransfer.files[0].name); });
+      }
+    });
+  });
+
+  // ---- render --------------------------------------------------------------
+  function shelfChanged(key) {
+    // compare against the originally loaded snapshot
+    var orig = JSON.parse(ORIGINAL)[key];
+    return JSON.stringify(orig) !== JSON.stringify(DATA[key]);
+  }
+
+  function render() {
+    // tabs
+    els.tabs.innerHTML = "";
+    Object.keys(DATA).forEach(function (key) {
+      var n = ((DATA[key].expected || {}).books || []).length;
+      var t = document.createElement("button");
+      t.className = "tab" + (key === currentKey ? " active" : "") + (shelfChanged(key) ? " changed" : "");
+      t.innerHTML = key + ' <span class="n">(' + n + ')</span>';
+      t.onclick = function () { currentKey = key; render(); };
+      els.tabs.appendChild(t);
+    });
+
+    var item = DATA[currentKey];
+    var img = item.image || "";
+    var expected = item.expected || {};
+    var books = expected.books || [];
+
+    els.main.innerHTML =
+      '<section class="panel">' +
+        '<div class="panel-head">Foto · ' + esc(currentKey) +
+          '<span class="count">' + (expected.image_width || "?") + "×" + (expected.image_height || "?") + '</span></div>' +
+        '<div class="photo-wrap" id="photoWrap"><img id="photo" src="' + esc(img) + '" alt="' + esc(currentKey) + '"></div>' +
+        '<div class="meta">' +
+          '<span>' + esc(item.source_filename || "") + '</span>' +
+          '<a href="' + esc(img) + '" target="_blank" rel="noopener">abrir original ↗</a>' +
+          '<span>clic en la foto = zoom</span>' +
+        '</div>' +
+      '</section>' +
+      '<section class="panel editor">' +
+        '<div class="panel-head">expected (JSON)<span class="count" id="bookCount">' + books.length + ' libros</span></div>' +
+        '<textarea id="json" spellcheck="false"></textarea>' +
+        '<div class="editor-toolbar">' +
+          '<button id="addBook">+ libro</button>' +
+          '<button id="format">Formatear</button>' +
+          '<span class="spacer" style="flex:1"></span>' +
+          '<span class="status" id="status"></span>' +
+        '</div>' +
+      '</section>';
+
+    var ta = byId("json");
+    ta.value = JSON.stringify(expected, null, 2);
+    ta.addEventListener("input", onEdit);
+
+    byId("photoWrap").addEventListener("click", function () { this.classList.toggle("zoom"); });
+    byId("addBook").addEventListener("click", addBook);
+    byId("format").addEventListener("click", function () {
+      var v = parse(ta.value); if (v.ok) { ta.value = JSON.stringify(v.val, null, 2); onEdit(); }
+    });
+    setStatus(true, "OK");
+    updateDirty();
+  }
+
+  function onEdit() {
+    var ta = byId("json");
+    var r = parse(ta.value);
+    if (!r.ok) { ta.classList.add("invalid"); setStatus(false, "JSON inválido: " + r.err); return; }
+    ta.classList.remove("invalid");
+    DATA[currentKey].expected = r.val;
+    byId("bookCount").textContent = ((r.val.books || []).length) + " libros";
+    setStatus(true, "OK");
+    // reflect changed-dot on the current tab without full re-render
+    var activeTab = els.tabs.querySelector(".tab.active");
+    if (activeTab) activeTab.classList.toggle("changed", shelfChanged(currentKey));
+    var n = (r.val.books || []).length;
+    if (activeTab) activeTab.querySelector(".n").textContent = "(" + n + ")";
+    updateDirty();
+  }
+
+  function addBook() {
+    var ta = byId("json");
+    var r = parse(ta.value);
+    if (!r.ok) { setStatus(false, "Corrige el JSON antes de añadir"); return; }
+    if (!Array.isArray(r.val.books)) r.val.books = [];
+    r.val.books.push({ cdu: "", title: "", author: "", genres: [], confidence: 0.5 });
+    ta.value = JSON.stringify(r.val, null, 2);
+    onEdit();
+  }
+
+  function parse(text) {
+    try { return { ok: true, val: JSON.parse(text) }; }
+    catch (e) { return { ok: false, err: e.message }; }
+  }
+  function setStatus(ok, msg) {
+    var s = byId("status"); if (!s) return;
+    s.className = "status " + (ok ? "ok" : "bad"); s.textContent = msg;
+  }
+  function updateDirty() {
+    els.dirty.classList.toggle("hidden", JSON.stringify(DATA) === ORIGINAL);
+  }
+
+  // ---- export --------------------------------------------------------------
+  function toYaml() {
+    return "---\n" + window.jsyaml.dump(DATA, { lineWidth: -1, noRefs: true, sortKeys: false });
+  }
+  els.downloadBtn.addEventListener("click", function () {
+    var blob = new Blob([toYaml()], { type: "text/yaml" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "expected.yml"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  els.copyBtn.addEventListener("click", function () {
+    navigator.clipboard.writeText(toYaml()).then(function () {
+      els.copyBtn.textContent = "¡Copiado!";
+      setTimeout(function () { els.copyBtn.textContent = "Copiar YAML"; }, 1200);
+    });
+  });
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // warn before leaving with unsaved edits
+  window.addEventListener("beforeunload", function (e) {
+    if (DATA && JSON.stringify(DATA) !== ORIGINAL) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  tryFetch();
+})();
+</script>
+</body>
+</html>
