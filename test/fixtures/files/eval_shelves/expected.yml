@@ -5,471 +5,497 @@ shelf-1:
   image: shelf-1.jpg
   expected:
     books:
-    - cdu: '658'
-      title: Reinventing Organizations
-      author: Frédéric Laloux
-      genres:
-      - Management
-      - Organizaciones
-      confidence: 0.9
-    - cdu: '658'
-      title: The Culture Game
-      author: Daniel Mezick
-      genres:
-      - Agile
-      - Cultura organizacional
-      confidence: 0.9
-    - cdu: '658.5'
-      title: Fearless Change
-      author: Mary Lynn Manns, Linda Rising
-      genres:
-      - Gestión del cambio
-      - Agile
-      confidence: 0.95
-    - cdu: '004'
-      title: The Psychology of Computer Programming
-      author: Gerald M. Weinberg
-      genres:
-      - Programación
-      - Psicología
-      confidence: 0.95
-    - cdu: '658.4'
-      title: The Secrets of Consulting
-      author: Gerald M. Weinberg
-      genres:
-      - Consultoría
-      - Management
-      confidence: 0.9
-    - cdu: '658.4'
-      title: Adrenaline junkies and template zombies
-      author: DeMarco, Lister
-      genres:
-      - Programación
-      - Ensayo
-      confidence: 0.9
-    - cdu: '658.4'
-      title: Synchronicity
-      author: Joseph Jaworski
-      genres:
-      - Liderazgo
-      - Ensayo
-      confidence: 0.9
-    - cdu: '2'
-      title: Esperanza Activa
-      author: Joanna Macy, Chris Johnstone
-      genres:
-      - Espiritualidad
-      - Ensayo
-      confidence: 0.55
-    - cdu: '316.77'
-      title: Utopías Digitales
-      author: ''
-      genres:
-      - Tecnología
-      - Sociedad
-      confidence: 0.55
-    - cdu: '339'
-      title: A Cauda Longa
-      author: Chris Anderson
-      genres:
-      - Marketing
-      - Economía digital
-      confidence: 0.9
-    - cdu: '658'
-      title: Collaboration Explained
-      author: Jean Tabaka
-      genres:
-      - Agile
-      - Colaboración
-      confidence: 0.9
-    - cdu: '7.01'
-      title: 'Ignore Everybody: And 39 Other Keys to Creativity'
-      author: Hugh MacLeod
-      genres:
-      - Creatividad
-      - Ensayo
-      confidence: 0.95
-    - cdu: '005'
-      title: Peopleware
-      author: Tom DeMarco, Timothy Lister
-      genres:
-      - Gestión de equipos
-      - Software
-      confidence: 0.9
-    - cdu: '004.41'
-      title: Agile Software Development
-      author: Alistair Cockburn
-      genres:
-      - Agile
-      - Desarrollo de software
-      confidence: 0.95
+      - cdu: '658'
+        title: Reinventing Organizations
+        author: Frédéric Laloux
+        genres:
+          - Management
+          - Organizaciones
+        confidence: 0.9
+      - cdu: '658'
+        title: The Culture Game
+        author: Daniel Mezick
+        genres:
+          - Agile
+          - Cultura organizacional
+        confidence: 0.9
+      - cdu: '658.5'
+        title: Fearless Change
+        author: Mary Lynn Manns, Linda Rising
+        genres:
+          - Gestión del cambio
+          - Agile
+        confidence: 0.95
+      - cdu: '004'
+        title: The Psychology of Computer Programming
+        author: Gerald M. Weinberg
+        genres:
+          - Programación
+          - Psicología
+        confidence: 0.95
+      - cdu: '658.4'
+        title: The Secrets of Consulting
+        author: Gerald M. Weinberg
+        genres:
+          - Consultoría
+          - Management
+        confidence: 0.9
+      - cdu: '658.4'
+        title: Adrenaline junkies and template zombies
+        author: DeMarco, Lister
+        genres:
+          - Programación
+          - Ensayo
+        confidence: 0.9
+      - cdu: '658.4'
+        title: Synchronicity
+        author: Joseph Jaworski
+        genres:
+          - Liderazgo
+          - Ensayo
+        confidence: 0.9
+      - cdu: '2'
+        title: Esperanza Activa
+        author: Joanna Macy, Chris Johnstone
+        genres:
+          - Espiritualidad
+          - Ensayo
+        confidence: 0.55
+      - cdu: '316.77'
+        title: Utopías Digitales
+        author: Ekaitz Cancela
+        genres:
+          - Tecnología
+          - Sociedad
+        confidence: 0.55
+      - cdu: '339'
+        title: A Cauda Longa
+        author: Chris Anderson
+        genres:
+          - Marketing
+          - Economía digital
+        confidence: 0.9
+      - cdu: '333'
+        title: Why employees don't do what they are supposed to do...
+        author: Fournies
+        genres:
+          - Marketing
+          - Economía digital
+        confidence: 0.9
+      - cdu: '339'
+        title: Qué hacemos con el trabajo
+        author: ''
+        genres:
+          - Marketing
+          - Economía digital
+        confidence: 0.9
+      - cdu: '339'
+        title: Humble Inquiry
+        author: Edgar H. Schein
+        genres:
+          - Marketing
+          - Economía digital
+        confidence: 0.9
+      - cdu: '658'
+        title: Collaboration Explained
+        author: Jean Tabaka
+        genres:
+          - Agile
+          - Colaboración
+        confidence: 0.9
+      - cdu: '7.01'
+        title: 'Ignore Everybody: And 39 Other Keys to Creativity'
+        author: Hugh MacLeod
+        genres:
+          - Creatividad
+          - Ensayo
+        confidence: 0.95
+      - cdu: '005'
+        title: Peopleware
+        author: Tom DeMarco, Timothy Lister
+        genres:
+          - Gestión de equipos
+          - Software
+        confidence: 0.9
+      - cdu: '004.41'
+        title: Agile Software Development
+        author: Alistair Cockburn
+        genres:
+          - Agile
+          - Desarrollo de software
+        confidence: 0.95
     image_width: 4096
     image_height: 3072
     unidentified:
-    - x1: 820
-      x2: 1025
-      y1: 545
-      y2: 2250
-      reason: Texto pequeño sobre 'Tools for the Agile Manager'; no puedo confirmar título/autor exacto
-    - x1: 1670
-      x2: 1880
-      y1: 445
-      y2: 2250
-      reason: Lomo naranja con texto 'Introducing...' parcialmente legible; no identificable con seguridad
-    - x1: 2700
-      x2: 2870
-      y1: 545
-      y2: 2250
-      reason: Lomo delgado con tipografía demasiado pequeña para leer
-    - x1: 2870
-      x2: 3035
-      y1: 615
-      y2: 2250
-      reason: Lomo delgado con tipografía demasiado pequeña para leer
+      - x1: 820
+        x2: 1025
+        y1: 545
+        y2: 2250
+        reason: Texto pequeño sobre 'Tools for the Agile Manager'; no puedo confirmar título/autor exacto
+      - x1: 1670
+        x2: 1880
+        y1: 445
+        y2: 2250
+        reason: Lomo naranja con texto 'Introducing...' parcialmente legible; no identificable con seguridad
+      - x1: 2700
+        x2: 2870
+        y1: 545
+        y2: 2250
+        reason: Lomo delgado con tipografía demasiado pequeña para leer
+      - x1: 2870
+        x2: 3035
+        y1: 615
+        y2: 2250
+        reason: Lomo delgado con tipografía demasiado pequeña para leer
 shelf-3:
   source_shelf_photo_id: 3
   source_filename: 2026-04-20 15.34.20.jpg
   image: shelf-3.jpg
   expected:
     books:
-    - cdu: '7.01'
-      title: 'Ignore Everybody: and 39 Other Keys to Creativity'
-      author: Hugh MacLeod
-      genres:
-      - Creatividad
-      - Negocios
-      confidence: 0.88
-    - cdu: '004.41'
-      title: 'Agile Software Development: The Cooperative Game'
-      author: Alistair Cockburn
-      genres:
-      - Agile
-      - Desarrollo software
-      confidence: 0.95
-    - cdu: '004.41'
-      title: Agile Coaching
-      author: Rachel Davies, Liz Sedley
-      genres:
-      - Agile
-      - Coaching
-      confidence: 0.93
-    - cdu: '658.5'
-      title: Making Work Visible
-      author: Dominica DeGrandis
-      genres:
-      - Management
-      - Kanban
-      confidence: 0.92
-    - cdu: '004.41'
-      title: User Story Mapping
-      author: Jeff Patton
-      genres:
-      - Agile
-      - Producto
-      confidence: 0.94
-    - cdu: '159.9'
-      title: El nuevo estilo ¡Relájate!
-      author: David Allen
-      genres:
-      - Productividad
-      - Autoayuda
-      confidence: 0.55
-    - cdu: '658.4'
-      title: 'Certain to Win: The Strategy of John Boyd, Applied to Business'
-      author: Chet Richards
-      genres:
-      - Estrategia
-      - Management
-      confidence: 0.9
-    - cdu: '658.5'
-      title: The Choice
-      author: Eliyahu M. Goldratt
-      genres:
-      - Management
-      - Teoría de las restricciones
-      confidence: 0.94
-    - cdu: '332.024'
-      title: Rich Dad Poor Dad
-      author: Robert T. Kiyosaki
-      genres:
-      - Finanzas personales
-      confidence: 0.97
-    - cdu: '612.82'
-      title: 'Cómo aprende el cerebro: Las claves para la educación'
-      author: Sarah-Jayne Blakemore, Uta Frith
-      genres:
-      - Neurociencia
-      - Educación
-      confidence: 0.88
-    - cdu: '658.406'
-      title: 'How to Change the World: Change Management 3.0'
-      author: Jurgen Appelo
-      genres:
-      - Management
-      - Gestión del cambio
-      confidence: 0.9
-    - cdu: 327(460)
-      title: Al contrario
-      author: Carlos Alonso Zaldívar
-      genres:
-      - Política
-      - Ensayo
-      confidence: 0.85
-    - cdu: ''
-      title: Zoom
-      author: Banyai
-      genres: []
-      confidence: 0.3
-    - cdu: '159.923'
-      title: 'Quiet: The Power of Introverts in a World That Can''t Stop Talking'
-      author: Susan Cain
-      genres:
-      - Psicología
-      - Introversión
-      confidence: 0.96
-    - cdu: '159.923'
-      title: 'Quiet: The Power of Introverts in a World That Can''t Stop Talking'
-      author: Susan Cain
-      genres:
-      - Psicología
-      - Introversión
-      confidence: 0.96
+      - cdu: '7.01'
+        title: 'Ignore Everybody: and 39 Other Keys to Creativity'
+        author: Hugh MacLeod
+        genres:
+          - Creatividad
+          - Negocios
+        confidence: 0.88
+      - cdu: '004.41'
+        title: Agile Software Development
+        author: Alistair Cockburn
+        genres:
+          - Agile
+          - Desarrollo software
+        confidence: 0.95
+      - cdu: '004.41'
+        title: Agile Coaching
+        author: Rachel Davies, Liz Sedley
+        genres:
+          - Agile
+          - Coaching
+        confidence: 0.93
+      - cdu: '658.5'
+        title: Making Work Visible
+        author: Dominica DeGrandis
+        genres:
+          - Management
+          - Kanban
+        confidence: 0.92
+      - cdu: '004.41'
+        title: User Story Mapping
+        author: Jeff Patton
+        genres:
+          - Agile
+          - Producto
+        confidence: 0.94
+      - cdu: '159.9'
+        title: Un nuevo estilo de Relaciones
+        author: Koldo Saratxaga
+        genres:
+          - Productividad
+          - Autoayuda
+        confidence: 0.55
+      - cdu: '658.4'
+        title: 'Certain to Win: The Strategy of John Boyd, Applied to Business'
+        author: Chet Richards
+        genres:
+          - Estrategia
+          - Management
+        confidence: 0.9
+      - cdu: '658.5'
+        title: The Choice
+        author: Eliyahu M. Goldratt
+        genres:
+          - Management
+          - Teoría de las restricciones
+        confidence: 0.94
+      - cdu: '332.024'
+        title: Rich Dad Poor Dad
+        author: Robert T. Kiyosaki
+        genres:
+          - Finanzas personales
+        confidence: 0.97
+      - cdu: '612.82'
+        title: 'Cómo aprende el cerebro: Las claves para la educación'
+        author: Sarah-Jayne Blakemore, Uta Frith
+        genres:
+          - Neurociencia
+          - Educación
+        confidence: 0.88
+      - cdu: '658.406'
+        title: 'How to Change the World: Change Management 3.0'
+        author: Jurgen Appelo
+        genres:
+          - Management
+          - Gestión del cambio
+        confidence: 0.9
+      - cdu: 327(460)
+        title: Al contrario
+        author: Carlos Alonso Zaldívar
+        genres:
+          - Política
+          - Ensayo
+        confidence: 0.85
+      - cdu: ''
+        title: Zoom
+        author: Banyai
+        genres: []
+        confidence: 0.3
+      - cdu: '159.923'
+        title: 'Quiet: The Power of Introverts in a World That Can''t Stop Talking'
+        author: Susan Cain
+        genres:
+          - Psicología
+          - Introversión
+        confidence: 0.96
+      - cdu: '159.923'
+        title: 'Quiet: The Power of Introverts in a World That Can''t Stop Talking'
+        author: Susan Cain
+        genres:
+          - Psicología
+          - Introversión
+        confidence: 0.96
+      - cdu: ''
+        title: ''
+        author: ''
+        genres: []
+        confidence: 0.5
     image_width: 4096
     image_height: 3072
     unidentified:
-    - x1: 2288
-      x2: 2527
-      y1: 512
-      y2: 2390
-      reason: Lomo negro con texto vertical parcialmente legible ('EL MÉTODO DE LOS...'), no se identifica título/autor con seguridad
+      - x1: 2288
+        x2: 2527
+        y1: 512
+        y2: 2390
+        reason: Lomo negro con texto vertical parcialmente legible ('EL MÉTODO DE LOS...'), no se identifica título/autor con seguridad
 shelf-4:
   source_shelf_photo_id: 4
   source_filename: telegram_AgACAgQAAxkBAAOCagIP-0ZjlMZBGJ1VwgQtBsr9a1QAAl4OaxtNIxBQMqM1yFz55rwBAAMCAAN5AAM7BA.jpg
   image: shelf-4.jpg
   expected:
     books:
-    - cdu: '658'
-      title: Collaboration Explained
-      author: Jean Tabaka
-      genres:
-      - Management
-      - Agile
-      - Colaboración
-      confidence: 0.9
-    - cdu: '159.9'
-      title: Humble Inquiry
-      author: Edgar H. Schein
-      genres:
-      - Liderazgo
-      - Comunicación
-      confidence: 0.85
-    - cdu: '159.954'
-      title: 'Ignore Everybody: And 39 Other Keys to Creativity'
-      author: Hugh MacLeod
-      genres:
-      - Creatividad
-      - Ensayo
-      confidence: 0.9
-    - cdu: '004.42'
-      title: Agile Software Development
-      author: Alistair Cockburn
-      genres:
-      - Desarrollo de software
-      - Agile
-      confidence: 0.95
-    - cdu: '658.3'
-      title: Agile Coaching
-      author: Rachel Davies, Liz Sedley
-      genres:
-      - Agile
-      - Coaching
-      confidence: 0.9
-    - cdu: '004.41'
-      title: 'User Story Mapping: Making Work Visible'
-      author: Jeff Patton
-      genres:
-      - Producto
-      - Agile
-      - UX
-      confidence: 0.95
-    - cdu: '159.9'
-      title: Un nuevo estilo de relaciones
-      author: ''
-      genres:
-      - Psicología
-      - Relaciones
-      confidence: 0.5
-    - cdu: '658'
-      title: The Choice
-      author: Eliyahu M. Goldratt
-      genres:
-      - Management
-      - Teoría de las restricciones
-      confidence: 0.95
-    - cdu: '330'
-      title: Rich Dad Poor Dad
-      author: Robert T. Kiyosaki
-      genres:
-      - Finanzas personales
-      - Ensayo
-      confidence: 0.98
-    - cdu: ''
-      title: El método de los 10 días - Ohio
-      author: Ruchi Bhargava
-      genres: []
-      confidence: 0.4
-    - cdu: '159.95'
-      title: Cómo aprende el cerebro
-      author: Sarah-Jayne Blakemore, Uta Frith
-      genres:
-      - Neurociencia
-      - Psicología
-      - Educación
-      confidence: 0.9
-    - cdu: '334'
-      title: 'How to Change the World: Social Entrepreneurs and the Power of New Ideas'
-      author: David Bornstein
-      genres:
-      - Emprendimiento social
-      - Ensayo
-      confidence: 0.95
-    - cdu: '32'
-      title: Al Contrario
-      author: Carlos Alonso Zaldívar
-      genres:
-      - Ensayo
-      - Política
-      confidence: 0.85
-    - cdu: '087.5'
-      title: Zoom
-      author: István Banyai
-      genres:
-      - Álbum ilustrado
-      - Infantil
-      confidence: 0.85
-    - cdu: '159.923'
-      title: Quiet
-      author: Susan Cain
-      genres:
-      - Psicología
-      - Personalidad
-      confidence: 0.95
-    - cdu: '159.923'
-      title: Quiet
-      author: Susan Cain
-      genres:
-      - Psicología
-      - Personalidad
-      confidence: 0.95
-    - cdu: '004.41'
-      title: Implementing Lean Software Development
-      author: Mary Poppendieck, Tom Poppendieck
-      genres:
-      - Desarrollo de software
-      - Lean
-      - Agile
-      confidence: 0.95
+      - cdu: '658'
+        title: Collaboration Explained
+        author: Jean Tabaka
+        genres:
+          - Management
+          - Agile
+          - Colaboración
+        confidence: 0.9
+      - cdu: '159.9'
+        title: Humble Inquiry
+        author: Edgar H. Schein
+        genres:
+          - Liderazgo
+          - Comunicación
+        confidence: 0.85
+      - cdu: '159.954'
+        title: 'Ignore Everybody: And 39 Other Keys to Creativity'
+        author: Hugh MacLeod
+        genres:
+          - Creatividad
+          - Ensayo
+        confidence: 0.9
+      - cdu: '004.42'
+        title: Agile Software Development
+        author: Alistair Cockburn
+        genres:
+          - Desarrollo de software
+          - Agile
+        confidence: 0.95
+      - cdu: '658.3'
+        title: Agile Coaching
+        author: Rachel Davies, Liz Sedley
+        genres:
+          - Agile
+          - Coaching
+        confidence: 0.9
+      - cdu: '004.41'
+        title: 'User Story Mapping: Making Work Visible'
+        author: Jeff Patton
+        genres:
+          - Producto
+          - Agile
+          - UX
+        confidence: 0.95
+      - cdu: '159.9'
+        title: Un nuevo estilo de relaciones
+        author: ''
+        genres:
+          - Psicología
+          - Relaciones
+        confidence: 0.5
+      - cdu: '658'
+        title: The Choice
+        author: Eliyahu M. Goldratt
+        genres:
+          - Management
+          - Teoría de las restricciones
+        confidence: 0.95
+      - cdu: '330'
+        title: Rich Dad Poor Dad
+        author: Robert T. Kiyosaki
+        genres:
+          - Finanzas personales
+          - Ensayo
+        confidence: 0.98
+      - cdu: ''
+        title: El método de los 10 días - Ohio
+        author: Ruchi Bhargava
+        genres: []
+        confidence: 0.4
+      - cdu: '159.95'
+        title: Cómo aprende el cerebro
+        author: Sarah-Jayne Blakemore, Uta Frith
+        genres:
+          - Neurociencia
+          - Psicología
+          - Educación
+        confidence: 0.9
+      - cdu: '334'
+        title: 'How to Change the World: Social Entrepreneurs and the Power of New Ideas'
+        author: David Bornstein
+        genres:
+          - Emprendimiento social
+          - Ensayo
+        confidence: 0.95
+      - cdu: '32'
+        title: Al Contrario
+        author: Carlos Alonso Zaldívar
+        genres:
+          - Ensayo
+          - Política
+        confidence: 0.85
+      - cdu: '087.5'
+        title: Zoom
+        author: István Banyai
+        genres:
+          - Álbum ilustrado
+          - Infantil
+        confidence: 0.85
+      - cdu: '159.923'
+        title: Quiet
+        author: Susan Cain
+        genres:
+          - Psicología
+          - Personalidad
+        confidence: 0.95
+      - cdu: '159.923'
+        title: Quiet
+        author: Susan Cain
+        genres:
+          - Psicología
+          - Personalidad
+        confidence: 0.95
+      - cdu: '004.41'
+        title: Implementing Lean Software Development
+        author: Mary Poppendieck, Tom Poppendieck
+        genres:
+          - Desarrollo de software
+          - Lean
+          - Agile
+        confidence: 0.95
     image_width: 960
     image_height: 540
     unidentified:
-    - x1: 0
-      x2: 55
-      y1: 30
-      y2: 470
-      reason: Spine on far left edge mostly cropped, text unreadable
-    - x1: 670
-      x2: 720
-      y1: 50
-      y2: 470
-      reason: Thin spine between Al Contrario and Zoom, no legible text visible
-    - x1: 905
-      x2: 960
-      y1: 30
-      y2: 470
-      reason: Far-right spine cropped at image edge, title not fully visible
+      - x1: 0
+        x2: 55
+        y1: 30
+        y2: 470
+        reason: Spine on far left edge mostly cropped, text unreadable
+      - x1: 670
+        x2: 720
+        y1: 50
+        y2: 470
+        reason: Thin spine between Al Contrario and Zoom, no legible text visible
+      - x1: 905
+        x2: 960
+        y1: 30
+        y2: 470
+        reason: Far-right spine cropped at image edge, title not fully visible
 shelf-5:
   source_shelf_photo_id: 5
   source_filename: 2026-04-22 16.02.30.jpg
   image: shelf-5.jpg
   expected:
     books:
-    - cdu: 82-312.9
-      title: Crónicas de robots
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Relatos
-      confidence: 0.95
-    - cdu: 82-312.9
-      title: Robots e Imperio
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Novela
-      confidence: 0.97
-    - cdu: 82-312.9
-      title: Los robots de Aurora
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Novela
-      confidence: 0.97
-    - cdu: 82-312.9
-      title: El robot humano
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Relatos
-      confidence: 0.9
-    - cdu: 82-312.9
-      title: Preludio a la Fundación
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Fundación
-      confidence: 0.97
-    - cdu: 82-312.9
-      title: Hacia la Fundación
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Fundación
-      confidence: 0.96
-    - cdu: 82-312.9
-      title: Tríptico del Imperio
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Imperio
-      confidence: 0.9
-    - cdu: 82-312.9
-      title: Fundación y Tierra
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Fundación
-      confidence: 0.95
-    - cdu: 82-312.9
-      title: Los límites de la Fundación
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Fundación
-      confidence: 0.96
-    - cdu: 82-312.9
-      title: Trilogía de las Fundaciones
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Saga Fundación
-      confidence: 0.95
-    - cdu: 82-32
-      title: La última pregunta y otros cuentos
-      author: Isaac Asimov
-      genres:
-      - Ciencia ficción
-      - Relatos
-      confidence: 0.9
+      - cdu: 82-312.9
+        title: Crónicas de robots
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Relatos
+        confidence: 0.95
+      - cdu: 82-312.9
+        title: Robots e Imperio
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Novela
+        confidence: 0.97
+      - cdu: 82-312.9
+        title: Los robots de Aurora
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Novela
+        confidence: 0.97
+      - cdu: 82-312.9
+        title: El robot humano
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Relatos
+        confidence: 0.9
+      - cdu: 82-312.9
+        title: Preludio a la Fundación
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Fundación
+        confidence: 0.97
+      - cdu: 82-312.9
+        title: Hacia la Fundación
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Fundación
+        confidence: 0.96
+      - cdu: 82-312.9
+        title: Tríptico del Imperio
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Imperio
+        confidence: 0.9
+      - cdu: 82-312.9
+        title: Fundación y Tierra
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Fundación
+        confidence: 0.95
+      - cdu: 82-312.9
+        title: Los límites de la Fundación
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Fundación
+        confidence: 0.96
+      - cdu: 82-312.9
+        title: Trilogía de las Fundaciones
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Saga Fundación
+        confidence: 0.95
+      - cdu: 82-32
+        title: La última pregunta y otros cuentos
+        author: Isaac Asimov
+        genres:
+          - Ciencia ficción
+          - Relatos
+        confidence: 0.9
     image_width: 1024
     image_height: 768
     unidentified: []
