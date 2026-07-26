@@ -36,7 +36,13 @@ PID_FILE = Rails.root.join("tmp/claude-worker.pid")
 def acquire_lock!
   if PID_FILE.exist?
     other = PID_FILE.read.to_i
-    if other > 0 && process_alive?(other)
+    # In the container the worker *is* pid 1, so a PID file left behind by a
+    # SIGKILLed run (host reboot — at_exit never fires) names a pid that is
+    # trivially alive: us. Without this branch the container crashloops
+    # forever and every Telegram message silently piles up as :pending.
+    if other == Process.pid
+      warn "[worker] PID file names our own pid=#{other} (leftover from a killed run), taking over"
+    elsif other > 0 && process_alive?(other)
       warn "[worker] another worker is already running (pid=#{other}). Kill it first, or wait for it to exit."
       exit 2
     else
